@@ -1,5 +1,5 @@
 #
-# BCM56780 20x400g port configuration.
+# BCM56780 40x200g port configuration.
 #
 # configuration yaml file
 #   device:
@@ -24,7 +24,7 @@ device:
             # CORE CLOCK FREQUENCY
             CORE_CLK_FREQ: CLK_1350MHZ
             # PP CLOCK FREQUENCY
-            PP_CLK_FREQ: CLK_950MHZ
+            PP_CLK_FREQ: CLK_1350MHZ
 ...
 ---
 bcm_device:
@@ -590,7 +590,6 @@ device:
                 NUM_LANES: 4
                 FEC_MODE: PC_FEC_RS544_2XN
                 MAX_FRAME_SIZE: 9416
-                LINK_TRAINING : 1
             ?
                 PORT_ID: [38,     # Management port 0 (Pipe 1)
                           78]     # Management port 1 (Pipe 3)
@@ -600,6 +599,89 @@ device:
                 SPEED: 10000
                 NUM_LANES: 1
                 MAX_FRAME_SIZE: 0x3fe8
+...
+---
+device:
+    0:
+        PC_TX_TAPS:
+            ?
+                PORT_ID: [1,2,3,4,66,67,68,69]
+                LANE_INDEX: [0, 1, 2, 3]
+            :
+                TX_SIG_MODE: PC_SIG_MODE_PAM4
+                TX_SIG_MODE_AUTO: 0
+                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
+                TXFIR_TAP_MODE_AUTO: 0
+                TX_PRE_SIGN: 1
+                TX_PRE: 12
+                TX_PRE_AUTO: 0
+                TX_MAIN_SIGN: 0
+                TX_MAIN: 136
+                TX_MAIN_AUTO: 0
+                TX_POST_SIGN: 1
+                TX_POST: 12
+                TX_POST_AUTO: 0
+                TX_PRE2_SIGN: 0
+                TX_PRE2: 0
+                TX_PRE2_AUTO: 0
+                TX_POST2_SIGN: 0
+                TX_POST2: 0
+                TX_POST2_AUTO: 0
+                TX_POST3_SIGN: 0
+                TX_POST3: 0
+                TX_POST3_AUTO: 0
+            ?
+                PORT_ID: [5,6,7,8,20,21,62,63,64,65,48,49]
+                LANE_INDEX: [0, 1, 2, 3]
+            :
+                TX_SIG_MODE: PC_SIG_MODE_PAM4
+                TX_SIG_MODE_AUTO: 0
+                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
+                TXFIR_TAP_MODE_AUTO: 0
+                TX_PRE_SIGN: 1
+                TX_PRE: 8
+                TX_PRE_AUTO: 0
+                TX_MAIN_SIGN: 0
+                TX_MAIN: 116
+                TX_MAIN_AUTO: 0
+                TX_POST_SIGN: 1
+                TX_POST: 4
+                TX_POST_AUTO: 0
+                TX_PRE2_SIGN: 0
+                TX_PRE2: 0
+                TX_PRE2_AUTO: 0
+                TX_POST2_SIGN: 0
+                TX_POST2: 0
+                TX_POST2_AUTO: 0
+                TX_POST3_SIGN: 0
+                TX_POST3: 0
+                TX_POST3_AUTO: 0
+            ?
+                PORT_ID: [9,10,24,25,22,28,23,29,26,27,42,43,46,40,47,41,60,44,61,45]
+                LANE_INDEX: [0, 1, 2, 3]
+            :
+                TX_SIG_MODE: PC_SIG_MODE_PAM4
+                TX_SIG_MODE_AUTO: 0
+                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
+                TXFIR_TAP_MODE_AUTO: 0
+                TX_PRE_SIGN: 1
+                TX_PRE: 8
+                TX_PRE_AUTO: 0
+                TX_MAIN_SIGN: 0
+                TX_MAIN: 112
+                TX_MAIN_AUTO: 0
+                TX_POST_SIGN: 0
+                TX_POST: 0
+                TX_POST_AUTO: 0
+                TX_PRE2_SIGN: 0
+                TX_PRE2: 0
+                TX_PRE2_AUTO: 0
+                TX_POST2_SIGN: 0
+                TX_POST2: 0
+                TX_POST2_AUTO: 0
+                TX_POST3_SIGN: 0
+                TX_POST3: 0
+                TX_POST3_AUTO: 0
 ...
 ---
 device:
