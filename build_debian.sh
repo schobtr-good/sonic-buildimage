@@ -415,10 +415,10 @@ set /files/etc/sysctl.conf/net.core.rmem_max 2097152
 set /files/etc/sysctl.conf/net.core.wmem_max 2097152
 " -r $FILESYSTEM_ROOT
 
-if [[ $CONFIGURED_ARCH == amd64 ]]; then
-    # Configure mcelog to log machine checks to syslog
-    sudo sed -i 's/^#syslog = yes/syslog = yes/' $FILESYSTEM_ROOT/etc/mcelog/mcelog.conf
-fi
+#if [[ $CONFIGURED_ARCH == amd64 ]]; then
+#    # Configure mcelog to log machine checks to syslog
+#    sudo sed -i 's/^#syslog = yes/syslog = yes/' $FILESYSTEM_ROOT/etc/mcelog/mcelog.conf
+#fi
 
 ## docker-py is needed by Ansible docker module
 sudo https_proxy=$https_proxy LANG=C chroot $FILESYSTEM_ROOT easy_install pip
