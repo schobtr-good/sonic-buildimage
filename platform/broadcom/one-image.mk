@@ -39,6 +39,8 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(INVENTEC_D7264Q28B_PLATFORM_MODULE) \
                                $(INVENTEC_D6356_PLATFORM_MODULE) \
                                $(CEL_DX010_PLATFORM_MODULE) \
+                               $(CEL_MIGALOO_PLATFORM_MODULE) \
+                               $(CEL_SILVERSTONE_PLATFORM_MODULE) \
                                $(CEL_HALIBURTON_PLATFORM_MODULE) \
                                $(DELTA_AG9032V1_PLATFORM_MODULE) \
                                $(DELTA_AG9064_PLATFORM_MODULE) \
@@ -55,8 +57,11 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(BRCM_XLR_GTS_PLATFORM_MODULE) \
                                $(DELTA_AG9032V2A_PLATFORM_MODULE) \
                                $(JUNIPER_QFX5210_PLATFORM_MODULE) \
-                               $(CEL_SILVERSTONE_PLATFORM_MODULE) \
-                               $(CEL_SHAMU_PLATFORM_MODULE)
+                               $(CEL_FISHBONE32_PLATFORM_MODULE) \
+                               $(CEL_FISHBONE48_PLATFORM_MODULE) \
+                               $(CEL_PHALANX_PLATFORM_MODULE) \
+                               $(CEL_SHAMU_PLATFORM_MODULE) \
+                               $(CEL_JAWS_PLATFORM_MODULE)
 ifeq ($(INSTALL_DEBUG_TOOLS),y)
 $(SONIC_ONE_IMAGE)_DOCKERS += $(SONIC_INSTALL_DOCKER_DBG_IMAGES)
 $(SONIC_ONE_IMAGE)_DOCKERS += $(filter-out $(patsubst %-$(DBG_IMAGE_MARK).gz,%.gz, $(SONIC_INSTALL_DOCKER_DBG_IMAGES)), $(SONIC_INSTALL_DOCKER_IMAGES))
