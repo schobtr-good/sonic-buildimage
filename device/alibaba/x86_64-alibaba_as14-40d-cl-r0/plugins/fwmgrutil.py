@@ -12,18 +12,18 @@ import logging
 import ast
 from datetime import datetime
 
-try:
-    from sonic_fwmgr.fwgmr_base import FwMgrUtilBase
-except ImportError as e:
-    raise ImportError("%s - required module not found" % str(e))
+#try:
+#    from sonic_fwmgr.fwgmr_base import FwMgrUtilBase
+#except ImportError as e:
+#    raise ImportError("%s - required module not found" % str(e))
 
 
-class FwMgrUtil(FwMgrUtilBase):
+class FwMgrUtil():
     BMC_REQ_BASE_URI = "http://240.1.1.1:8080/api"
     ONIE_CFG_FILE = "/host/machine.conf"
 
     def __init__(self):
-        self.platform_name = "AS1348f8h"
+        self.platform_name = "AS1440D"
         self.bmc_info_uri = "/".join([self.BMC_REQ_BASE_URI, "bmc/info"])
         self.bmc_nextboot_uri = "/".join([self.BMC_REQ_BASE_URI, "bmc/nextboot"])
         self.bmc_reboot_uri = "/".join([self.BMC_REQ_BASE_URI, "bmc/reboot"])
