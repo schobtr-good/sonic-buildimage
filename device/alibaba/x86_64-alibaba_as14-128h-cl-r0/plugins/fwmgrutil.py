@@ -653,8 +653,10 @@ class FwMgrUtil():
 
                 # Set fw_extra
                 fw_extra_str = {
-                    "TOP_LC_CPLD": "top_lc",
-                    "BOT_LC_CPLD": "bottom_lc",
+                    "TOP_LC_CPLD1": "top_lc",
+                    "TOP_LC_CPLD2": "top_lc",
+                    "BOT_LC_CPLD1": "bottom_lc",
+                    "BOT_LC_CPLD2": "bottom_lc",$
                     "FAN_CPLD": "fan",
                     "CPU_CPLD": "cpu",
                     "BASE_CPLD": "base",
@@ -691,9 +693,7 @@ class FwMgrUtil():
 
                     # Install cpld image via ispvm tool
                     print("Installing...")
-                    # +++ add by maxwill for cpld upgrade index +++ #
-                    index = int(cpld_chnl_index[str(fw_extra).upper()])
-                    command = 'ispvm -i %d %s' % (index, fw_path)
+                    command = 'ispvm %s' % (fw_path)
                     if fw_extra_str in ["top_lc", "bottom_lc"]:
                         option = 1 if fw_extra_str == "top_lc" else 2
                         command = "ispvm -c %d %s" % (option,
