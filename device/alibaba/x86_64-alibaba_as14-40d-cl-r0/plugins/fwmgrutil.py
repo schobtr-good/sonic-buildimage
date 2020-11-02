@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+#test test
 
 import subprocess
 import requests
@@ -653,8 +653,10 @@ class FwMgrUtil():
 
                 # Set fw_extra
                 fw_extra_str = {
-                    "TOP_LC_CPLD": "top_lc",
-                    "BOT_LC_CPLD": "bottom_lc",
+                    "TOP_LC_CPLD1": "top_lc",
+                    "TOP_LC_CPLD2": "top_lc",
+                    "BOT_LC_CPLD1": "bottom_lc",
+                    "BOT_LC_CPLD2": "bottom_lc",
                     "FAN_CPLD": "fan",
                     "CPU_CPLD": "cpu",
                     "BASE_CPLD": "base",
@@ -667,8 +669,13 @@ class FwMgrUtil():
                 cpld_chnl_index = {
                       "BASE_CPLD": 0,
                       "CPU_CPLD": 1,
-                      "SW_CPLD": 3,
-                      "FAN_CPLD": 2
+                      "SW_CPLD1": 3,
+                      "SW_CPLD2": 3,
+                      "FAN_CPLD": 2,
+                      "TOP_LC_CPLD1": 4,
+                      "TOP_LC_CPLD2": 4,
+                      "BOT_LC_CPLD1": 5,
+                      "BOT_LC_CPLD2": 5,
                 }
 
                 self.__update_fw_upgrade_logger(
