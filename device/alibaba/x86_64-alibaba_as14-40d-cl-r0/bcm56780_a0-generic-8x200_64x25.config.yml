@@ -516,7 +516,7 @@ device:
             ?
                 PORT_ID: 11
             :
-                PC_PHYS_PORT_ID: 19
+                PC_PHYS_PORT_ID: 18
             ?
                 PORT_ID: 6
             :
@@ -524,7 +524,7 @@ device:
             ?
                 PORT_ID: 12
             :
-                PC_PHYS_PORT_ID: 23
+                PC_PHYS_PORT_ID: 22
             ?
                 PORT_ID: 9
             :
@@ -532,7 +532,7 @@ device:
             ?
                 PORT_ID: 13
             :
-                PC_PHYS_PORT_ID: 35
+                PC_PHYS_PORT_ID: 34
             ?
                 PORT_ID: 24
             :
@@ -540,7 +540,7 @@ device:
             ?
                 PORT_ID: 30
             :
-                PC_PHYS_PORT_ID: 59
+                PC_PHYS_PORT_ID: 58
             ?
                 PORT_ID: 10
             :
@@ -548,7 +548,7 @@ device:
             ?
                 PORT_ID: 14
             :
-                PC_PHYS_PORT_ID: 39
+                PC_PHYS_PORT_ID: 38
             ?
                 PORT_ID: 25
             :
@@ -556,7 +556,7 @@ device:
             ?
                 PORT_ID: 31
             :
-                PC_PHYS_PORT_ID: 63
+                PC_PHYS_PORT_ID: 62
             ?
                 PORT_ID: 22
             :
@@ -564,7 +564,7 @@ device:
             ?
                 PORT_ID: 32
             :
-                PC_PHYS_PORT_ID: 51
+                PC_PHYS_PORT_ID: 50
             ?
                 PORT_ID: 28
             :
@@ -572,7 +572,7 @@ device:
             ?
                 PORT_ID: 33
             :
-                PC_PHYS_PORT_ID: 75
+                PC_PHYS_PORT_ID: 74
             ?
                 PORT_ID: 23
             :
@@ -580,7 +580,7 @@ device:
             ?
                 PORT_ID: 34
             :
-                PC_PHYS_PORT_ID: 55
+                PC_PHYS_PORT_ID: 54
             ?
                 PORT_ID: 29
             :
@@ -588,7 +588,7 @@ device:
             ?
                 PORT_ID: 35
             :
-                PC_PHYS_PORT_ID: 79
+                PC_PHYS_PORT_ID: 78
             ?
                 PORT_ID: 26
             :
@@ -596,7 +596,7 @@ device:
             ?
                 PORT_ID: 36
             :
-                PC_PHYS_PORT_ID: 67
+                PC_PHYS_PORT_ID: 66
             ?
                 PORT_ID: 27
             :
@@ -604,7 +604,7 @@ device:
             ?
                 PORT_ID: 37
             :
-                PC_PHYS_PORT_ID: 71
+                PC_PHYS_PORT_ID: 70
             ?
                 PORT_ID: 42
             :
@@ -612,7 +612,7 @@ device:
             ?
                 PORT_ID: 50
             :
-                PC_PHYS_PORT_ID: 91
+                PC_PHYS_PORT_ID: 90
             ?
                 PORT_ID: 43
             :
@@ -620,7 +620,7 @@ device:
             ?
                 PORT_ID: 51
             :
-                PC_PHYS_PORT_ID: 95
+                PC_PHYS_PORT_ID: 94
             ?
                 PORT_ID: 46
             :
@@ -628,7 +628,7 @@ device:
             ?
                 PORT_ID: 52
             :
-                PC_PHYS_PORT_ID: 107
+                PC_PHYS_PORT_ID: 106
             ?
                 PORT_ID: 40
             :
@@ -636,7 +636,7 @@ device:
             ?
                 PORT_ID: 53
             :
-                PC_PHYS_PORT_ID: 83
+                PC_PHYS_PORT_ID: 82
             ?
                 PORT_ID: 47
             :
@@ -644,7 +644,7 @@ device:
             ?
                 PORT_ID: 54
             :
-                PC_PHYS_PORT_ID: 111
+                PC_PHYS_PORT_ID: 110
             ?
                 PORT_ID: 41
             :
@@ -652,7 +652,7 @@ device:
             ?
                 PORT_ID: 55
             :
-                PC_PHYS_PORT_ID: 87
+                PC_PHYS_PORT_ID: 86
             ?
                 PORT_ID: 60
             :
@@ -660,7 +660,7 @@ device:
             ?
                 PORT_ID: 70
             :
-                PC_PHYS_PORT_ID: 123
+                PC_PHYS_PORT_ID: 122
             ?
                 PORT_ID: 44
             :
@@ -668,7 +668,7 @@ device:
             ?
                 PORT_ID: 56
             :
-                PC_PHYS_PORT_ID: 99
+                PC_PHYS_PORT_ID: 98
             ?
                 PORT_ID: 61
             :
@@ -676,7 +676,7 @@ device:
             ?
                 PORT_ID: 71
             :
-                PC_PHYS_PORT_ID: 127
+                PC_PHYS_PORT_ID: 126
             ?
                 PORT_ID: 45
             :
@@ -684,7 +684,7 @@ device:
             ?
                 PORT_ID: 57
             :
-                PC_PHYS_PORT_ID: 103
+                PC_PHYS_PORT_ID: 102
             ?
                 PORT_ID: 64
             :
@@ -692,7 +692,7 @@ device:
             ?
                 PORT_ID: 72
             :
-                PC_PHYS_PORT_ID: 143
+                PC_PHYS_PORT_ID: 142
             ?
                 PORT_ID: 65
             :
@@ -700,7 +700,7 @@ device:
             ?
                 PORT_ID: 73
             :
-                PC_PHYS_PORT_ID: 139
+                PC_PHYS_PORT_ID: 138
             ?
                 PORT_ID: 48
             :
@@ -838,7 +838,7 @@ device:
                 TX_POST3_AUTO: 0
             ?
                 PORT_ID: [1,2,3,4,15,16,17,18,66,67,68,69,74,75,76,77]
-                LANE_INDEX: [0, 1]
+                LANE_INDEX: [0]
             :
                 TX_SIG_MODE: PC_SIG_MODE_NRZ 
                 TX_SIG_MODE_AUTO: 0
@@ -864,7 +864,7 @@ device:
                 TX_POST3_AUTO: 0
             ?
                 PORT_ID: [5,11,6,9,24,10,12,13,14,30,64,65,72,73]
-                LANE_INDEX: [0, 1]
+                LANE_INDEX: [0]
             :
                 TX_SIG_MODE: PC_SIG_MODE_NRZ 
                 TX_SIG_MODE_AUTO: 0
@@ -891,7 +891,7 @@ device:
             ?
                 PORT_ID: [25,22,28,23,29,26,27,42,43,46,40,47,41,60,44,61,45,
                           31,32,33,34,35,36,37,50,51,52,53,54,55,70,56,71,57]
-                LANE_INDEX: [0, 1]
+                LANE_INDEX: [0]
             :
                 TX_SIG_MODE: PC_SIG_MODE_NRZ 
                 TX_SIG_MODE_AUTO: 0
