@@ -5,7 +5,7 @@ try:
 except ImportError, e:
     raise ImportError (str(e) + " - required module not find!")
 
-FWMGR_PY_PATH = "/usr/share/sonic/device/x86_64-alibaba_as14-40d-cl-r0/plugins/fwmgrutil.py"
+FWMGR_PY_PATH = "/usr/share/sonic/device/x86_64-alibaba_as24-128d-cl-r0/plugins/fwmgrutil.py"
 FWMGR_MODULE_NAME = "fwmgrutil"
 FWMGR_CLASS_NAME = "FwMgrUtil"
 
