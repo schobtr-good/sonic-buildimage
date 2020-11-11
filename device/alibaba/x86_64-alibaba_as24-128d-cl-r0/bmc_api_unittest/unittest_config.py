@@ -3,7 +3,7 @@
 # unittest configuration
 import os
 
-TEST_DIR = '/home/admin/api_unittest'
+TEST_DIR = '/usr/share/sonic/device/x86_64-alibaba_as24-128d-cl-r0/bmc_api_unittest'
 TEST_DIR1 = '/usr/lib/python2.7/dist-packages/api_unittest'
 TEST_DIR = TEST_DIR if os.path.exists(TEST_DIR) else TEST_DIR1
 SKIP_REBOOT_CPU = True

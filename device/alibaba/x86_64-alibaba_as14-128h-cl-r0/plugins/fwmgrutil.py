@@ -656,7 +656,7 @@ class FwMgrUtil():
                     "TOP_LC_CPLD1": "top_lc",
                     "TOP_LC_CPLD2": "top_lc",
                     "BOT_LC_CPLD1": "bottom_lc",
-                    "BOT_LC_CPLD2": "bottom_lc",$
+                    "BOT_LC_CPLD2": "bottom_lc",
                     "FAN_CPLD": "fan",
                     "CPU_CPLD": "cpu",
                     "BASE_CPLD": "base",
