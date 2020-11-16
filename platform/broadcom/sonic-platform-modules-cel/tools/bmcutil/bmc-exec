@@ -33,7 +33,7 @@ run_cmd() {
     if [ -z "$ret" ]; then
         echo "Failed to connect on BMC"
     else
-        echo $ret | python -c "import sys, json; k = json.load(sys.stdin)['result']; print k if type(k) is not list else '\n'.join(k);"
+        echo $ret | python -c "import sys, json; k = json.load(sys.stdin)['data']; print k if type(k) is not list else '\n'.join(k);"
     fi
     return 0
 }
