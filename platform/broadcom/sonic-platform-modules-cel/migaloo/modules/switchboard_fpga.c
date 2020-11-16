@@ -2195,11 +2195,6 @@ static int smbus_access(struct i2c_adapter *adapter, u16 addr,
     REG_STAT   = I2C_MASTER_STATUS  + (master_bus - 1) * 0x20;
     REG_DATA   = I2C_MASTER_DATA    + (master_bus - 1) * 0x20;
 
-    /* +++ add by maxwill for test +++ */
-    if (master_bus == I2C_MASTER_CH_7)
-        printk("mh access CH_7, REG_FREQ_L=0x%x REG_FREQ_H=0x%x REG_CTRL=0x%x REG_CMD=0x%x \n", REG_FREQ_L, REG_FREQ_H, REG_CTRL, REG_CMD);
-    /* --- add by maxwill for test  --- */
-
     ////[S][ADDR/R]
     if (rw == I2C_SMBUS_READ &&
             (size == I2C_SMBUS_QUICK || size == I2C_SMBUS_BYTE)) {
