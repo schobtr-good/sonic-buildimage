@@ -74,7 +74,7 @@ CPLDTEST_CLS = {
                                 "SW_CPLD2": "as24-128d_cpld_5_cpu_pwr.vme",
                                 "TOP_LC_CPLD1": "as24-128d_cpld_6_cpu_pwr.vme",
                                 "TOP_LC_CPLD2": "as24-128d_cpld_7_cpu_pwr.vme",
-                                "BOT_LC_CPLD1": "as24-128d_cpld_8_cpu_pwr.vme"
+                                "BOT_LC_CPLD1": "as24-128d_cpld_8_cpu_pwr.vme",
                                 "BOT_LC_CPLD2": "as24-128d_cpld_9_cpu_pwr.vme"},
 
                     "refresh": {"FAN_CPLD": "as24-128d_cpld_1_transfr_bmc.vme",
