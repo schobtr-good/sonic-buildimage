@@ -72,7 +72,7 @@ CPLDTEST_CLS = {
                                 "CPU_CPLD": "as14-128h_cpld_3_cpu_pwr.vme",
                                 "TOP_LC_CPLD1": "as14-128h_cpld_4_cpu_pwr.vme",
                                 "TOP_LC_CPLD2": "as14-128h_cpld_5_cpu_pwr.vme",
-                                "BOT_LC_CPLD1": "as14-128h_cpld_6_cpu_pwr.vme"
+                                "BOT_LC_CPLD1": "as14-128h_cpld_6_cpu_pwr.vme",
                                 "BOT_LC_CPLD2": "as14-128h_cpld_7_cpu_pwr.vme"},
 
                     "refresh": {"FAN_CPLD": "as14-128h_cpld_1_transfr_bmc.vme",
