@@ -1,5 +1,5 @@
 #
-# BCM56780 16x200G+48x100g(PAM4)  port configuration.
+# BCM56780 16x100G+48x50g port configuration.
 #
 # configuration yaml file
 #   device:
@@ -728,11 +728,11 @@ device:
                           48,49,62,63,
                           [66,69]]
             :
-                &port_mode_200g
+                &port_mode_100g
                 ENABLE: 0
-                SPEED: 200000
+                SPEED: 100000
                 NUM_LANES: 4
-                FEC_MODE: PC_FEC_RS544_2XN
+                FEC_MODE: PC_FEC_RS528
                 MAX_FRAME_SIZE: 9416
             ?
                 PORT_ID: [5,6,
@@ -743,11 +743,11 @@ device:
                           60,61,64,65,
                           [70,73]]
             :
-                &port_mode_100g
+                &port_mode_50g
                 ENABLE: 0
-                SPEED: 100000
+                SPEED: 50000
                 NUM_LANES: 2
-                FEC_MODE: PC_FEC_RS544
+                FEC_MODE: PC_FEC_RS528
                 MAX_FRAME_SIZE: 9416
             ?
                 PORT_ID: [38,     # Management port 0 (Pipe 1)
@@ -764,21 +764,21 @@ device:
     0:
         PC_TX_TAPS:
             ?
-                PORT_ID: [1,2,3,4,66,67,68,69]
+                PORT_ID: [3,4,1,2,7,62,63,68,69,66,67]
                 LANE_INDEX: [0, 1, 2, 3]
             :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
+                TX_SIG_MODE: PC_SIG_MODE_NRZ 
                 TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
+                TXFIR_TAP_MODE: PC_TXFIR_NRZ_TAPS_6 
                 TXFIR_TAP_MODE_AUTO: 0
                 TX_PRE_SIGN: 1
-                TX_PRE: 12
+                TX_PRE: 6
                 TX_PRE_AUTO: 0
                 TX_MAIN_SIGN: 0
-                TX_MAIN: 136
+                TX_MAIN: 86
                 TX_MAIN_AUTO: 0
                 TX_POST_SIGN: 1
-                TX_POST: 12
+                TX_POST: 16
                 TX_POST_AUTO: 0
                 TX_PRE2_SIGN: 0
                 TX_PRE2: 0
@@ -790,21 +790,21 @@ device:
                 TX_POST3: 0
                 TX_POST3_AUTO: 0
             ?
-                PORT_ID: [7,8,20,21,48,49,62,63]
+                PORT_ID: [8,20,21,48,49]
                 LANE_INDEX: [0, 1, 2, 3]
             :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
+                TX_SIG_MODE: PC_SIG_MODE_NRZ 
                 TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
+                TXFIR_TAP_MODE: PC_TXFIR_NRZ_TAPS_6 
                 TXFIR_TAP_MODE_AUTO: 0
                 TX_PRE_SIGN: 1
                 TX_PRE: 8
                 TX_PRE_AUTO: 0
                 TX_MAIN_SIGN: 0
-                TX_MAIN: 116
+                TX_MAIN: 84
                 TX_MAIN_AUTO: 0
                 TX_POST_SIGN: 1
-                TX_POST: 4
+                TX_POST: 8
                 TX_POST_AUTO: 0
                 TX_PRE2_SIGN: 0
                 TX_PRE2: 0
@@ -816,24 +816,24 @@ device:
                 TX_POST3: 0
                 TX_POST3_AUTO: 0
             ?
-                PORT_ID: [5,11,6,12,24,64,72,65,73]
+                PORT_ID: [5,11,6,9,24,10,12,13,14,30,64,65,72,73]
                 LANE_INDEX: [0, 1]
             :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
+                TX_SIG_MODE: PC_SIG_MODE_NRZ 
                 TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
+                TXFIR_TAP_MODE: PC_TXFIR_NRZ_TAPS_6 
                 TXFIR_TAP_MODE_AUTO: 0
                 TX_PRE_SIGN: 1
-                TX_PRE: 32
+                TX_PRE: 8
                 TX_PRE_AUTO: 0
                 TX_MAIN_SIGN: 0
-                TX_MAIN: 128
+                TX_MAIN: 84
                 TX_MAIN_AUTO: 0
-                TX_POST_SIGN: 0
-                TX_POST: 0
+                TX_POST_SIGN: 1
+                TX_POST: 8
                 TX_POST_AUTO: 0
                 TX_PRE2_SIGN: 0
-                TX_PRE2: 6
+                TX_PRE2: 0
                 TX_PRE2_AUTO: 0
                 TX_POST2_SIGN: 0
                 TX_POST2: 0
@@ -842,154 +842,25 @@ device:
                 TX_POST3: 0
                 TX_POST3_AUTO: 0
             ?
-                PORT_ID: [9,13,30,10,14,25,31,22,32,23,47,54,41,55,60,70,44,56,61,71,45,57]
+                PORT_ID: [25,22,28,23,29,26,27,42,43,46,40,47,41,60,44,61,45,
+                          31,32,33,34,35,36,37,50,51,52,53,54,55,70,56,71,57]
                 LANE_INDEX: [0, 1]
             :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
+                TX_SIG_MODE: PC_SIG_MODE_NRZ 
                 TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
+                TXFIR_TAP_MODE: PC_TXFIR_NRZ_TAPS_6 
                 TXFIR_TAP_MODE_AUTO: 0
                 TX_PRE_SIGN: 1
-                TX_PRE: 28
+                TX_PRE: 4
                 TX_PRE_AUTO: 0
                 TX_MAIN_SIGN: 0
-                TX_MAIN: 132
+                TX_MAIN: 76
                 TX_MAIN_AUTO: 0
-                TX_POST_SIGN: 0
-                TX_POST: 0
+                TX_POST_SIGN: 1
+                TX_POST: 6
                 TX_POST_AUTO: 0
                 TX_PRE2_SIGN: 0
-                TX_PRE2: 6
-                TX_PRE2_AUTO: 0
-                TX_POST2_SIGN: 0
-                TX_POST2: 0
-                TX_POST2_AUTO: 0
-                TX_POST3_SIGN: 0
-                TX_POST3: 0
-                TX_POST3_AUTO: 0
-            ?
-                PORT_ID: [33]
-                LANE_INDEX: [1]
-            :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
-                TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
-                TXFIR_TAP_MODE_AUTO: 0
-                TX_PRE_SIGN: 1
-                TX_PRE: 28
-                TX_PRE_AUTO: 0
-                TX_MAIN_SIGN: 0
-                TX_MAIN: 132
-                TX_MAIN_AUTO: 0
-                TX_POST_SIGN: 0
-                TX_POST: 0
-                TX_POST_AUTO: 0
-                TX_PRE2_SIGN: 0
-                TX_PRE2: 6
-                TX_PRE2_AUTO: 0
-                TX_POST2_SIGN: 0
-                TX_POST2: 0
-                TX_POST2_AUTO: 0
-                TX_POST3_SIGN: 0
-                TX_POST3: 0
-                TX_POST3_AUTO: 0
-            ?
-                PORT_ID: [33]
-                LANE_INDEX: [0]
-            :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
-                TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
-                TXFIR_TAP_MODE_AUTO: 0
-                TX_PRE_SIGN: 1
-                TX_PRE: 20
-                TX_PRE_AUTO: 0
-                TX_MAIN_SIGN: 0
-                TX_MAIN: 144
-                TX_MAIN_AUTO: 0
-                TX_POST_SIGN: 0
-                TX_POST: 0
-                TX_POST_AUTO: 0
-                TX_PRE2_SIGN: 0
-                TX_PRE2: 2
-                TX_PRE2_AUTO: 0
-                TX_POST2_SIGN: 0
-                TX_POST2: 0
-                TX_POST2_AUTO: 0
-                TX_POST3_SIGN: 0
-                TX_POST3: 0
-                TX_POST3_AUTO: 0
-            ?
-                PORT_ID: [28,34,29,35,36,27,37,42,50,43,51,46,52,40,53]
-                LANE_INDEX: [0, 1]
-            :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
-                TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
-                TXFIR_TAP_MODE_AUTO: 0
-                TX_PRE_SIGN: 1
-                TX_PRE: 20
-                TX_PRE_AUTO: 0
-                TX_MAIN_SIGN: 0
-                TX_MAIN: 144
-                TX_MAIN_AUTO: 0
-                TX_POST_SIGN: 0
-                TX_POST: 0
-                TX_POST_AUTO: 0
-                TX_PRE2_SIGN: 0
-                TX_PRE2: 2
-                TX_PRE2_AUTO: 0
-                TX_POST2_SIGN: 0
-                TX_POST2: 0
-                TX_POST2_AUTO: 0
-                TX_POST3_SIGN: 0
-                TX_POST3: 0
-                TX_POST3_AUTO: 0
-            ?
-                PORT_ID: [26]
-                LANE_INDEX: [0]
-            :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
-                TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
-                TXFIR_TAP_MODE_AUTO: 0
-                TX_PRE_SIGN: 1
-                TX_PRE: 28
-                TX_PRE_AUTO: 0
-                TX_MAIN_SIGN: 0
-                TX_MAIN: 132
-                TX_MAIN_AUTO: 0
-                TX_POST_SIGN: 0
-                TX_POST: 0
-                TX_POST_AUTO: 0
-                TX_PRE2_SIGN: 0
-                TX_PRE2: 6
-                TX_PRE2_AUTO: 0
-                TX_POST2_SIGN: 0
-                TX_POST2: 0
-                TX_POST2_AUTO: 0
-                TX_POST3_SIGN: 0
-                TX_POST3: 0
-                TX_POST3_AUTO: 0
-            ?
-                PORT_ID: [26]
-                LANE_INDEX: [1]
-            :
-                TX_SIG_MODE: PC_SIG_MODE_PAM4
-                TX_SIG_MODE_AUTO: 0
-                TXFIR_TAP_MODE: PC_TXFIR_PAM4_TAPS_6
-                TXFIR_TAP_MODE_AUTO: 0
-                TX_PRE_SIGN: 1
-                TX_PRE: 20
-                TX_PRE_AUTO: 0
-                TX_MAIN_SIGN: 0
-                TX_MAIN: 144
-                TX_MAIN_AUTO: 0
-                TX_POST_SIGN: 0
-                TX_POST: 0
-                TX_POST_AUTO: 0
-                TX_PRE2_SIGN: 0
-                TX_PRE2: 2
+                TX_PRE2: 0
                 TX_PRE2_AUTO: 0
                 TX_POST2_SIGN: 0
                 TX_POST2: 0
