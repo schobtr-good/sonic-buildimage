@@ -102,4 +102,15 @@ CPLDTEST_CLS = {
                                 "CPU_CPLD": "None",
                                 "TOP_LC_CPLD": "None",
                                 "BOT_LC_CPLD": "None"}},
+    "as14-40d" : { "program": {"FAN_CPLD": "as14-40d_cpld_1_cpu_pwr.vme",
+                                "BASE_CPLD": "as14-40d_cpld_2_cpu_pwr.vme",
+                                "CPU_CPLD": "as14-40d_cpld_3_cpu_pwr.vme",
+                                "SW_CPLD1": "as14-40d_cpld_4_cpu_pwr.vme",
+                                "SW_CPLD2": "as14-40d_cpld_5_cpu_pwr.vme"},
+
+                    "refresh": {"FAN_CPLD": "as14-40d_cpld_1_transfr_bmc.vme",
+                                "BASE_CPLD": "as14-40d_cpld_2_transfr_bmc.vme",
+                                "CPU_CPLD": "None",
+                                "SW_CPLD1": "None",
+                                "SW_CPLD2": "None"}},
 }
