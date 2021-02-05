@@ -11,8 +11,7 @@ BMC api auto test framework
         FAN_CPLD = '/home/admin/img/as*_cpld_1_cpu_pwr.vme'
         BASE_CPLD = '/home/admin/img/as*_cpld_2_cpu_pwr.vme'
         CPU_CPLD = '/home/admin/img/as*_cpld_3_cpu_pwr.vme'
-        SW_CPLD1 = '/home/admin/img/as*_cpld_4_cpu_pwr.vme'
-        SW_CPLD2 = '/home/admin/img/as*_cpld_5_cpu_pwr.vme'
+        SW_CPLD = '/home/admin/img/as*_cpld_4_cpu_pwr.vme'
         FAN_CPLD_REFRESH = '/home/admin/img/as*_cpld_1_transfr_bmc.vme'
         BASE_CPLD_REFRESH = '/home/admin/img/as*_cpld_2_transfr_bmc.vme'
 
@@ -42,21 +41,6 @@ BMC api auto test framework
 
                 export BMC_TEST_PLATFORM=CEL    
                 ./api_unittest --run-tests test_fwmgrutil_refresh.TestFirmwareRefreshUtil.test_firmware_refresh_bios
-
-                export BMC_TEST_PLATFORM=CEL     
-                ./api_unittest --run-tests test_fwmgrutil_refresh.TestFirmwareRefreshUtil.test_firmware_refresh_cpu_cpld   
-
-                export BMC_TEST_PLATFORM=CEL    
-                ./api_unittest --run-tests test_fwmgrutil_refresh.TestFirmwareRefreshUtil.test_firmware_refresh_fan_cpld     
-
-                export BMC_TEST_PLATFORM=CEL                                  
-                ./api_unittest --run-tests test_fwmgrutil_refresh.TestFirmwareRefreshUtil.test_firmware_refresh_base_cpld  
-                      
-                export BMC_TEST_PLATFORM=CEL  
-                ./api_unittest --run-tests test_fwmgrutil_refresh.TestFirmwareRefreshUtil.test_firmware_refresh_cpld1  
-
-                export BMC_TEST_PLATFORM=CEL        
-                ./api_unittest --run-tests test_fwmgrutil_refresh.TestFirmwareRefreshUtil.test_firmware_refresh_cpld2     
 
                 export BMC_TEST_PLATFORM=CEL  
                 ./api_unittest --run-tests test_fwmgrutil_refresh.TestFirmwareRefreshUtil.test_firmware_refresh_cpld

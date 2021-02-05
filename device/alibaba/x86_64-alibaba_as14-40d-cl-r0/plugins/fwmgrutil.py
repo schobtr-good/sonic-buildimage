@@ -653,29 +653,23 @@ class FwMgrUtil():
 
                 # Set fw_extra
                 fw_extra_str = {
-                    "TOP_LC_CPLD1": "top_lc",
-                    "TOP_LC_CPLD2": "top_lc",
-                    "BOT_LC_CPLD1": "bottom_lc",
-                    "BOT_LC_CPLD2": "bottom_lc",
+                    "TOP_LC_CPLD": "top_lc",
+                    "BOT_LC_CPLD": "bottom_lc",
                     "FAN_CPLD": "fan",
                     "CPU_CPLD": "cpu",
                     "BASE_CPLD": "base",
                     "COMBO_CPLD": "combo",
-                    "SW_CPLD1": "switch",
-                    "SW_CPLD2": "switch"
+                    "SW_CPLD": "switch",
                 }.get(fw_extra_str, None)
 
                 # +++ add by maxwill for cpld upgrade index +++ #
                 cpld_chnl_index = {
-                      "BASE_CPLD": 0,
-                      "CPU_CPLD": 1,
-                      "SW_CPLD1": 3,
-                      "SW_CPLD2": 3,
-                      "FAN_CPLD": 2,
-                      "TOP_LC_CPLD1": 4,
-                      "TOP_LC_CPLD2": 4,
-                      "BOT_LC_CPLD1": 5,
-                      "BOT_LC_CPLD2": 5,
+                      "BASE": 0,
+                      "CPU": 1,
+                      "SWITCH": 3,
+                      "FAN": 2,
+                      "TOP_LC": 4,
+                      "BOTTOM_LC": 5,
                 }
 
                 self.__update_fw_upgrade_logger(
@@ -700,11 +694,11 @@ class FwMgrUtil():
                     print("Installing...")
                     
                     # +++ add by maxwill for cpld upgrade index +++ #
-                    index = int(cpld_chnl_index[str(fw_extra).upper()])
+                    index = int(cpld_chnl_index[str(fw_extra_str).upper()])
                     command = 'ispvm -i %d %s' % (index, fw_path)
                     if fw_extra_str in ["top_lc", "bottom_lc"]:
                         option = 1 if fw_extra_str == "top_lc" else 2
-                        command = "ispvm -c %d %s" % (option,
+                        command = "ispvm -i %d -c %d %s" % (index, option,
                                                       os.path.abspath(fw_path))
                     print("Running command : %s" % command)
                     process = subprocess.Popen(

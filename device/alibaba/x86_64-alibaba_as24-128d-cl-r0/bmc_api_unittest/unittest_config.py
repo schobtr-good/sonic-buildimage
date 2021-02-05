@@ -64,22 +64,21 @@ CPLDTEST = {
                                 "LC_CPLD2": "as23-128h_cpld_2_transfr_sub_bmc.vme"}},
     }
 
-
-
 CPLDTEST_CLS = {
     "as24-128d" : { "program": {"FAN_CPLD": "as24-128d_cpld_1_cpu_pwr.vme",
                                 "BASE_CPLD": "as24-128d_cpld_2_cpu_pwr.vme",
                                 "CPU_CPLD": "as24-128d_cpld_3_cpu_pwr.vme",
-                                "SW_CPLD1": "as24-128d_cpld_4_cpu_pwr.vme",
-                                "SW_CPLD2": "as24-128d_cpld_5_cpu_pwr.vme",
-                                "TOP_LC_CPLD1": "as24-128d_cpld_6_cpu_pwr.vme",
-                                "TOP_LC_CPLD2": "as24-128d_cpld_7_cpu_pwr.vme",
-                                "BOT_LC_CPLD1": "as24-128d_cpld_8_cpu_pwr.vme",
-                                "BOT_LC_CPLD2": "as24-128d_cpld_9_cpu_pwr.vme"},
+                                "SW_CPLD": "as24-128d_cpld_4_cpu_pwr.vme",
+                                "TOP_LC_CPLD": "as24-128d_cpld_5_cpu_pwr.vme",
+                                "BOT_LC_CPLD": "as24-128d_cpld_6_cpu_pwr.vme",
+                               },
 
                     "refresh": {"FAN_CPLD": "as24-128d_cpld_1_transfr_bmc.vme",
                                 "BASE_CPLD": "as24-128d_cpld_2_transfr_bmc.vme",
-                                "CPU_CPLD": "None",
+                                "CPU_CPLD": "as24-128d_cpld_3_transfr_bmc.vme",
+                                "SW_CPLD": "as24-128d_cpld_4_transfr_bmc.vme",
                                 "TOP_LC_CPLD": "None",
-                                "BOT_LC_CPLD": "None"}},
+                                "BOT_LC_CPLD": "None",
+                               },
+                 },
 }
