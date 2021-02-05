@@ -729,7 +729,7 @@ device:
                           [66,69]]
             :
                 &port_mode_200g
-                ENABLE: 0
+                ENABLE: 1
                 SPEED: 200000
                 NUM_LANES: 4
                 FEC_MODE: PC_FEC_RS544_2XN
@@ -744,7 +744,7 @@ device:
                           [70,73]]
             :
                 &port_mode_100g
-                ENABLE: 0
+                ENABLE: 1
                 SPEED: 100000
                 NUM_LANES: 2
                 FEC_MODE: PC_FEC_RS544
