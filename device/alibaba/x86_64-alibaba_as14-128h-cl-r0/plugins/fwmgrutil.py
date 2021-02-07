@@ -653,24 +653,23 @@ class FwMgrUtil():
 
                 # Set fw_extra
                 fw_extra_str = {
-                    "TOP_LC_CPLD1": "top_lc",
-                    "TOP_LC_CPLD2": "top_lc",
-                    "BOT_LC_CPLD1": "bottom_lc",
-                    "BOT_LC_CPLD2": "bottom_lc",
+                    "TOP_LC_CPLD": "top_lc",
+                    "BOT_LC_CPLD": "bottom_lc",
                     "FAN_CPLD": "fan",
                     "CPU_CPLD": "cpu",
                     "BASE_CPLD": "base",
                     "COMBO_CPLD": "combo",
-                    "SW_CPLD1": "switch",
-                    "SW_CPLD2": "switch"
+                    "SW_CPLD": "switch",
                 }.get(fw_extra_str, None)
 
                 # +++ add by maxwill for cpld upgrade index +++ #
                 cpld_chnl_index = {
-                      "BASE_CPLD": 0,
-                      "CPU_CPLD": 1,
-                      "SW_CPLD": 3,
-                      "FAN_CPLD": 2
+                      "BASE": 0,
+                      "CPU": 1,
+                      "SWITCH": 3,
+                      "FAN": 2,
+                      "TOP_LC": 4,
+                      "BOTTOM_LC": 5,
                 }
 
                 self.__update_fw_upgrade_logger(
