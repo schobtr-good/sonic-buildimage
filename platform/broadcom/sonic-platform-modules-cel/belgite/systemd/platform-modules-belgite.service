@@ -1,0 +1,14 @@
+
+[Unit]
+Description=Celestica blegite platform modules
+After=local-fs.target
+Before=pmon.service
+
+[Service]
+Type=oneshot
+ExecStart=-/etc/init.d/platform-modules-belgite start
+ExecStop=-/etc/init.d/platform-modules-belgite stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

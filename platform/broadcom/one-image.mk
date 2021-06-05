@@ -35,7 +35,6 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(ACCTON_AS5812_54T_PLATFORM_MODULE) \
                                $(ACCTON_AS5835_54X_PLATFORM_MODULE) \
                                $(ACCTON_AS9716_32D_PLATFORM_MODULE) \
-                               $(ACCTON_AS9726_32D_PLATFORM_MODULE) \
                                $(ACCTON_AS5835_54T_PLATFORM_MODULE) \
                                $(ACCTON_AS7312_54XS_PLATFORM_MODULE) \
                                $(ACCTON_AS7315_27XB_PLATFORM_MODULE) \
@@ -47,6 +46,7 @@ $(SONIC_ONE_IMAGE)_LAZY_INSTALLS += $(DELL_S6000_PLATFORM_MODULE) \
                                $(CEL_DX010_PLATFORM_MODULE) \
                                $(CEL_HALIBURTON_PLATFORM_MODULE) \
                                $(CEL_SEASTONE2_PLATFORM_MODULE) \
+                               $(CEL_BELGITE_PLATFORM_MODULE) \
                                $(DELTA_AG9032V1_PLATFORM_MODULE) \
                                $(DELTA_AG9064_PLATFORM_MODULE) \
                                $(DELTA_AG5648_PLATFORM_MODULE) \
