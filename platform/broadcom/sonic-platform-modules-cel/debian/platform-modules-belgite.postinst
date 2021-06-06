@@ -1,0 +1,10 @@
+depmod -a
+systemctl enable platform-modules-belgite.service
+systemctl enable fancontrol.service
+
+systemctl start platform-modules-belgite.service
+systemctl start fancontrol.service
+
+/usr/local/bin/platform_api_mgnt.sh install
+sudo chmod +x /usr/local/bin/udev_prefix.sh
+sudo chmod +x /usr/local/bin/popmsg.sh

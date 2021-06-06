@@ -1,0 +1,115 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          setup-board
+# Required-Start:    $portmap
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:     S
+# Default-Stop:      0 6
+# Short-Description: Setup Haliburton board.
+### END INIT INFO
+
+case "$1" in
+start)
+
+	echo -n "Setting up board... "
+
+        modprobe smc
+        sleep 0.1
+        modprobe i2c-dev
+        sleep 0.1
+        rmmod i2c-i801
+        sleep 0.1
+        rmmod i2c-ismt
+        sleep 0.1
+        rmmod i2c-mux-954x
+        sleep 0.1
+        modprobe i2c-i801
+        sleep 0.1
+        modprobe i2c-ismt
+        sleep 0.1
+        modprobe i2c-mux-954x force_deselect_on_exit=1
+        sleep 0.1
+        modprobe at24
+        sleep 0.1
+        #        modprobe hlx_gpio_ich
+        #modprobe dps200
+        modprobe optoe
+        #        modprobe cp210x
+
+        found=0
+       for devnum in 0 1; do
+                devname=`cat /sys/bus/i2c/devices/i2c-${devnum}/name`
+               # iSMT adapter can be at either dffd0000 or dfff0000
+                if [[ $devname == 'SMBus iSMT adapter at '* ]]; then
+                        found=1
+                break
+                fi
+        done
+
+        [ $found -eq 0 ] && echo "cannot find iSMT" && exit 1
+
+        i2cset -y ${devnum} 0x70 0x10 0x00 0x01 i
+
+         # Attach syseeprom
+        sleep 0.1
+        echo 24lc64t 0x52 > /sys/bus/i2c/devices/i2c-${devnum}/new_device
+        sleep 0.1
+        # Attach PCA9548 0x70 Channel Extender for CPU Board
+        echo pca9548 0x70 > /sys/bus/i2c/devices/i2c-${devnum}/new_device
+        sleep 0.1
+
+        let "devnum=$devnum+8"
+        # Attach PCA9541 Ox71 Master Selector
+        chmod 755 /sys/bus/i2c/devices/i2c-${devnum}/new_device
+        echo pca9548 0x71 > /sys/bus/i2c/devices/i2c-${devnum}/new_device
+        sleep 0.1
+
+        echo 24lc64t 0x53 > /sys/bus/i2c/devices/i2c-2/new_device
+        sleep 0.1
+        echo 24c02 0x50 > /sys/bus/i2c/devices/i2c-4/new_device
+        sleep 0.1
+        echo 24c02 0x51 > /sys/bus/i2c/devices/i2c-4/new_device
+        sleep 0.1
+        # Attach PSUs
+#        echo dps200 0x5a > /sys/bus/i2c/devices/i2c-12/new_device
+#        echo dps200 0x5b > /sys/bus/i2c/devices/i2c-13/new_device
+
+
+        # Attach 8 SFP+ Uplink
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-10/new_device
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-11/new_device
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-12/new_device
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-13/new_device
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-14/new_device
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-15/new_device
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-16/new_device
+        echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-17/new_device
+
+        # Enable SFP module presence interrupt
+#        echo "both" > /sys/devices/platform/e1031.smc/SFP/modabs_trig
+#        echo 0 > /sys/devices/platform/e1031.smc/SFP/modabs_mask
+
+#        /bin/sh /usr/local/bin/platform_api_mgnt.sh init
+
+
+        echo "done."
+        ;;
+
+stop)
+        echo "done."
+        ;;
+
+force-reload|restart)
+        echo "Not supported"
+        ;;
+
+*)
+        echo "Usage: /etc/init.d/platform-modules-belgite.init {start|stop}"
+        exit 1
+        ;;
+esac
+
+exit 0

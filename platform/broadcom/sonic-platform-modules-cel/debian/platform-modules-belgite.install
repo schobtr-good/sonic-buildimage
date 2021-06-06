@@ -1,0 +1,11 @@
+belgite/cfg/belgite-modules.conf etc/modules-load.d
+belgite/systemd/platform-modules-belgite.service lib/systemd/system
+belgite/script/fancontrol.sh etc/init.d
+belgite/script/fancontrol.service lib/systemd/system
+services/fancontrol/fancontrol  usr/local/bin
+belgite/modules/sonic_platform-1.0-py2-none-any.whl usr/share/sonic/device/x86_64-cel_belgite-r0
+belgite/modules/sonic_platform-1.0-py3-none-any.whl usr/share/sonic/device/x86_64-cel_belgite-r0
+services/platform_api/platform_api_mgnt.sh usr/local/bin
+belgite/script/popmsg.sh usr/local/bin
+belgite/script/udev_prefix.sh usr/local/bin
+belgite/script/50-ttyUSB-C0.rules etc/udev/rules.d
