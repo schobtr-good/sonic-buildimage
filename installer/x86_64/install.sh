@@ -373,6 +373,7 @@ demo_install_grub()
 }
 
 # Install UEFI BIOS GRUB for DEMO OS
+
 demo_install_uefi_grub()
 {
     local demo_mnt="$1"
@@ -398,6 +399,7 @@ demo_install_uefi_grub()
         exit 1
     }
 
+if [ -z "$onie_secure_boot" ]; then
     grub_install_log=$(mktemp)
     grub-install \
         --no-nvram \
@@ -412,8 +414,22 @@ demo_install_uefi_grub()
     }
     rm -f $grub_install_log
 
+    else
+	mkdir /boot/efi/EFI/$demo_volume_label/
+        cp /boot/efi/EFI/onie/* /boot/efi/EFI/$demo_volume_label/
+        uuid=$(blkid | grep $demo_volume_label | sed -ne 's/.* UUID=\"\([^"]*\)\".*/\1/p')
+        if [ -n "$uuid" ]; then
+            replaced_uuid=$(sed -n 's/^search.fs_uuid[ ]\+\([^ ]\+\).*/\1/p' /boot/efi/EFI/$demo_volume_label/grub.cfg)
+            sed -i "s/$replaced_uuid[ ]\+root.*/$uuid root/g" /boot/efi/EFI/$demo_volume_label/grub.cfg
+        else
+            echo "ERROR: can not find $demo_volume_label partition"
+            exit 1
+        fi
+    fi
+
     # Configure EFI NVRAM Boot variables.  --create also sets the
     # new boot number as active.
+    if [ -z "$onie_secure_boot" ]; then
     efibootmgr --quiet --create \
         --label "$demo_volume_label" \
         --disk $blk_dev --part $uefi_part \
@@ -421,6 +437,16 @@ demo_install_uefi_grub()
         echo "ERROR: efibootmgr failed to create new boot variable on: $blk_dev"
         exit 1
     }
+    else
+	efibootmgr --quiet --create \
+            --label "$demo_volume_label" \
+            --disk $blk_dev --part $uefi_part \
+            --loader "/EFI/$demo_volume_label/shimx64.efi" || {
+            echo "ERROR: efibootmgr failed to create new boot variable on: $blk_dev"
+            exit 1
+        }
+    fi
+
 
 }
 
@@ -618,7 +644,7 @@ else # install_env = "onie"
 fi
 
 cat <<EOF >> $grub_cfg
-menuentry '$demo_grub_entry' {
+menuentry '$demo_grub_entry' --unrestricted{
         search --no-floppy --label --set=root $demo_volume_label
         echo    'Loading $demo_volume_label $demo_type kernel ...'
         insmod gzio
@@ -638,6 +664,10 @@ if [ "$install_env" = "onie" ]; then
     # Add menu entries for ONIE -- use the grub fragment provided by the
     # ONIE distribution.
     $onie_root_dir/grub.d/50_onie_grub >> $grub_cfg
+    if [ -n "$onie_secure_boot" ]; then
+        sed -i 's/shimx64/grubx64/g'  $grub_cfg
+    fi
+
     mkdir -p $onie_initrd_tmp/$demo_mnt/grub
 else
 cat <<EOF >> $grub_cfg

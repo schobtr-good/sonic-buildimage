@@ -13,16 +13,18 @@ except ImportError as e:
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 1
-    PORT_END = 34
-    OSFP_PORT_START = 1
-    OSFP_PORT_END = 32
-    SFP_PORT_START = 33
-    SFP_PORT_END = 34
+    PORT_START = 0
+    PORT_END = 33
+    OSFP_PORT_START = 0
+    OSFP_PORT_END = 31
+    SFP_PORT_START = 32
+    SFP_PORT_END = 33
 
-    EEPROM_OFFSET = 9
-    PORT_INFO_PATH = '/sys/class/silverstone-x_fpga'
-
+    EEPROM_OFFSET = 12
+    QSFP_PORT_INFO_PATH = '/sys/class/SFF'
+    SFP_PORT_INFO_PATH = '/sys/devices/platform/fpga-xcvr'
+    PORT_INFO_PATH = QSFP_PORT_INFO_PATH
+	
     _port_name = ""
     _port_to_eeprom_mapping = {}
     _port_to_i2cbus_mapping = {}
@@ -74,18 +76,22 @@ class SfpUtil(SfpUtilBase):
             self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET)
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 x + self.EEPROM_OFFSET)
+            #print ("Nicholas eeprom path '%s'" % self.port_to_eeprom_mapping[x])
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
         # Check for invalid port_num
+        #print ("Nicholas port num '%d'" % port_num)
         if port_num not in range(self.port_start, self.port_end + 1):
             return False
 
         # Get path for access port presence status
         port_name = self.get_port_name(port_num)
+        #print ("Nicholas port '%s'" % port_name)
         sysfs_filename = "qsfp_modprs" if port_num in self.osfp_ports else "sfp_modabs"
+        self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.osfp_ports else self.SFP_PORT_INFO_PATH
         reg_path = "/".join([self.PORT_INFO_PATH, port_name, sysfs_filename])
-
+        #print ("Nicholas path '%s'" % reg_path)
         # Read status
         try:
             reg_file = open(reg_path)

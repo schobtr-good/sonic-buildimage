@@ -53,14 +53,20 @@
 				       ©À©¤©¤ getreg
 				       ©À©¤©¤ scratch
 				       ©À©¤©¤ setreg
-				       ©¸©¤©¤ version
+					   ©À©¤©¤ version
+					   ©À©¤©¤ port_led_mode	      # for qsfp1~16
+					   ©¸©¤©¤ port_led_color	  # for qsfp1~16
+
  
  SW CPLD2:
  /sys/bus/i2c/devices/9-0031
 				       ©À©¤©¤ getreg
 				       ©À©¤©¤ scratch
 				       ©À©¤©¤ setreg
-				       ©¸©¤©¤ version
+					   ©À©¤©¤ version
+					   ©À©¤©¤ port_led_mode	      # for qsfp17~32
+					   ©¸©¤©¤ port_led_color	  # for qsfp17~32
+
  *
  */
 
@@ -84,10 +90,17 @@
 	[_ch] = { .adap_id = _adap_id, .deselect_on_exit = _deselect }
 
 #define FPGA_PCIE_DEVICE_ID	0x7021
-#define FPGA_TYPE_ADDR		0x0C
 
-#define MMIO_BAR			0
-#define PCA9548_I2C_BUS_OFS		10
+#define FPGA_TYPE_ADDR		0x0C
+#define FPGA_OTHER_CR_ADDR  0x14
+
+#define BMC_PRESENT_BIT     0x08
+#define BMC_PRESENT         0x00    /* FPGA_OTHER_CR_ADDR bit8 0-bmc present 1-bmc absent*/
+
+#define FPGA_EXCLUDE_MIN_BUS    8      /* iic core 0-7 is share with BMC, 8 and 9 is for FPGA only, mask 0-7 when BMC is present*/
+
+#define MMIO_BAR			    0
+#define PCA9548_I2C_BUS_OFS		11 /* for SilverstoneX, 2 bus for COMe, 10 bus for FPGA, [0~11] */
 
 /* I2C ocore configurations */
 #define OCORE_REGSHIFT		2
@@ -227,8 +240,8 @@ static struct pca954x_platform_mode i2c_mux_72[] = {
 
 /* 33-sfp1 34-sfp2  35-LMK*/
 static struct pca954x_platform_mode i2c_mux_74[] = {
-	I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 33, true),
-	I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 34, true),
+	I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 33, true),
+	I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 34, true),
 	I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 35, true),
 	I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 36, true),
 	I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 37, true),
@@ -290,18 +303,12 @@ static struct resource cls_i2c_res_0[] = {
 	{
 		.start = 0x00010000, .end = 0x00010FFF,
 		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,}, 
 };
 
 /* Resource IOMEM for FPGA extened i2c bus 1 */
 static struct resource  cls_i2c_res_1[] = {
 	{
 		.start = 0x00011000, .end = 0x00011FFF,
-		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
 		.flags = IORESOURCE_MEM,}, 
 };
 
@@ -310,18 +317,12 @@ static struct resource  cls_i2c_res_2[] = {
 	{
 		.start = 0x00012000, .end = 0x00012FFF,
 		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,}, 
 };
 
 /* Resource IOMEM for FPGA extened i2c bus 3 */
 static struct  resource cls_i2c_res_3[] = {
 	{
 		.start = 0x00013000, .end = 0x00013FFF,
-		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
 		.flags = IORESOURCE_MEM,}, 
 };
 
@@ -330,18 +331,12 @@ static struct resource  cls_i2c_res_4[] = {
 	{
 		.start = 0x00014000, .end = 0x00014FFF,
 		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,}, 
 };
 
 /* Resource IOMEM for FPGA extened i2c bus 5 */
 static struct resource  cls_i2c_res_5[] = {
 	{
 		.start = 0x00015000, .end = 0x00015FFF,
-		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
 		.flags = IORESOURCE_MEM,}, 
 };
 
@@ -350,19 +345,13 @@ static struct resource  cls_i2c_res_6[] = {
 	{
 		.start = 0x00016000, .end = 0x00016FFF,
 		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,}, 
 };
 
 /* Resource IOMEM for FPGA extened i2c bus 7 */
 static struct resource  cls_i2c_res_7[] = {
 	{
 		.start = 0x00017000, .end = 0x00017FFF,
-		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,}, 
+		.flags = IORESOURCE_MEM,},  
 };
 
 /* Resource IOMEM for FPGA extened i2c bus 8 */
@@ -370,18 +359,12 @@ static struct resource  cls_i2c_res_8[] = {
 	{
 		.start = 0x00018000, .end = 0x00018FFF,
 		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,}, 
 };
 
 /* Resource IOMEM for FPGA extened i2c bus 9 */
 static struct resource  cls_i2c_res_9[] = {
 	{
 		.start = 0x00019000, .end = 0x00019FFF,
-		.flags = IORESOURCE_MEM,}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
 		.flags = IORESOURCE_MEM,}, 
 };
 
@@ -565,7 +548,8 @@ static struct cls_xcvr_platform_data xcvr_data[] = {
 static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 {	
 	int err;
-	int num_i2c_bus, i, ret, vector;
+	int num_i2c_bus, i = 0, ret, vector;
+	int bmc_present = 0;   /* 0-present 1-absent */
 	unsigned long rstart;
 	void __iomem *base_addr;
 	struct switchbrd_priv *priv;
@@ -574,8 +558,6 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	struct platform_device *xcvr_pdev;
 	//uint32_t fpga_type;
 	
-    printk("pci bus: %x \n",dev->bus->number);
-	printk("org dev irq is %d\n", dev->irq);
 	err = pci_enable_device(dev);
 	if (err){
 		dev_err(&dev->dev,  "Failed to enable PCI device\n");
@@ -596,8 +578,8 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		dev_err(&dev->dev,  "failed to allocate MSI entry\n");
 		goto err_unmap;
 	}
-	printk("msi irq is %d\n", dev->irq);
-#if 0
+
+#if 0 /* only one FPGA, so not to judge FPGA TYTE*/
 	fpga_type = ioread32(base_addr + FPGA_TYPE_ADDR);
 	printk("fpga Type:0x%8.8x\n",fpga_type);
 	if (fpga_type == FPGA_CMM_TYPE) {
@@ -605,15 +587,20 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		goto err_exit;
 	}
 #endif
+	bmc_present = (ioread32(base_addr + FPGA_OTHER_CR_ADDR) >> BMC_PRESENT_BIT) & 0x01;
+	if (bmc_present == BMC_PRESENT) {
+		printk("BMC present\n");
+	} else {
+		printk("BMC absent\n");
+	}
+
+
 	rstart = pci_resource_start(dev, MMIO_BAR);
 	if (!rstart) {
 		dev_err(&dev->dev, "Switchboard base address uninitialized, "
 			"check FPGA\n");
 		err = -ENODEV;
 		goto err_diable_msi;
-#if 0
-		goto err_free_vector;
-#endif
 	}
 
 	dev_dbg(&dev->dev, "BAR%d res: 0x%lx-0x%llx\n", MMIO_BAR, 
@@ -677,13 +664,17 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		goto err_unregister_fpga_dev;
 	}
 	printk("register xcvr node\n");
-
-	for(i = 0; i < num_i2c_bus; i++){
+	
+	if (bmc_present == BMC_PRESENT) {
+		i += FPGA_EXCLUDE_MIN_BUS;       /* skip share bus so there's no dual i2c masters situation */
+	} else {
+		i = 0;
+	}
+	for(; i < num_i2c_bus; i++){
 		/* override resource with MEM/IO resource offset */
 		i2c_bus_configs[i].res[0].start += rstart;
 		i2c_bus_configs[i].res[0].end += rstart;
-		i2c_bus_configs[i].res[1].start += rstart;
-		i2c_bus_configs[i].res[1].end += rstart;
+
 		/* all fpga i2c bus share pci device msi irq */
 		i2c_bus_configs[i].pdata.irq = dev->irq;
 		dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n",i2c_bus_configs[i].id, i2c_bus_configs[i].res[0].start, i2c_bus_configs[i].res[0].end);

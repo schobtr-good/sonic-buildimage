@@ -74,6 +74,23 @@ class Chassis(ChassisBase):
         """
         return self._eeprom.get_eeprom()
 
+    ##############################################################
+    ####################### Other methods ########################
+    ##############################################################
+
+    def get_watchdog(self):
+        """
+        Retreives hardware watchdog device on this chassis
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+        """
+        if self._watchdog is None:
+            from sonic_platform.watchdog import Watchdog
+            self._watchdog = Watchdog()
+
+        return self._watchdog
+
     def get_reboot_cause(self):
         """
         Retrieves the cause of the previous reboot

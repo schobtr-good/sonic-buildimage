@@ -36,7 +36,7 @@
 #define VERSION_ADDR 0xA100
 #define SCRATCH_ADDR 0xA101
 #define SYS_LED_ADDR 0xA162
-#define CPLD_REGISTER_SIZE 0x77
+#define CPLD_REGISTER_SIZE 0xA2
 
 struct cpld_b_data {
     struct mutex       cpld_lock;
@@ -243,6 +243,15 @@ static ssize_t sys_led_store(struct device *dev, struct device_attribute *devatt
     data = inb(SYS_LED_ADDR);
     data = data & ~(0x3);
     data = data | led_status;
+	
+    /* if bit[5:4] is not configured to 01(green) or 10(yellow), 
+    led will be off after set this filed */ 
+    if(led_status == 0x00 && (0x0 == (data >> 4 & 0x3) || 0x3 == (data >> 4 & 0x3))){  
+        data = data & ~(0x3 << 4); 
+        data = data | (0x01 << 4); /* set bit[5:4] to 01(green) defaultly */
+    } else if(led_status == 0x01 || led_status == 0x02){ 
+        data = data & ~(0x3 << 4); /* set bit[5:4] to 00(blink) defaultly */
+    }
     outb(data, SYS_LED_ADDR);
     mutex_unlock(&cpld_data->cpld_lock);
     return count;
@@ -325,7 +334,7 @@ static struct attribute_group cpld_b_attrs_grp = {
 static struct resource cpld_b_resources[] = {
     {
         .start  = 0xA100,
-        .end    = 0xA176,
+        .end    = 0xA1A2,
         .flags  = IORESOURCE_IO,
     },
 };

@@ -494,6 +494,25 @@ fi
 ## Remove gcc and python dev pkgs
 sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y remove gcc libpython2.7-dev
 
+sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools mtd-utils device-tree-compiler sbsigntool
+## Sign kernel
+sudo touch /etc/apt/apt.conf.d/10proxy
+sudo chmod 666 /etc/apt/apt.conf.d/10proxy
+sudo echo "Acquire::http::proxy \"http://10.196.4.62:8080\";" > /etc/apt/apt.conf.d/10proxy
+sudo echo "Acquire::https::proxy \"http://10.196.4.62:8080\";" >> /etc/apt/apt.conf.d/10proxy
+sudo LANG=C apt-get -y install  sbsigntool
+sudo rm /etc/apt/apt.conf.d/10proxy
+for kernel in `sudo find  $FILESYSTEM_ROOT/boot -name vmlinuz*`; do
+        sudo mv $kernel ${kernel}.unsigned
+        sudo sbsign --key src/sonic-linux-kernel/x509/rsa_private.pem --cert src/sonic-linux-kernel/x509/cert.pem --out $kernel ${kernel}.unsigned
+        sudo rm -rf ${kernel}.unsigned
+done
+## Update initramfs
+for module in `sudo find  $FILESYSTEM_ROOT -name *.ko`; do
+         sudo src/sonic-linux-kernel/x509/sign-file sha256 src/sonic-linux-kernel/x509/rsa_private.pem src/sonic-linux-kernel/x509/cert.pem $module
+done
+
+
 ## Update initramfs
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
 

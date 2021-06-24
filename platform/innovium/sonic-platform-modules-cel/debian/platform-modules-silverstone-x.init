@@ -26,23 +26,32 @@ start)
 	modprobe lpc_basecpld
 	modprobe mc24lc64t
 	modprobe optoe
-        # Instantiate TLV EEPROM device on I801 bus 
-        devname=`cat /sys/bus/i2c/devices/i2c-0/name`
-        if [[ $devname == 'SMBus I801 adapter at '* ]]; then
-                echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
-        fi
-        devname=`cat /sys/bus/i2c/devices/i2c-9/name`
+       	
+	# Instantiate TLV EEPROM device on I801/ISMT bus 
+       	devname=`cat /sys/bus/i2c/devices/i2c-0/name`
+       	if [[ $devname == 'SMBus'* ]]; then
+               	echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
+       	fi
+        devname=`cat /sys/bus/i2c/devices/i2c-10/name`
         if [[ $devname == 'fpga-xiic-i2c' ]]; then
-                echo switchboard 0x30 > /sys/bus/i2c/devices/i2c-9/new_device
-                echo switchboard 0x31 > /sys/bus/i2c/devices/i2c-9/new_device
+               	echo switchboard 0x30 > /sys/bus/i2c/devices/i2c-10/new_device
+                echo switchboard 0x31 > /sys/bus/i2c/devices/i2c-10/new_device
         fi
-	# bus 11~42 for 32 qsfp ports and 43 for sfp1 44 for sfp2
-	for i in {11..44}; do
+	# bus 12~43 for 32 qsfp ports and 44 for sfp1 45 for sfp2
+	for i in {12..43}; do
         	devname=`cat /sys/bus/i2c/devices/i2c-"$i"/name`
         	if [[ $devname == *'mux'* ]]; then
                 	echo optoe1 0x50 > /sys/bus/i2c/devices/i2c-"$i"/new_device
-			port=`expr $i - 10`
-			echo port$port  > /sys/bus/i2c/devices/i2c-"$i"/"$i"-0050/port_name
+			port=`expr $i - 11`
+			echo qsfp$port  > /sys/bus/i2c/devices/i2c-"$i"/"$i"-0050/port_name
+        	fi
+	done
+	for i in {44..45}; do
+        	devname=`cat /sys/bus/i2c/devices/i2c-"$i"/name`
+        	if [[ $devname == *'mux'* ]]; then
+                	echo optoe2 0x50 > /sys/bus/i2c/devices/i2c-"$i"/new_device
+			port=`expr $i - 43`
+			echo sfp$port  > /sys/bus/i2c/devices/i2c-"$i"/"$i"-0050/port_name
         	fi
 	done
         decode-syseeprom --init 2> /dev/null &
@@ -53,6 +62,16 @@ start)
         ;;
 
 stop)
+	rmmod optoe
+        rmmod mc24lc64t
+        rmmod lpc_basecpld
+        rmmod fpga_xcvr
+        rmmod i2c_switchcpld
+        rmmod fpga_system
+        rmmod fpga_i2c_ocores
+        rmmod fpga_device
+        rmmod ipmi_devintf
+        rmmod i2c-dev
         echo "done."
         ;;
 

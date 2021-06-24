@@ -70,16 +70,16 @@ def get_reading_by_name(sensor_name, sdr_elist_dump):
 def read_temperature_sensors(ipmi_sdr_elist):
 
     sensor_list = [
-        ('TEMP_FAN_U52',        'Fan Tray Middle Temp'),
-        ('TEMP_FAN_U17',        'Fan Tray Right Temp'),
+        ('TEMP_FB_U52',         'Fan Tray Middle Temp'),
+        ('TEMP_FB_U17',         'Fan Tray Right Temp'),
         ('TEMP_SW_U52',         'Switchboard Left Inlet Temp'),
         ('TEMP_SW_U16',         'Switchboard Right Inlet Temp'),
         ('TEMP_BB_U3',          'Baseboard Temp'),
         ('TEMP_CPU',            'CPU Internal Temp'),
         ('TEMP_SW_Internal',    'ASIC Internal Temp'),
-        ('SW_U04_Temp',         'IR3595 Chip Left Temp'),
-        ('SW_U14_Temp',         'IR3595 Chip Right Temp'),
-        ('SW_U4403_Temp',       'IR3584 Chip Temp'),
+        ('TEMP_SW_U2',          'SW Radiator Temp'),
+        ('TEMP_DIMM0',          'DIMM0 Temp'),
+        ('TEMP_DIMM1',          'DIMM1 Temp'),
     ]
 
     output = ''
