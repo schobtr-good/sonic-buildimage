@@ -1,4 +1,4 @@
-#include $(PLATFORM_PATH)/invm-sai.mk
+include $(PLATFORM_PATH)/invm-sai.mk
 include $(PLATFORM_PATH)/platform-modules-cel.mk
 include $(PLATFORM_PATH)/platform-modules-delta.mk
 include $(PLATFORM_PATH)/docker-syncd-invm.mk
