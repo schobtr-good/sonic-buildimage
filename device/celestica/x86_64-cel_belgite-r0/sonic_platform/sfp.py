@@ -71,14 +71,18 @@ class Sfp(SfpBase):
 
     # Port number
     PORT_START = 1
-    PORT_END = 52
+    PORT_END = 8 
     port_to_i2c_mapping = {
-        49: 15,
-        50: 14,
-        51: 17,
-        52: 16
+        1: 10,
+        2: 11,
+        3: 12,
+        4: 13,
+        5: 14,
+        6: 15,
+        7: 16,
+        8: 17
     }
-    _sfp_port = list(range(49, PORT_END + 1))
+    _sfp_port = list(range(1, PORT_END + 1))
     PRS_PATH = "/sys/devices/platform/belgite.smc/SFP/sfp_modabs"
     PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
     PMON_HWSKU_PATH = '/usr/share/sonic/hwsku'
@@ -679,7 +683,7 @@ class Sfp(SfpBase):
         try:
             with open(self.PRS_PATH, 'r') as port_status:
                 status = int(port_status.read(), 16)
-                status = (status >> (self.port_num - 49)) & 1
+                status = (status >> (self.port_num - 1)) & 1
         except IOError:
             return False
 
