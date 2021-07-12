@@ -12,7 +12,7 @@ class PsuUtil(PsuBase):
     def __init__(self):
         PsuBase.__init__(self)
 
-        self.psu_path = "/sys/devices/platform/belgite.smc/"
+        self.psu_path = "/sys/devices/platform/pddf.cpld/"
         self.psu_presence = "psu{}_prs"
         self.psu_oper_status = "psu{}_status"
 
@@ -39,7 +39,7 @@ class PsuUtil(PsuBase):
         except IOError:
             return False
 
-        return status == 1
+        return True if status == 1 else False
 
     def get_psu_presence(self, index):
         """
@@ -49,11 +49,12 @@ class PsuUtil(PsuBase):
         :return: Boolean, True if PSU is plugged, False if not
         """
         psu_location = ["R", "L"]
-        status = 0
+        status = 1
         try:
             with open(self.psu_path + self.psu_presence.format(psu_location[index - 1]), 'r') as psu_prs:
                 status = int(psu_prs.read())
         except IOError:
             return False
 
-        return status == 1
+        return True if status == 0 else False
+

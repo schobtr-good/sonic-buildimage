@@ -50,7 +50,7 @@ class SfpUtil(SfpUtilBase):
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
-        sfp_modabs_path = '/sys/devices/platform/belgite.smc/SFP/sfp_modabs'
+        sfp_modabs_path = '/sys/devices/platform/pddf.cpld/SFP/sfp%s_modabs' % str(port_num) 
 
         if port_num not in self._sfp_port:
             return False

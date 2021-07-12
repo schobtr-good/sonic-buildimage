@@ -16,7 +16,7 @@ start)
 
 	echo -n "Setting up board... "
 
-        modprobe smc
+        modprobe platform_pddf_cpld 
         sleep 0.1
         modprobe i2c-dev
         sleep 0.1
@@ -91,6 +91,19 @@ start)
         # Enable SFP module presence interrupt
 #        echo "both" > /sys/devices/platform/e1031.smc/SFP/modabs_trig
 #        echo 0 > /sys/devices/platform/e1031.smc/SFP/modabs_mask
+
+	i2cset -y -f 1 0x52 0x00 0xb0
+        fan_direction=`i2cget -y -f 0x1 0x52`
+        if [ "$fan_direction" = "0xbf" ]; then
+            i2cset -y -f 2 0x32 0x88 0x7
+        else
+            i2cset -y -f 2 0x32 0x88 0x0
+        fi
+        sleep 0.1
+        modprobe platform_pddf_fan
+        sleep 0.1
+        echo pddf_fan 0x32 > /sys/bus/i2c/devices/i2c-2/new_device
+        sleep 0.1
 
 #        /bin/sh /usr/local/bin/platform_api_mgnt.sh init
 
