@@ -17,23 +17,23 @@ start)
 	echo -n "Setting up board... "
 
         modprobe platform_pddf_cpld 
-        sleep 0.1
+        sleep 1
         modprobe i2c-dev
-        sleep 0.1
+        sleep 3 
         rmmod i2c-i801
-        sleep 0.1
+        sleep 3 
         rmmod i2c-ismt
-        sleep 0.1
+        sleep 3 
         rmmod i2c-mux-954x
-        sleep 0.1
+        sleep 3 
         modprobe i2c-i801
-        sleep 0.1
+        sleep 3 
         modprobe i2c-ismt
-        sleep 0.1
+        sleep 3 
         modprobe i2c-mux-954x force_deselect_on_exit=1
-        sleep 0.1
+        sleep 1
         modprobe at24
-        sleep 0.1
+        sleep 1
         #        modprobe hlx_gpio_ich
         #modprobe dps200
         modprobe optoe
