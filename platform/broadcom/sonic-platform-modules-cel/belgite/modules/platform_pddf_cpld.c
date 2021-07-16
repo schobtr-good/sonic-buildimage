@@ -113,10 +113,10 @@ enum SYS_LED {
 } sys_led;
 
 enum LED_CTRL {
-    led_off = 0,
+    led_on = 0,
     led_blk_1hz,
     led_blk_4hz,
-    led_on
+    led_off
 } led_ctrl;
 
 #define LED_OFF        "off"
@@ -141,7 +141,8 @@ enum LED_CTRL {
 enum ALARM_LED {
     alarm_led_off = 0,
     alarm_led_grn,
-    alarm_led_amb
+    alarm_led_amb,
+    alarm_led_other
 } alarm_led;
 
 #define LED_PWR 	 0xA142
@@ -392,40 +393,49 @@ static ssize_t sys_led_store(struct device *dev, struct device_attribute *devatt
 {
     unsigned char data;
 
-
+    mutex_lock(&cpld_data->cpld_lock);
+    data = inb(LED_SYS);
     if(sysfs_streq(buf, LED_OFF)){
+	data &= 0xCF;
 	data = sys_led_off << 4;
 	data += led_off; 
     }else if(sysfs_streq(buf, LED_GREEN)){
+	data &= 0xCF;
         data = sys_led_grn << 4;
-        data += led_on;
+        data &= 0xFC;
     }else if(sysfs_streq(buf, LED_AMBER)){
+	data &= 0xCF;
     	data = sys_led_amb << 4;
-        data += led_on;
+        data &= 0xFC;
     }else if(sysfs_streq(buf, LED_HZ_GBNK)){
+	data &= 0xCF;
         data = sys_led_grn << 4;
         data += led_blk_1hz;
     }else if(sysfs_streq(buf, LED_HZ_ABNK)){
-    data = sys_led_amb << 4;
-            data += led_blk_1hz; 
+   	data &= 0xCF; 
+	data = sys_led_amb << 4;
+        data += led_blk_1hz; 
     }else if(sysfs_streq(buf, LED_QHZ_GBNK)){
-   	 data = sys_led_grn << 4;
-            data += led_blk_4hz; 
+        data &= 0xCF;		
+	data = sys_led_grn << 4;
+        data += led_blk_4hz; 
     }else if(sysfs_streq(buf, LED_QHZ_ABNK)){
-     data = sys_led_amb << 4;
-            data += led_blk_4hz;
+        data &= 0xCF; 
+	data = sys_led_amb << 4;
+        data += led_blk_4hz;
 
     }else if(sysfs_streq(buf, LED_HZ_GABNK)){
-     data = sys_led_on << 4;
-            data += led_blk_1hz;
+	data &= 0xCF;
+        data = sys_led_on << 4;
+        data += led_blk_1hz;
     }else if(sysfs_streq(buf, LED_QHZ_GABNK)){
-	  data = sys_led_on<< 4;
-            data += led_blk_4hz;
+	data &= 0xCF;
+	data = sys_led_on<< 4;
+        data += led_blk_4hz;
     }else{
 	    count = -EINVAL; 
     }
- 
-    mutex_lock(&cpld_data->cpld_lock);
+
     outb(data, LED_SYS);
     mutex_unlock(&cpld_data->cpld_lock);
     return count;
@@ -442,12 +452,44 @@ static ssize_t alarm_led_show(struct device *dev, struct device_attribute *devat
                                char *buf)
 {
     unsigned char data = 0;
+    unsigned char color = 0;
+    unsigned char control = 0;
+
     mutex_lock(&cpld_data->cpld_lock);
     data = inb(LED_ALARM);
     mutex_unlock(&cpld_data->cpld_lock);
-    data = data & 0x3;
-    return sprintf(buf, "%s\n",
-                   data == alarm_led_grn ? "on" : data == alarm_led_amb ? "amber" : "off");
+    color = (data & 0x30) >> 4;
+    control = (data & 0x3);
+
+    switch(color){
+        case alarm_led_off:
+        case alarm_led_other:
+             return sprintf(buf, "%s\n", LED_OFF);
+        case alarm_led_amb:
+            if ( control == led_blk_1hz){
+                return sprintf(buf, "%s\n", LED_HZ_ABNK);
+           }else if(control == led_blk_4hz){
+                return sprintf(buf, "%s\n", LED_QHZ_ABNK);
+           }else if(control == led_on || control == led_off){
+                return sprintf(buf, "%s\n", LED_AMBER);
+           }else{
+                break;
+           }
+        case alarm_led_grn:
+           if ( control == led_blk_1hz){
+                return sprintf(buf, "%s\n", LED_HZ_GBNK);
+           }else if(control == led_blk_4hz){
+                return sprintf(buf, "%s\n", LED_QHZ_GBNK);
+           }else if(control == led_on || control == led_off){
+                return sprintf(buf, "%s\n", LED_GREEN);
+           }else{
+                break;
+           }
+	default:
+           break;
+    }
+
+    return sprintf(buf, "%s\n", LED_OFF);
 }
 
 /**
@@ -461,22 +503,37 @@ static ssize_t alarm_led_show(struct device *dev, struct device_attribute *devat
 static ssize_t alarm_led_store(struct device *dev, struct device_attribute *devattr,
                                 const char *buf, size_t count)
 {
-    unsigned char led_status, data;
-
-    if (sysfs_streq(buf, "off")) {
-        led_status = alarm_led_off;
-    } else if (sysfs_streq(buf, "green")) {
-        led_status = alarm_led_grn;
-    } else if (sysfs_streq(buf, "amber")) {
-        led_status = alarm_led_amb;
-    } else {
-        count = -EINVAL;
-        return count;
-    }
+    unsigned char data;
     mutex_lock(&cpld_data->cpld_lock);
     data = inb(LED_ALARM);
-    data = data & ~(0x3);
-    data = data | led_status;
+
+    if (sysfs_streq(buf, LED_OFF)) {
+        data |= (0x3 << 4);
+  	data |= 0x3;		
+    } else if (sysfs_streq(buf, LED_GREEN)) {
+        data &= 0xCF;	
+        data |= (alarm_led_grn << 4);
+	data |= 0x3;
+    } else if (sysfs_streq(buf, LED_AMBER)) {
+	data &= 0xCF;
+        data |= (alarm_led_amb << 4);
+	data |= 0x3;
+    } else if (sysfs_streq(buf, LED_HZ_ABNK)) {
+	data &= 0xCF;
+	data |= (alarm_led_amb << 4);
+	data &= 0xFC;
+	data |= led_blk_1hz;
+    } else if (sysfs_streq(buf, LED_QHZ_ABNK)) {
+	data &= 0xCF;
+	data |= (alarm_led_amb << 4);
+	data &= 0xFC;
+	data |= led_blk_4hz;
+    } else {
+        count = -EINVAL;
+	mutex_unlock(&cpld_data->cpld_lock);
+        return count;
+    }
+
     outb(data, LED_ALARM);
     mutex_unlock(&cpld_data->cpld_lock);
     return count;
@@ -487,11 +544,11 @@ static ssize_t pwr_led_show(struct device *dev, struct device_attribute *devattr
 {
     unsigned char data = 0;
     mutex_lock(&cpld_data->cpld_lock);
-    data = inb(LED_ALARM);
+    data = inb(LED_PWR);
     mutex_unlock(&cpld_data->cpld_lock);
     data = data & 0x3;
     return sprintf(buf, "%s\n",
-                   data == alarm_led_grn ? "on" : data == alarm_led_amb ? "amber" : "off");
+                   data == pwr_led_grn ? "green" : data == pwr_led_amb ? "amber" : "off");
 }
 
 
@@ -501,20 +558,20 @@ static ssize_t pwr_led_store(struct device *dev, struct device_attribute *devatt
     unsigned char led_status, data;
 
     if (sysfs_streq(buf, "off")) {
-        led_status = alarm_led_off;
+        led_status = pwr_led_off;
     } else if (sysfs_streq(buf, "green")) {
         led_status = alarm_led_grn;
     } else if (sysfs_streq(buf, "amber")) {
-        led_status = alarm_led_amb;
+        led_status = pwr_led_amb;
     } else {
         count = -EINVAL;
         return count;
     }
     mutex_lock(&cpld_data->cpld_lock);
-    data = inb(LED_ALARM);
+    data = inb(LED_PWR);
     data = data & ~(0x3);
     data = data | led_status;
-    outb(data, LED_ALARM);
+    outb(data, LED_PWR);
     mutex_unlock(&cpld_data->cpld_lock);
     return count;
 }

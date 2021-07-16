@@ -34,9 +34,9 @@
 
 #define VAL_TO_RPM_FACTOR 150
 
-#define FAN_LED_OFF	  0
-#define FAN_LED_AMBER	  1
-#define FAN_LED_GREEN	  2
+#define FAN_LED_OFF	  3
+#define FAN_LED_AMBER	  2 
+#define FAN_LED_GREEN	  1 
 #define FAN_WDT_CTRL      0x30
 
 static struct pddf_fan_data *fan_update_device(struct device *dev);                    
@@ -189,7 +189,7 @@ static struct attribute *pddf_fan_attributes[] = {
     NULL
 };
 
-#define FAN_DUTY_CYCLE_REG_MASK         0xF
+#define FAN_DUTY_CYCLE_REG_MASK         0xFF
 #define FAN_MAX_DUTY_CYCLE              100
 
 static int fan_read_value(struct i2c_client *client, u8 reg)
@@ -204,32 +204,31 @@ static int fan_write_value(struct i2c_client *client, u8 reg, u8 value)
 
 /* fan utility functions
  */
-static u32 reg_val_to_duty_cycle(u8 reg_val) 
+static u8 reg_val_to_duty_cycle(u8 reg_val) 
 {
-	reg_val &= FAN_DUTY_CYCLE_REG_MASK;
+    u8 res = 0; 
 
-	if (!reg_val) {
-		return 0;
-	}
+    reg_val &= FAN_DUTY_CYCLE_REG_MASK;
 
-	if (reg_val == 0xF) {
-		return FAN_MAX_DUTY_CYCLE;
-	}
+    if (!reg_val) {
+	return 0;
+    }
 
-    return (reg_val * 6) + 10;
+    if (reg_val == 0xFF) {
+	return FAN_MAX_DUTY_CYCLE;
+    }
+
+    res = (u8)(reg_val*FAN_MAX_DUTY_CYCLE/FAN_DUTY_CYCLE_REG_MASK); 
+    return res;
 }
 
 static u8 duty_cycle_to_reg_val(u8 duty_cycle) 
 {
-	if (duty_cycle < 16) {
-		return 0;
-	}
-
 	if (duty_cycle >= 100) {
-		return 0xF;
+		return 0xFF;
 	}
 
-    return (duty_cycle - 10) / 6;
+    return (duty_cycle*FAN_DUTY_CYCLE_REG_MASK/FAN_MAX_DUTY_CYCLE) ;
 }
 
 static u32 reg_val_to_speed_rpm(u8 reg_val)
@@ -250,24 +249,19 @@ static u8 reg_val_to_direction(enum fan_id index, u8 reg_val)
     return tmp;
 }
 
-static u8 reg_val_to_color(u8 reg_val, u8 *reg_color)
+static u8 reg_val_to_color(u8 reg_val, char **reg_color)
 {
     switch(reg_val)
     {
         case FAN_LED_OFF:
-	    (void)sprintf(reg_color, "%s\n", "off");	
- 	    break;
+	    return sprintf(*reg_color, "%s\n", "off");	
 	case FAN_LED_AMBER:
-	    (void)sprintf(reg_color, "%s\n", "amber"); 
-	    break;
+	    return sprintf(*reg_color, "%s\n", "amber"); 
 	case FAN_LED_GREEN:
-	    (void)sprintf(reg_color, "%s\n", "green");
-	    break;
+	    return sprintf(*reg_color, "%s\n", "green");
 	default:
-	    (void)sprintf(reg_color, "invalid:%d\n", reg_val); 
+	    return sprintf(*reg_color, "invalid:%d\n", reg_val); 
     }
-
-    return 0;
 }
 
 static u8 reg_val_to_is_present(u8 reg_val)
@@ -311,7 +305,7 @@ static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
     if (attr->index > FAN3_DUTY_CYCLE_PERCENTAGE || attr->index < FAN1_DUTY_CYCLE_PERCENTAGE)
 	return -EINVAL;
 
-    fan_write_value(client, 0x28, 0); /* Disable fan speed watch dog */
+    //fan_write_value(client, 0x28, 0); /* Disable fan speed watch dog */
     fan_write_value(client, pddf_fan_reg[attr->index], duty_cycle_to_reg_val(value));
     return count;
 }
@@ -330,6 +324,8 @@ static ssize_t set_led_ctrl(struct device *dev, struct device_attribute *da,
 	value = FAN_LED_AMBER;
     }else if(sysfs_streq(buf, "green")){
    	value = FAN_LED_GREEN; 
+    }else if(sysfs_streq(buf, "off")){
+        value = FAN_LED_OFF;
     }else{
    	return -EINVAL; 
     }
@@ -346,6 +342,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
     struct pddf_fan_data *data = fan_update_device(dev);
     ssize_t ret = 0;
     u8 fan_index = 0;   
+    u8 duty_cycle = 0;
  
     if (data->valid) {
         switch (attr->index) {
@@ -353,7 +350,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
             case FAN2_DUTY_CYCLE_PERCENTAGE:
             case FAN3_DUTY_CYCLE_PERCENTAGE:
             {
-                u32 duty_cycle = reg_val_to_duty_cycle(data->reg_val[attr->index]);
+                duty_cycle = reg_val_to_duty_cycle(data->reg_val[attr->index]);
                 ret = sprintf(buf, "%u\n", duty_cycle);
                 break;
             }
@@ -368,6 +365,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
             case FAN1_PRESENT:
             case FAN2_PRESENT:
             case FAN3_PRESENT:
+
                 ret = sprintf(buf, "%d\n",
                               reg_val_to_is_present(data->reg_val[attr->index]));
                 break;
@@ -396,7 +394,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
 	    case FAN1_LED:
 	    case FAN2_LED:
 	    case FAN3_LED:
-		ret = reg_val_to_color(data->reg_val[attr->index], buf);
+		ret = reg_val_to_color(data->reg_val[attr->index], &buf);
 		break;
 
 	    default:
