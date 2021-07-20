@@ -598,5 +598,5 @@ module_i2c_driver(switchboard_driver);
 
 MODULE_AUTHOR("Celestica Inc.");
 MODULE_DESCRIPTION("Celestica CPLD switchboard driver");
-MODULE_VERSION("1.0.0");
+MODULE_VERSION("2.0.0");
 MODULE_LICENSE("GPL");

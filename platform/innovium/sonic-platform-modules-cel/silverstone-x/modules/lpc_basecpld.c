@@ -36,7 +36,7 @@
 #define VERSION_ADDR 0xA100
 #define SCRATCH_ADDR 0xA101
 #define SYS_LED_ADDR 0xA162
-#define CPLD_REGISTER_SIZE 0xA2
+#define CPLD_REGISTER_SIZE 0xA3
 
 struct cpld_b_data {
     struct mutex       cpld_lock;
@@ -93,9 +93,11 @@ static DEVICE_ATTR_RW(scratch);
 static ssize_t version_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
     int len = 0;
+    unsigned char value = 0;
     // CPLD register is one byte
     mutex_lock(&cpld_data->cpld_lock);
-    len = sprintf(buf, "0x%2.2x\n",inb(VERSION_ADDR));
+    value = inb(VERSION_ADDR);
+    len = sprintf(buf, "%d.%d\n", value >> 4, value & 0x0F);
     mutex_unlock(&cpld_data->cpld_lock);
     return len;
 }
@@ -417,6 +419,6 @@ module_exit(cpld_b_exit);
 
 MODULE_AUTHOR("Celestica Inc.");
 MODULE_DESCRIPTION("LPC CPLD baseboard driver");
-MODULE_VERSION("0.0.2");
+MODULE_VERSION("2.0.0");
 MODULE_LICENSE("GPL");
 

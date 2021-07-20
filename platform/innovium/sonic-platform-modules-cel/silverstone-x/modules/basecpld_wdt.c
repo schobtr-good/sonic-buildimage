@@ -403,6 +403,7 @@ static void __exit basecpld_wdt_exit(void)
 }
 
 MODULE_DESCRIPTION("basecpld_wdt Watchdog Driver");
+MODULE_VERSION("2.0.0");
 MODULE_AUTHOR("Nicholas <nicwu@celestica.com>");
 MODULE_LICENSE("GPL");
 

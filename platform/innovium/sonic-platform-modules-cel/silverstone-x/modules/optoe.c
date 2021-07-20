@@ -1143,5 +1143,6 @@ static void __exit optoe_exit(void)
 module_exit(optoe_exit);
 
 MODULE_DESCRIPTION("Driver for optical transceiver (SFP, QSFP, ...) EEPROMs");
+MODULE_VERSION("2.0.0");
 MODULE_AUTHOR("DON BOLLINGER <don@thebollingers.org>");
 MODULE_LICENSE("GPL");

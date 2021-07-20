@@ -169,6 +169,7 @@ static struct i2c_driver mc24lc64t_driver = {
 module_i2c_driver(mc24lc64t_driver);
 
 MODULE_AUTHOR("Abhisit Sangjan <asang@celestica.com>");
+MODULE_VERSION("2.0.0");
 MODULE_DESCRIPTION("Microchip 24LC64T Driver");
 MODULE_LICENSE("GPL");
 

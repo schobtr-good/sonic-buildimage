@@ -169,5 +169,6 @@ static void __exit optoe_exit(void)
 module_exit(optoe_exit);
 
 MODULE_DESCRIPTION("Device for optical transceiver (SFP, QSFP, ...) EEPROMs");
+MODULE_VERSION("2.0.0");
 MODULE_AUTHOR("Nicholas <nic@celestica.com>");
 MODULE_LICENSE("GPL");

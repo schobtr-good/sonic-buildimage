@@ -72,6 +72,7 @@ stop)
         rmmod fpga_device
         rmmod ipmi_devintf
         rmmod i2c-dev
+        echo 0x56 > /sys/bus/i2c/devices/i2c-0/delete_device
         echo "done."
         ;;
 

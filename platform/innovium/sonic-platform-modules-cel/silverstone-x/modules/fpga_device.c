@@ -83,7 +83,7 @@
 #include "fpga_i2c_ocores.h"
 #include "fpga_xcvr.h"
 
-#define MOD_VERSION "2.1.0-6"
+#define MOD_VERSION "2.0.0"
 #define DRV_NAME "cls-switchboard"
 
 #define I2C_MUX_CHANNEL(_ch, _adap_id, _deselect) \

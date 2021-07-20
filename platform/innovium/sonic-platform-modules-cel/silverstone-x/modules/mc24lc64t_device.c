@@ -81,5 +81,6 @@ static void __exit mc24lc64t_exit(void)
 module_exit(mc24lc64t_exit);
 
 MODULE_DESCRIPTION("Device for mc24lc64t EEPROM");
+MODULE_VERSION("2.0.0");
 MODULE_AUTHOR("Nicholas <nic@celestica.com>");
 MODULE_LICENSE("GPL");

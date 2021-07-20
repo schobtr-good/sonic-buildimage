@@ -313,7 +313,7 @@ module_exit(drv_exit);
 
 MODULE_AUTHOR("Nicholas Wu<nicwu@celestica.com>");
 MODULE_DESCRIPTION("Celestica xcvr control driver");
-MODULE_VERSION("0.0.1");
+MODULE_VERSION("2.0.0");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:cls-xcvr");
 

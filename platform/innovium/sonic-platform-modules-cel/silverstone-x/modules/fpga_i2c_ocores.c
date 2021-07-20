@@ -1289,15 +1289,11 @@ static int ocores_xfer_core(struct xiic_i2c *i2c,
 	u8 ctrl;
 	
 	mutex_unlock(&i2c->lock);
-	ret = xiic_bus_busy(i2c);
-	res = xiic_abr_error(i2c);
-	if (ret || res){
-		/* Soft reset IIC controller. */
-		xiic_setreg32(i2c, XIIC_RESETR_OFFSET, XIIC_RESET_MASK);
-		/* Set receive Fifo depth to maximum (zero based). */
-		xiic_setreg8(i2c, XIIC_RFD_REG_OFFSET, IIC_RX_FIFO_DEPTH - 1);
+	/* Soft reset IIC controller. */
+	xiic_setreg32(i2c, XIIC_RESETR_OFFSET, XIIC_RESET_MASK);
+	/* Set receive Fifo depth to maximum (zero based). */
+	xiic_setreg8(i2c, XIIC_RFD_REG_OFFSET, IIC_RX_FIFO_DEPTH - 1);
 		
-	}
 	/* Reset Tx Fifo. */
 	xiic_setreg8(i2c, XIIC_CR_REG_OFFSET, XIIC_CR_TX_FIFO_RESET_MASK);
 	
@@ -1639,5 +1635,6 @@ static struct platform_driver xiic_i2c_driver = {
 module_platform_driver(xiic_i2c_driver);
 
 MODULE_AUTHOR("info@mocean-labs.com");
+MODULE_VERSION("2.0.0");
 MODULE_DESCRIPTION("Xilinx I2C bus driver");
 MODULE_LICENSE("GPL v2");
