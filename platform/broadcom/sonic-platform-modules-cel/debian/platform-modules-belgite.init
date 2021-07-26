@@ -38,6 +38,7 @@ start)
         #modprobe dps200
         modprobe optoe
         #        modprobe cp210x
+	modprobe lm75b
 
         found=0
        for devnum in 0 1; do
@@ -105,7 +106,12 @@ start)
         echo pddf_fan 0x32 > /sys/bus/i2c/devices/i2c-2/new_device
         sleep 0.1
 
-#        /bin/sh /usr/local/bin/platform_api_mgnt.sh init
+	echo lm75b 0x48 > /sys/bus/i2c/devices/i2c-5/new_device
+        echo lm75b 0x49 > /sys/bus/i2c/devices/i2c-5/new_device
+        echo lm75b 0x49 > /sys/bus/i2c/devices/i2c-6/new_device
+        echo lm75b 0x4a > /sys/bus/i2c/devices/i2c-6/new_device
+
+        /bin/sh /usr/local/bin/platform_api_mgnt.sh init
 
 
         echo "done."

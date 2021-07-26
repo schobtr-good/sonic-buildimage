@@ -18,21 +18,26 @@ DAEMON=/usr/local/bin/fancontrol
 DESC="fan speed regulator"
 NAME="fancontrol"
 PIDFILE=/var/run/fancontrol.pid
-PLATFORMPATH=/sys/devices/platform/belgite.smc
+#PLATFORMPATH=/sys/devices/platform/belgite.smc
 MAIN_CONF=/usr/share/sonic/device/x86_64-cel_belgite-r0/fancontrol
-DEVPATH=/sys/devices/pci0000:00/0000:00:13.0/i2c-0/i2c-8/i2c-23/23-004d 
+DEVPATH=/sys/bus/i2c/drivers/pddf.fan/2-0032
 
 test -x $DAEMON || exit 0
 
 for i in 1 2 3
 do
-	j=$i
-	[ $i -eq 3 ] && j=4
-	FANFAULT=$(cat ${DEVPATH}/fan${j}_fault)
+	[ $i -eq 3 ]
+	FANFAULT=$(cat ${DEVPATH}/fan${i}_fault)
   [ $FANFAULT = 1 ] && continue
-	FANDIR=$(cat ${PLATFORMPATH}/fan${i}_dir)
+	DIRECTION=$(cat ${PLATFORMPATH}/fan${i}_direction)
+	FANDIR=$([ $DIRECTION = 1 ] && echo "B2F" || echo "F2B")
 done
 CONF=${MAIN_CONF}-${FANDIR}
+
+install() {
+    find /var/lib/docker/overlay*/ -path */sbin/fancontrol -exec cp /usr/local/bin/fancontrol {} \;
+}
+
 
 case "$1" in
   start)

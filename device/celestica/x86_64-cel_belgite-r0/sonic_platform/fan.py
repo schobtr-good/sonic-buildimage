@@ -15,10 +15,11 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-EMC2305_PATH = "/sys/bus/i2c/drivers/emc2305/"
-FAN_PATH = "/sys/devices/platform/belgitesmc/"
+EMC2305_PATH = "/sys/bus/i2c/drivers/pddf.fan/2-0032/"
+FAN_PATH = "/sys/bus/i2c/drivers/pddf.fan/2-0032/"
 EMC2305_MAX_PWM = 255
-EMC2305_FAN_PWM = "pwm{}"
+EMC2305_FAN_PWM = "fan{}_duty_cycle_percentage"
+EMC2305_FAN_DIRECTION = "fan{}_direction"
 EMC2305_FAN_TARGET = "fan{}_target"
 EMC2305_FAN_INPUT = "pwm{}"
 FAN_NAME_LIST = ["FAN-1", "FAN-2", "FAN-3"]
@@ -59,8 +60,8 @@ class Fan(FanBase):
                 'index_map': [1, 2, 4]
             }
         ]
-        self.fan_belgite_presence = "fan{}_prs"
-        self.fan_belgite_direction = "fan{}_dir"
+        self.fan_belgite_presence = "fan{}_present"
+        self.fan_belgite_direction = "fan{}_direction"
         self.fan_belgite_led = "fan{}_led"
         self.fan_belgite_led_col_map = {
             self.STATUS_LED_COLOR_GREEN: "green",
@@ -102,13 +103,12 @@ class Fan(FanBase):
             depending on fan direction
         """
         direction = self.FAN_DIRECTION_EXHAUST
+        fan_dir_path=
         if not self.is_psu_fan:
-            fan_direction_file = (FAN_PATH +
-                                  self.fan_belgite_direction.format(self.fan_tray_index+1))
-            raw = self.__read_txt_file(fan_direction_file).strip('\r\n')
-            direction = self.FAN_DIRECTION_INTAKE if str(
-                raw).upper() == "F2B" else self.FAN_DIRECTION_EXHAUST
-
+           fan_direction_path = r"/sys/bus/i2c/drivers/pddf.fan/2-0032/fan%s_direction" % str(int(self.fan_index)+1)
+           with open(fan_direction_path, "r") as f:
+               fan_direction_val = f.read()
+            direction = self.FAN_DIRECTION_INTAKE if fan_direction_val  == "1" else self.FAN_DIRECTION_EXHAUST
         return direction
 
     def get_speed(self):
