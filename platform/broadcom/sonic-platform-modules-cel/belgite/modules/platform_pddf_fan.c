@@ -118,20 +118,30 @@ enum sysfs_fan_attributes {
 
 #define DECLARE_FAN_DIRECTION_ATTR(index)  &sensor_dev_attr_fan##index##_direction.dev_attr.attr
 
-#define DECLARE_FAN_DUTY_CYCLE_SENSOR_DEV_ATTR(index) \
-    static SENSOR_DEVICE_ATTR(fan##index##_duty_cycle_percentage, S_IWUSR | S_IRUGO, fan_show_value, set_duty_cycle, FAN##index##_DUTY_CYCLE_PERCENTAGE);
+/*#define DECLARE_FAN_DUTY_CYCLE_SENSOR_DEV_ATTR(index) \
+    static SENSOR_DEVICE_ATTR(fan##index##_duty_cycle_percentage, S_IWUSR | S_IRUGO, fan_show_value, set_duty_cycle, FAN##index##_DUTY_CYCLE_PERCENTAGE);*/
 
-#define DECLARE_FAN_DUTY_CYCLE_ATTR(index) &sensor_dev_attr_fan##index##_duty_cycle_percentage.dev_attr.attr
+#define DECLARE_FAN_DUTY_CYCLE_SENSOR_DEV_ATTR(index) \
+    static SENSOR_DEVICE_ATTR(pwm##index, S_IWUSR | S_IRUGO, fan_show_value, set_duty_cycle, FAN##index##_DUTY_CYCLE_PERCENTAGE);
+
+/*#define DECLARE_FAN_DUTY_CYCLE_ATTR(index) &sensor_dev_attr_fan##index##_duty_cycle_percentage.dev_attr.attr*/
+
+#define DECLARE_FAN_DUTY_CYCLE_ATTR(index) &sensor_dev_attr_pwm##index.dev_attr.attr
 
 #define DECLARE_FAN_PRESENT_SENSOR_DEV_ATTR(index) \
     static SENSOR_DEVICE_ATTR(fan##index##_present, S_IRUGO, fan_show_value, NULL, FAN##index##_PRESENT); 
 
 #define DECLARE_FAN_PRESENT_ATTR(index)      &sensor_dev_attr_fan##index##_present.dev_attr.attr
 
-#define DECLARE_FAN_SPEED_RPM_SENSOR_DEV_ATTR(index) \
-    static SENSOR_DEVICE_ATTR(fan##index##_speed_rpm, S_IRUGO, fan_show_value, NULL, FAN##index##_SPEED_RPM);
+/*#define DECLARE_FAN_SPEED_RPM_SENSOR_DEV_ATTR(index) \
+    static SENSOR_DEVICE_ATTR(fan##index##_speed_rpm, S_IRUGO, fan_show_value, NULL, FAN##index##_SPEED_RPM);*/
 
-#define DECLARE_FAN_SPEED_RPM_ATTR(index)  &sensor_dev_attr_fan##index##_speed_rpm.dev_attr.attr
+#define DECLARE_FAN_SPEED_RPM_SENSOR_DEV_ATTR(index) \
+    static SENSOR_DEVICE_ATTR(fan##index##_input, S_IRUGO, fan_show_value, NULL, FAN##index##_SPEED_RPM);
+
+/*#define DECLARE_FAN_SPEED_RPM_ATTR(index)  &sensor_dev_attr_fan##index##_speed_rpm.dev_attr.attr*/
+
+#define DECLARE_FAN_SPEED_RPM_ATTR(index)  &sensor_dev_attr_fan##index##_input.dev_attr.attr
 
 #define DECLARE_FAN_LED_SENSOR_DEV_ATTR(index) \
     static SENSOR_DEVICE_ATTR(fan##index##_led, S_IRUGO | S_IWUSR, fan_show_value, set_led_ctrl, FAN##index##_LED);
@@ -204,7 +214,7 @@ static int fan_write_value(struct i2c_client *client, u8 reg, u8 value)
 
 /* fan utility functions
  */
-static u8 reg_val_to_duty_cycle(u8 reg_val) 
+static u8 reg_val_to_duty_cycle(u8 reg_val)
 {
     u8 res = 0; 
 
@@ -218,17 +228,17 @@ static u8 reg_val_to_duty_cycle(u8 reg_val)
 	return FAN_MAX_DUTY_CYCLE;
     }
 
-    res = (u8)(reg_val*FAN_MAX_DUTY_CYCLE/FAN_DUTY_CYCLE_REG_MASK); 
+    res = (u8)(reg_val); 
     return res;
 }
 
 static u8 duty_cycle_to_reg_val(u8 duty_cycle) 
 {
-	if (duty_cycle >= 100) {
-		return 0xFF;
+	if (duty_cycle >= FAN_DUTY_CYCLE_REG_MASK) {
+		return FAN_DUTY_CYCLE_REG_MASK;
 	}
 
-    return (duty_cycle*FAN_DUTY_CYCLE_REG_MASK/FAN_MAX_DUTY_CYCLE) ;
+    return duty_cycle;
 }
 
 static u32 reg_val_to_speed_rpm(u8 reg_val)
@@ -299,7 +309,7 @@ static ssize_t set_duty_cycle(struct device *dev, struct device_attribute *da,
     if (error)
         return error;
         
-    if (value < 0 || value > FAN_MAX_DUTY_CYCLE)
+    if (value < 0 || value > FAN_DUTY_CYCLE_REG_MASK)
         return -EINVAL;
 
     if (attr->index > FAN3_DUTY_CYCLE_PERCENTAGE || attr->index < FAN1_DUTY_CYCLE_PERCENTAGE)
@@ -365,7 +375,6 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
             case FAN1_PRESENT:
             case FAN2_PRESENT:
             case FAN3_PRESENT:
-
                 ret = sprintf(buf, "%d\n",
                               reg_val_to_is_present(data->reg_val[attr->index]));
                 break;
@@ -395,6 +404,7 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
 	    case FAN2_LED:
 	    case FAN3_LED:
 		ret = reg_val_to_color(data->reg_val[attr->index], &buf);
+		printk(KERN_WARNING "buf:%s.\n", buf);
 		break;
 
 	    default:

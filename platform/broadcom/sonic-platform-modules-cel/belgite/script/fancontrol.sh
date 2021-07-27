@@ -29,7 +29,7 @@ do
 	[ $i -eq 3 ]
 	FANFAULT=$(cat ${DEVPATH}/fan${i}_fault)
   [ $FANFAULT = 1 ] && continue
-	DIRECTION=$(cat ${PLATFORMPATH}/fan${i}_direction)
+	DIRECTION=$(cat ${DEVPATH}/fan${i}_direction)
 	FANDIR=$([ $DIRECTION = 1 ] && echo "B2F" || echo "F2B")
 done
 CONF=${MAIN_CONF}-${FANDIR}
