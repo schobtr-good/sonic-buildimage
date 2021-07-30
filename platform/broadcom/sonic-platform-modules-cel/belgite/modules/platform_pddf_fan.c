@@ -404,7 +404,6 @@ static ssize_t fan_show_value(struct device *dev, struct device_attribute *da,
 	    case FAN2_LED:
 	    case FAN3_LED:
 		ret = reg_val_to_color(data->reg_val[attr->index], &buf);
-		printk(KERN_WARNING "buf:%s.\n", buf);
 		break;
 
 	    default:

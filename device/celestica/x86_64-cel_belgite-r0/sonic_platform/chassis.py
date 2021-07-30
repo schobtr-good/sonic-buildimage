@@ -25,7 +25,7 @@ NUM_FAN_TRAY = 3
 NUM_FAN = 1
 NUM_PSU = 2
 NUM_THERMAL = 7
-NUM_SFP = 52
+NUM_SFP = 8 
 NUM_COMPONENT = 3
 RESET_REGISTER = "0x112"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/previous-reboot-cause.txt"
@@ -76,7 +76,7 @@ class Chassis(ChassisBase):
         from sonic_platform.fan import Fan
         for fant_index in range(0, NUM_FAN_TRAY):
             for fan_index in range(0, NUM_FAN):
-                fan = Fan(fant_index, fan_index)
+                fan = Fan(fant_index)
                 self._fan_list.append(fan)
 
     def __initialize_thermals(self):
