@@ -224,10 +224,10 @@ static u8 reg_val_to_duty_cycle(u8 reg_val)
 	return 0;
     }
 
-    if (reg_val == 0xFF) {
+    /*if (reg_val == 0xFF) {
 	return FAN_MAX_DUTY_CYCLE;
-    }
-
+    }*/
+    
     res = (u8)(reg_val); 
     return res;
 }
