@@ -59,7 +59,6 @@ class SfpUtil(SfpUtilBase):
         try:
             with open(sfp_modabs_path, 'r') as port_status:
                 status = int(port_status.read(), 16)
-                status = (status >> (port_num - 1)) & 1
         except IOError:
             return False
 
