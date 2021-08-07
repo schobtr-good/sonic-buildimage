@@ -11,19 +11,65 @@ class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
     PORT_START = 1
-    PORT_END = 8 
+    PORT_END = 56 
     port_to_i2c_mapping = {
-        1: 10,
-        2: 11,
-        3: 12,
-        4: 13,
-        5: 14,
-        6: 15,
-        7: 16,
-        8: 17
+        1: None,
+        2: None,
+        3: None,
+        4: None,
+        5: None,
+        6: None,
+        7: None,
+        8: None,
+        9: None,
+        10: None,
+        13: None,
+        14: None,
+        15: None,
+        16: None,
+        17: None,
+        18: None,
+        19: None,
+        20: None,
+        21: None,
+        22: None,
+        23: None,
+        24: None,
+        25: None,
+        26: None,
+        27: None,
+        28: None,
+        29: None,
+        30: None,
+        31: None,
+        32: None,
+        33: None,
+        34: None,
+        35: None,
+        36: None,
+        37: None,
+        38: None,
+        39: None,
+        40: None,
+        41: None,
+        42: None,
+        43: None,
+        44: None,
+        45: None,
+        46: None,
+        47: None,
+        48: None,
+        49: 10,
+        50: 11,
+        51: 12,
+        52: 13,
+        53: 14,
+        54: 15,
+        55: 16,
+        56: 17
     }
     _port_to_eeprom_mapping = {}
-    _sfp_port = list(range(1, PORT_END + 1))
+    _sfp_port = list(range(49, PORT_END + 1))
 
     @property
     def port_start(self):
@@ -50,11 +96,10 @@ class SfpUtil(SfpUtilBase):
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
-        sfp_modabs_path = '/sys/devices/platform/pddf.cpld/SFP/sfp%s_modabs' % str(port_num) 
-
         if port_num not in self._sfp_port:
             return False
-
+        
+        sfp_modabs_path = '/sys/devices/platform/pddf.cpld/SFP/sfp%s_modabs' % str(port_num - 49)
         status = 1
         try:
             with open(sfp_modabs_path, 'r') as port_status:

@@ -71,25 +71,25 @@ class Sfp(SfpBase):
 
     # Port number
     PORT_START = 1
-    PORT_END = 8 
+    PORT_END = 56 
     port_to_i2c_mapping = {
-        1: 10,
-        2: 11,
-        3: 12,
-        4: 13,
-        5: 14,
-        6: 15,
-        7: 16,
-        8: 17
+        49: 10,
+        50: 11,
+        51: 12,
+        52: 13,
+        53: 14,
+        54: 15,
+        55: 16,
+        56: 17
     }
-    _sfp_port = list(range(1, PORT_END + 1))
-    PRS_PATH = "/sys/devices/platform/belgite.smc/SFP/sfp_modabs"
+    _sfp_port = list(range(49, PORT_END + 1))
+    PRS_PATH = "/sys/devices/platform/pddf.cpld/SFP/sfp{0}_modabs"
     PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
     PMON_HWSKU_PATH = '/usr/share/sonic/hwsku'
     HOST_CHK_CMD = "docker > /dev/null 2>&1"
 
     PLATFORM = "x86_64-cel_belgite-r0"
-    HWSKU = "Celestica-E1031-T48S4"
+    HWSKU = "Belgite-M0"
 
     def __init__(self, sfp_index, sfp_name):
         # Init index
@@ -680,10 +680,10 @@ class Sfp(SfpBase):
             return False
 
         status = 1
+        sfp_modabs_path = self.PRS_PATH.format(self.port_num - 49)
         try:
-            with open(self.PRS_PATH, 'r') as port_status:
+            with open(sfp_modabs_path, 'r') as port_status:
                 status = int(port_status.read(), 16)
-                status = (status >> (self.port_num - 1)) & 1
         except IOError:
             return False
 
