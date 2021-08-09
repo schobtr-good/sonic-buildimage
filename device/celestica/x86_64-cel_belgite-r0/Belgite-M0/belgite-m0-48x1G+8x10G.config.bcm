@@ -1,8 +1,3 @@
-#Core clock Frequency
-core_clock_frequency=266
-
-#core clock to pm clock
-core_clock_to_pm_clock_factor=2
 
 #GPORT0
 portmap_25.0=2:1
@@ -152,21 +147,3 @@ portmap_55.0=61:10
 portmap_56.0=63:10
 
 
-pbmp_xport_xe=0x01FFFFFFFFFFFFFE
-
-#TSC0
-phy_chain_rx_polarity_flip_physical{29.0}=1
-
-#IFP INPORT support
-ifp_inports_support_enable=1
-
-#L2X FIFO mode
-l2xmsg_mode=1
-l2delete_chunks=4096
-
-port_flex_enable=1
-
-os=unix
-irq_adaptive_poll_enable=1
-
-cls_cmd_daemon=1
