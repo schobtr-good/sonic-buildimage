@@ -71,18 +71,21 @@ class Sfp(SfpBase):
 
     # Port number
     PORT_START = 1
-    PORT_END = 55 
+    PORT_END = 8 
+    SFP_PORT_START=1
+    SFP_PORT_END=8
+
     port_to_i2c_mapping = {
-        48: 10,
-        49: 11,
-        50: 12,
-        51: 13,
-        52: 14,
-        53: 15,
-        54: 16,
-        55: 17
+        1: 10,
+        2: 11,
+        3: 12,
+        4: 13,
+        5: 14,
+        6: 15,
+        7: 16,
+        8: 17
     }
-    _sfp_port = list(range(48, PORT_END + 1))
+    _sfp_port = list(range(SFP_PORT_START, SFP_PORT_END + 1))
     PRS_PATH = "/sys/devices/platform/pddf.cpld/SFP/sfp{0}_modabs"
     PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
     PMON_HWSKU_PATH = '/usr/share/sonic/hwsku'
@@ -680,7 +683,7 @@ class Sfp(SfpBase):
             return False
 
         status = 1
-        sfp_modabs_path = self.PRS_PATH.format(self.port_num - 49)
+        sfp_modabs_path = self.PRS_PATH.format(self.port_num - self.SFP_PORT_START)
         try:
             with open(sfp_modabs_path, 'r') as port_status:
                 status = int(port_status.read(), 16)

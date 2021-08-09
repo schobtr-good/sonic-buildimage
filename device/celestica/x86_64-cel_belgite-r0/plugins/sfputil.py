@@ -11,19 +11,19 @@ class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
     PORT_START = 1
-    PORT_END = 60 
-    SFP_PORT_START = 48
-    SFP_PORT_END = 55
+    PORT_END = 8 
+    SFP_PORT_START = 1 
+    SFP_PORT_END = 8 
     port_to_i2c_mapping = {
         
-        48: 10,
-        49: 11,
-        50: 12,
-        51: 13,
-        52: 14,
-        53: 15,
-        54: 16,
-        55: 17
+        1: 10,
+        2: 11,
+        3: 12,
+        4: 13,
+        5: 14,
+        6: 15,
+        7: 16,
+        8: 17
     }
     _port_to_eeprom_mapping = {}
     _sfp_port = list(range(SFP_PORT_START, SFP_PORT_END + 1))
