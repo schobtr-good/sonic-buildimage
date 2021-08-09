@@ -71,18 +71,18 @@ class Sfp(SfpBase):
 
     # Port number
     PORT_START = 1
-    PORT_END = 56 
+    PORT_END = 55 
     port_to_i2c_mapping = {
-        49: 10,
-        50: 11,
-        51: 12,
-        52: 13,
-        53: 14,
-        54: 15,
-        55: 16,
-        56: 17
+        48: 10,
+        49: 11,
+        50: 12,
+        51: 13,
+        52: 14,
+        53: 15,
+        54: 16,
+        55: 17
     }
-    _sfp_port = list(range(49, PORT_END + 1))
+    _sfp_port = list(range(48, PORT_END + 1))
     PRS_PATH = "/sys/devices/platform/pddf.cpld/SFP/sfp{0}_modabs"
     PLATFORM_ROOT_PATH = '/usr/share/sonic/device'
     PMON_HWSKU_PATH = '/usr/share/sonic/hwsku'

@@ -11,65 +11,22 @@ class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
     PORT_START = 1
-    PORT_END = 56 
+    PORT_END = 60 
+    SFP_PORT_START = 48
+    SFP_PORT_END = 55
     port_to_i2c_mapping = {
-        1: None,
-        2: None,
-        3: None,
-        4: None,
-        5: None,
-        6: None,
-        7: None,
-        8: None,
-        9: None,
-        10: None,
-        13: None,
-        14: None,
-        15: None,
-        16: None,
-        17: None,
-        18: None,
-        19: None,
-        20: None,
-        21: None,
-        22: None,
-        23: None,
-        24: None,
-        25: None,
-        26: None,
-        27: None,
-        28: None,
-        29: None,
-        30: None,
-        31: None,
-        32: None,
-        33: None,
-        34: None,
-        35: None,
-        36: None,
-        37: None,
-        38: None,
-        39: None,
-        40: None,
-        41: None,
-        42: None,
-        43: None,
-        44: None,
-        45: None,
-        46: None,
-        47: None,
-        48: None,
-        49: 10,
-        50: 11,
-        51: 12,
-        52: 13,
-        53: 14,
-        54: 15,
-        55: 16,
-        56: 17
+        
+        48: 10,
+        49: 11,
+        50: 12,
+        51: 13,
+        52: 14,
+        53: 15,
+        54: 16,
+        55: 17
     }
     _port_to_eeprom_mapping = {}
-    _sfp_port = list(range(49, PORT_END + 1))
+    _sfp_port = list(range(SFP_PORT_START, SFP_PORT_END + 1))
 
     @property
     def port_start(self):
@@ -91,22 +48,21 @@ class SfpUtil(SfpUtilBase):
         # Override port_to_eeprom_mapping for class initialization
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
         for x in range(self.PORT_START, self.PORT_END + 1):
-            port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[x])
+            port_eeprom_path = eeprom_path.format(self.port_to_i2c_mapping[x]) if x in self._sfp_port else None
             self.port_to_eeprom_mapping[x] = port_eeprom_path
+
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
         if port_num not in self._sfp_port:
             return False
-        
-        sfp_modabs_path = '/sys/devices/platform/pddf.cpld/SFP/sfp%s_modabs' % str(port_num - 49)
+        sfp_modabs_path = '/sys/devices/platform/pddf.cpld/SFP/sfp%s_modabs' % str(port_num - self.SFP_PORT_START)
         status = 1
         try:
             with open(sfp_modabs_path, 'r') as port_status:
                 status = int(port_status.read(), 16)
         except IOError:
             return False
-
         return status == 0
 
     def get_low_power_mode(self, port_num):
@@ -145,7 +101,6 @@ class SfpUtil(SfpUtilBase):
                         return False, {}
 
                 return True, port_dict
-
         finally:
             fd.close()
             epoll.close()
