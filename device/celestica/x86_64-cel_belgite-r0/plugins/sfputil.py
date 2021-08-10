@@ -56,7 +56,7 @@ class SfpUtil(SfpUtilBase):
     def get_presence(self, port_num):
         if port_num not in self._sfp_port:
             return False
-        sfp_modabs_path = '/sys/devices/platform/pddf.cpld/SFP/sfp%s_modabs' % str(port_num - self.SFP_PORT_START)
+        sfp_modabs_path = '/sys/devices/platform/pddf.cpld/SFP/sfp%s_modabs' % str(port_num)
         status = 1
         try:
             with open(sfp_modabs_path, 'r') as port_status:
