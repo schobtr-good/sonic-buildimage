@@ -642,6 +642,7 @@ static ssize_t psuL_enb_store(struct device *dev, struct device_attribute *attr,
     value = (value & 0x01) << PSUL_ENB;
     if (status == 0) {
         data = inb(PSU_STAT);
+	data &= 0xFE;
         data = data | value;
         outb(data, PSU_STAT);
         status = size;
@@ -661,7 +662,8 @@ static ssize_t psuR_enb_store(struct device *dev, struct device_attribute *attr,
     value = (value & 0x01) << PSUR_ENB;
     if (status == 0) {
         data = inb(PSU_STAT);
-        data = data | value;
+       	data &= 0xFD; 
+	data = data | value;
         outb(data, PSU_STAT);
         status = size;
     }
