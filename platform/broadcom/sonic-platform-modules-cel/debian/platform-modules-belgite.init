@@ -35,7 +35,7 @@ start)
         modprobe at24
         sleep 1
         #        modprobe hlx_gpio_ich
-        #modprobe dps200
+        modprobe platform_pddf_psu 
         modprobe optoe
         #        modprobe cp210x
 	modprobe lm75b
@@ -75,8 +75,8 @@ start)
         echo 24c02 0x51 > /sys/bus/i2c/devices/i2c-4/new_device
         sleep 0.1
         # Attach PSUs
-#        echo dps200 0x5a > /sys/bus/i2c/devices/i2c-12/new_device
-#        echo dps200 0x5b > /sys/bus/i2c/devices/i2c-13/new_device
+        echo fsp550 0x58 > /sys/bus/i2c/devices/i2c-4/new_device
+        echo fsp550 0x59 > /sys/bus/i2c/devices/i2c-4/new_device
 
 
         # Attach 8 SFP+ Uplink

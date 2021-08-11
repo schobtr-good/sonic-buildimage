@@ -22,12 +22,12 @@ PSU_NAME_LIST = ["PSU-R", "PSU-L"]
 PSU_NUM_FAN = [1, 1]
 PSU_I2C_MAPPING = {
     0: {
-        "num": 13,
-        "addr": "5b"
+        "num": 4,
+        "addr": "58"
     },
     1: {
-        "num": 12,
-        "addr": "5a"
+        "num": 4,
+        "addr": "59"
     },
 }
 
@@ -38,7 +38,7 @@ class Psu(PsuBase):
     def __init__(self, psu_index):
         PsuBase.__init__(self)
         self.index = psu_index
-        self.psu_path = "/sys/devices/platform/belgite.smc/"
+        self.psu_path = "/sys/devices/platform/pddf.cpld/"
         self.psu_presence = "psu{}_prs"
         self.psu_oper_status = "psu{}_status"
         self.i2c_num = PSU_I2C_MAPPING[self.index]["num"]
@@ -181,7 +181,7 @@ class Psu(PsuBase):
         presences_status = self.__read_txt_file(
             self.psu_path + self.psu_presence.format(psu_location[self.index])) or 0
 
-        return int(presences_status) == 1
+        return int(presences_status) == 0
 
     def get_status(self):
         """
