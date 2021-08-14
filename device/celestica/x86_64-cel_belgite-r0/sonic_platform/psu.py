@@ -5,7 +5,7 @@
 # provides the PSUs status which are available in the platform
 #
 #############################################################################
-
+import re
 import os.path
 import sonic_platform
 
@@ -14,8 +14,9 @@ try:
     from sonic_platform.fan import Fan
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-
-FAN_E1031_SPEED_PATH = "/sys/class/hwmon/hwmon{}/fan1_input"
+TLV_ATTR_TYPE_MODEL = 2
+TLV_ATTR_TYPE_SERIAL = 5
+PSU_EEPROM_PATH = "/sys/bus/i2c/devices/{}-00{}/eeprom"
 HWMON_PATH = "/sys/bus/i2c/devices/i2c-{0}/{0}-00{1}/hwmon"
 FAN_MAX_RPM = 11000
 PSU_NAME_LIST = ["PSU-R", "PSU-L"]
@@ -23,11 +24,13 @@ PSU_NUM_FAN = [1, 1]
 PSU_I2C_MAPPING = {
     0: {
         "num": 4,
-        "addr": "58"
+        "addr": "58",
+        "eeprom_addr": "50"
     },
     1: {
         "num": 4,
-        "addr": "59"
+        "addr": "59",
+        "eeprom_addr": "51"
     },
 }
 
@@ -44,6 +47,7 @@ class Psu(PsuBase):
         self.i2c_num = PSU_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = HWMON_PATH.format(self.i2c_num, self.i2c_addr)
+        self.eeprom_addr = PSU_EEPROM_PATH.format(self.i2c_num, PSU_I2C_MAPPING[self.index]["eeprom_addr"])
         PsuBase.__init__(self)
 
     def __read_txt_file(self, file_path):
@@ -62,6 +66,28 @@ class Psu(PsuBase):
                 if name.startswith(file_start) and search_str in self.__read_txt_file(file_path):
                     return file_path
         return None
+
+    def read_fru(self, path, attr_type):
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                all_info = f.read()
+            all_info = str(all_info)[46:].replace("\\", "-")
+
+            info_len_hex_list = re.findall(r"-xc(\w)", all_info)[:-1]
+            start_index = 4
+            info_list = list()
+            for info_len in info_len_hex_list:
+                info_len = int(info_len, 16)
+                info_list.append(all_info[start_index:start_index + info_len].strip())
+                start_index += info_len + 4
+            try:
+                return info_list[int(attr_type) - 1]
+            except IndexError as E:
+                print("[PSU] has error: %s" % E)
+                return "N/A"
+        else:
+            print("[PSU] Can't find path to eeprom : %s" % path)
+            return SyntaxError
 
     def get_voltage(self):
         """
@@ -194,3 +220,25 @@ class Psu(PsuBase):
             self.psu_path + self.psu_oper_status.format(psu_location[self.index])) or 0
 
         return int(power_status) == 1
+
+    def get_model(self):
+        """
+        Retrieves the model number (or part number) of the device
+        Returns:
+            string: Model/part number of device
+        """
+        model = self.read_fru(self.eeprom_addr, TLV_ATTR_TYPE_MODEL)
+        if not model:
+            return "N/A"
+        return model
+
+    def get_serial(self):
+        """
+        Retrieves the serial number of the device
+        Returns:
+            string: Serial number of device
+        """
+        serial = self.read_fru(self.eeprom_addr, TLV_ATTR_TYPE_SERIAL)
+        if not serial:
+            return "N/A"
+        return serial
