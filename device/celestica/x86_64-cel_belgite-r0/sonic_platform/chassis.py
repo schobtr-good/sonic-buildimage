@@ -44,12 +44,10 @@ class Chassis(ChassisBase):
         self.is_host = self._api_helper.is_host()
 
 
-        if not self.is_host:
-            self.__initialize_fan()
-            self.__initialize_psu()
-            self.__initialize_thermals()
-        else:
-            self.__initialize_components()
+        self.__initialize_fan()
+        self.__initialize_psu()
+        self.__initialize_thermals()
+        self.__initialize_components()
 
         self._reboot_cause_path = HOST_REBOOT_CAUSE_PATH if self.__is_host(
         ) else PMON_REBOOT_CAUSE_PATH
@@ -73,11 +71,11 @@ class Chassis(ChassisBase):
             self._psu_list.append(psu)
 
     def __initialize_fan(self):
-        from sonic_platform.fan import Fan
-        for fant_index in range(0, NUM_FAN_TRAY):
-            for fan_index in range(0, NUM_FAN):
-                fan = Fan(fant_index)
-                self._fan_list.append(fan)
+        from sonic_platform.fan_drawer  import FanDrawer
+        for i in range(NUM_FAN_TRAY):
+            fandrawer = FanDrawer(i)
+            self._fan_drawer_list.append(fandrawer)
+            self._fan_list.extend(fandrawer._fan_list)
 
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal

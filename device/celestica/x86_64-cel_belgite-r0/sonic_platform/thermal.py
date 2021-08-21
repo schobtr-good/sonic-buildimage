@@ -20,8 +20,8 @@ class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
 
     THERMAL_NAME_LIST = []
-    MAINBOARD_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-0049/hwmon/hwmon5"
-    CPUBOARD_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-004a/hwmon/hwmon6"
+    MAINBOARD_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-0049/hwmon/hwmon7"
+    CPUBOARD_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-004a/hwmon/hwmon8"
     SS_CONFIG_PATH = "/usr/share/sonic/device/x86_64-cel_belgite-r0/sensors.conf"
 
     def __init__(self, thermal_index):
@@ -45,12 +45,8 @@ class Thermal(ThermalBase):
         self.ss_key = self.THERMAL_NAME_LIST[self.index]
 
     def __get_ss_info(self, index):
-        if self.index <= 1:
-            ss_path = self.MAINBOARD_SS_PATH
-            ss_index = index
-        else:
-            ss_path = self.CPUBOARD_SS_PATH
-            ss_index = index
+        ss_path = self.MAINBOARD_SS_PATH
+        ss_index = 1
         return ss_index, ss_path
 
     def __read_txt_file(self, file_path):
