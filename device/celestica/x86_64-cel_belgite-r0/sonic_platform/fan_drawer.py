@@ -13,7 +13,7 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-NUM_FAN = 2
+NUM_FAN = 1
 
 
 class FanDrawer(FanDrawerBase):

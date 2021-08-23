@@ -12,6 +12,7 @@ import os.path
 
 try:
     from sonic_platform_base.fan_base import FanBase
+    from .helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
@@ -39,10 +40,12 @@ PSU_I2C_MAPPING = {
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
-    def __init__(self, fan_index=0):
-        self.fan_index = fan_index
-
+    def __init__(self, fan_tray_index, fan_index=0, is_psu_fan=False, psu_index=0):
         FanBase.__init__(self)
+        self.fan_index = fan_index
+        self._api_helper = APIHelper()
+        self.fan_tray_index = fan_tray_index
+        self.is_psu_fan = is_psu_fan
 
     def get_direction(self):
         """
