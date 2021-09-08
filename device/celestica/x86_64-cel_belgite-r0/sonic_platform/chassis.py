@@ -21,10 +21,10 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-NUM_FAN_TRAY = 3
+NUM_FAN_TRAY = 5
 NUM_FAN = 1
 NUM_PSU = 2
-NUM_THERMAL = 7
+NUM_THERMAL = 4
 NUM_SFP = 8 
 NUM_COMPONENT = 3
 RESET_REGISTER = "0x112"

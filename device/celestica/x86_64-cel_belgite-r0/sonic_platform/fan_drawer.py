@@ -19,13 +19,17 @@ NUM_FAN = 1
 class FanDrawer(FanDrawerBase):
     def __init__(self, fantray_index):
         FanDrawerBase.__init__(self)
-        self._index = fantray_index + 1
+        self._index = fantray_index + 1  
         self._init_fan(fantray_index)
+        print("initself._index:%s" % self._index)
 
     def _init_fan(self, fantray_index):
         from sonic_platform.fan import Fan
-        for index in range(NUM_FAN):
-            fan = Fan(fantray_index, index)
+        for index in range(NUM_FAN):    
+            if fantray_index < 3:
+                fan = Fan(fantray_index, index)
+            else:
+                fan = Fan(fantray_index, index, True, fantray_index-2)
             self._fan_list.append(fan)
 
     def set_status_led(self, color):
@@ -105,4 +109,9 @@ class FanDrawer(FanDrawerBase):
         Returns:
             bool: True if it is replaceable.
         """
-        return True
+        print("self._index:%s" % self._index)
+        if self._index < 4: 
+            return False
+        else:
+            return True
+        

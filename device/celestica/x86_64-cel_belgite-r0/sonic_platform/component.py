@@ -20,7 +20,7 @@ except ImportError as e:
 MMC_CPLD_ADDR = '0x100'
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 CONFIG_DB_PATH = "/etc/sonic/config_db.json"
-SMC_CPLD_PATH = "/sys/devices/platform/belgite.smc/version"
+SMC_CPLD_PATH = "/sys/devices/platform/pddf.cpld/version"
 GETREG_PATH = "/sys/devices/platform/belgite.smc/getreg"
 COMPONENT_NAME_LIST = ["SMC_CPLD", "MMC_CPLD", "BIOS"]
 COMPONENT_DES_LIST = ["System Management Controller",

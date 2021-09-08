@@ -20,8 +20,10 @@ class Thermal(ThermalBase):
     """Platform-specific Thermal class"""
 
     THERMAL_NAME_LIST = []
-    MAINBOARD_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-0049/hwmon/hwmon7"
-    CPUBOARD_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-004a/hwmon/hwmon8"
+    U60_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-0049/hwmon/hwmon7"
+    U7_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-6/6-004a/hwmon/hwmon8"
+    U10_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-5/5-0048/hwmon/hwmon5"
+    U4_SS_PATH = "/sys/devices/pci0000:00/0000:00:12.0/i2c-1/i2c-5/5-0049/hwmon/hwmon6"
     SS_CONFIG_PATH = "/usr/share/sonic/device/x86_64-cel_belgite-r0/sensors.conf"
 
     def __init__(self, thermal_index):
@@ -30,22 +32,24 @@ class Thermal(ThermalBase):
         self.index = thermal_index
 
         # Add thermal name
-        self.THERMAL_NAME_LIST.append("Rear  panel-Inlet ambient sensor")
-        self.THERMAL_NAME_LIST.append("Rear  panel-Helix shutdown sensor")
-        self.THERMAL_NAME_LIST.append(
-            "Front panel-Inlet ambient sensor (right)")
-        self.THERMAL_NAME_LIST.append("Front panel-Helix shutdown sensor")
-        self.THERMAL_NAME_LIST.append(
-            "Front panel-Inlet ambient sensor (left)")
-        self.THERMAL_NAME_LIST.append("CPU board temperature sensor : 1")
-        self.THERMAL_NAME_LIST.append("CPU board temperature sensor : 2")
+        self.THERMAL_NAME_LIST.append("LM75 U10")
+        self.THERMAL_NAME_LIST.append("LM75 U4")
+        self.THERMAL_NAME_LIST.append("LM75 U7")
+        self.THERMAL_NAME_LIST.append("LM75 U60")
 
         # Set hwmon path
         self.ss_index, self.hwmon_path = self.__get_ss_info(self.index)
         self.ss_key = self.THERMAL_NAME_LIST[self.index]
 
     def __get_ss_info(self, index):
-        ss_path = self.MAINBOARD_SS_PATH
+        ss_dict = {
+                1:self.U10_SS_PATH,
+                2:self.U4_SS_PATH,
+                3:self.U7_SS_PATH,
+                4:self.U60_SS_PATH
+                }
+
+        ss_path = ss_dict.get(index) 
         ss_index = 1
         return ss_index, ss_path
 
