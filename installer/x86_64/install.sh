@@ -399,35 +399,6 @@ demo_install_uefi_grub()
         exit 1
     }
 
-<<<<<<< HEAD
-    if [ -z "$onie_secure_boot" ]; then
-        grub_install_log=$(mktemp)
-        grub-install \
-            --no-nvram \
-            --bootloader-id="$demo_volume_label" \
-            --efi-directory="/boot/efi" \
-            --boot-directory="$demo_mnt" \
-            --recheck \
-            "$blk_dev" > /$grub_install_log 2>&1 || {
-            echo "ERROR: grub-install failed on: $blk_dev"
-            cat $grub_install_log && rm -f $grub_install_log
-            exit 1
-        }
-        rm -f $grub_install_log
-    else
-	rm -rf /boot/efi/EFI/$demo_volume_label/
-	mkdir /boot/efi/EFI/$demo_volume_label/
-        cp -rf /boot/efi/EFI/onie/* /boot/efi/EFI/$demo_volume_label/
-        uuid=$(blkid | grep $demo_volume_label | sed -ne 's/.* UUID=\"\([^"]*\)\".*/\1/p')
-        if [ -n "$uuid" ]; then
-            replaced_uuid=$(sed -n 's/^search.fs_uuid[ ]\+\([^ ]\+\).*/\1/p' /boot/efi/EFI/$demo_volume_label/grub.cfg)
-            sed -i "s/$replaced_uuid[ ]\+root.*/$uuid root/g" /boot/efi/EFI/$demo_volume_label/grub.cfg
-        else
-            echo "ERROR: can not find $demo_volume_label partition"
-            exit 1
-        fi
-    fi
-=======
 if [ -z "$onie_secure_boot" ]; then
     grub_install_log=$(mktemp)
     grub-install \
@@ -442,11 +413,10 @@ if [ -z "$onie_secure_boot" ]; then
         exit 1
     }
     rm -f $grub_install_log
->>>>>>> origin/201911_cel_midstone-100x_115200
 
-else
-	rm -rf /boot/efi/EFI/$demo_volume_label/
-        mkdir /boot/efi/EFI/$demo_volume_label/
+    else
+        rm -rf /boot/efi/EFI/$demo_volume_label/
+	mkdir /boot/efi/EFI/$demo_volume_label/
         cp /boot/efi/EFI/onie/* /boot/efi/EFI/$demo_volume_label/
         uuid=$(blkid | grep $demo_volume_label | sed -ne 's/.* UUID=\"\([^"]*\)\".*/\1/p')
         if [ -n "$uuid" ]; then
@@ -468,11 +438,7 @@ else
         echo "ERROR: efibootmgr failed to create new boot variable on: $blk_dev"
         exit 1
     }
-<<<<<<< HEAD
     else
-=======
-else
->>>>>>> origin/201911_cel_midstone-100x_115200
 	efibootmgr --quiet --create \
             --label "$demo_volume_label" \
             --disk $blk_dev --part $uefi_part \
@@ -699,15 +665,9 @@ if [ "$install_env" = "onie" ]; then
     # Add menu entries for ONIE -- use the grub fragment provided by the
     # ONIE distribution.
     $onie_root_dir/grub.d/50_onie_grub >> $grub_cfg
-<<<<<<< HEAD
-    #if [ -n "$onie_secure_boot" ]; then
-    #    sed -i 's/shimx64/grubx64/g'  $grub_cfg
-    #fi
-=======
     if [ -n "$onie_secure_boot" ]; then
         sed -i 's/shimx64/grubx64/g'  $grub_cfg
     fi
->>>>>>> origin/201911_cel_midstone-100x_115200
 
     mkdir -p $onie_initrd_tmp/$demo_mnt/grub
 else
