@@ -11,8 +11,8 @@ setup(
     author='SONiC Team',
     author_email='linuxnetdev@microsoft.com',
     url='https://github.com/Azure/sonic-buildimage',
-    maintainer='Wirut Getbamrung',
-    maintainer_email='wgetbumr@celestica.com',
+    maintainer='Nicholas Wu',
+    maintainer_email='nicwu@celestica.com',
     packages=[
         'sonic_platform',
     ],

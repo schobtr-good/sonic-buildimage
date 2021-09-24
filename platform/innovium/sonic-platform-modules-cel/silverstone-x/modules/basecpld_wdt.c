@@ -32,16 +32,21 @@
 #include <linux/uaccess.h>
 #include <linux/watchdog.h>
 
-#define REBOOT_CAUSE_REG   0xA106
-#define WDT_TIMER_REG      0xA181
-#define WDT_ENABLE_REG     0xA182
-#define WDT_FEED_REG       0xA183
-#define WDT_PUNCH_REG      0xA184
-#define WDT_START_FEED     0x01
-#define WDT_STOP_FEED      0x00
+#define REBOOT_CAUSE_REG             0xA106
+#define WDT_SET_TIMER_H_BIT_REG      0xA181
+#define WDT_SET_TIMER_M_BIT_REG      0xA182
+#define WDT_SET_TIMER_L_BIT_REG      0xA183
+#define WDT_TIMER_H_BIT_REG          0xA184
+#define WDT_TIMER_M_BIT_REG          0xA185
+#define WDT_TIMER_L_BIT_REG          0xA186
+#define WDT_ENABLE_REG               0xA187
+#define WDT_FEED_REG                 0xA188
+#define WDT_PUNCH_REG                0xA189
+#define WDT_START_FEED               0x01
+#define WDT_STOP_FEED                0x00
 
-#define MAX_TIMER_VALUE     0x07    /* 0-200ms 1-30s 2-1min 3-3min 4-4min 5-5min 6-7min 7-10min */
-#define DEFUALT_TIMER_VALUE 0x02    /* 2-1min */
+#define MAX_TIMER_VALUE     0xffffff
+#define DEFUALT_TIMER_VALUE 180000    /* 180s */
 #define WDT_ENABLE          0x01
 #define WDT_DISABLE         0x00
 #define WDT_RESTART         0x00
@@ -49,10 +54,10 @@
 
 static const int max_timeout = MAX_TIMER_VALUE;
 
-static int timeout = DEFUALT_TIMER_VALUE;	/* default 1min */
+static int timeout = DEFUALT_TIMER_VALUE;	/* default 180s */
 module_param(timeout, int, 0);
 MODULE_PARM_DESC(timeout, "Start watchdog timer on module load with"
-	" given initial timeout, range 0x00~0x07(0-200ms 1-30s 2-1min 3-3min 4-4min 5-5min 6-7min 7-10min)."
+	" given initial timeout(unit: ms)."
 	" Zero (default) disables this feature.");
 
 static bool nowayout = WATCHDOG_NOWAYOUT;
@@ -65,8 +70,8 @@ struct watchdog_data {
 	char		expect_close;
 	struct watchdog_info ident;
 
-	unsigned short	timeout;
-	u8		timer_val;	/* content for the wd_time register */
+	int	timeout;
+	int		timer_val;	/* content for the wd_time register */
 	char		caused_reboot;	/* last reboot was by the watchdog */
 };
 
@@ -74,6 +79,24 @@ static struct watchdog_data watchdog = {
 	.lock = __MUTEX_INITIALIZER(watchdog.lock),
 };
 
+static int watchdog_time_left(void)
+{
+	int time = 0;
+	
+	time = inb(WDT_TIMER_H_BIT_REG);
+	time = time << 8 | inb(WDT_TIMER_M_BIT_REG);
+	time = time << 8 | inb(WDT_TIMER_L_BIT_REG);
+	return time;
+}
+static int watchdog_get_timeout(void)
+{
+	int timeout = 0;
+	
+	timeout = inb(WDT_TIMER_H_BIT_REG);
+	timeout = timeout << 8 | inb(WDT_TIMER_M_BIT_REG);
+	timeout = timeout << 8 | inb(WDT_TIMER_L_BIT_REG);
+	return timeout;
+}
 static int watchdog_set_timeout(int timeout)
 {
 	if (timeout <= 0
@@ -91,7 +114,9 @@ static int watchdog_set_timeout(int timeout)
 		watchdog.timer_val = timeout;
 	}
 	/* Set timer value */
-	outb(watchdog.timer_val, WDT_TIMER_REG);
+	outb((watchdog.timer_val >> 16) & 0xff, WDT_SET_TIMER_H_BIT_REG);
+	outb((watchdog.timer_val >> 8) & 0xff, WDT_SET_TIMER_M_BIT_REG);
+	outb(watchdog.timer_val & 0xff, WDT_SET_TIMER_L_BIT_REG);
 	mutex_unlock(&watchdog.lock);
 
 	return 0;
@@ -165,13 +190,12 @@ static int watchdog_open(struct inode *inode, struct file *file)
 	if (test_and_set_bit(0, &watchdog.opened))
 		return -EBUSY;
 
-	watchdog_start();
+	//watchdog_start();
 
 	if (nowayout)
 		__module_get(THIS_MODULE);
 
-	//watchdog.expect_close = 0;
-	watchdog.expect_close = 1;
+	watchdog.expect_close = 0;
 	return nonseekable_open(inode, file);
 }
 
@@ -291,7 +315,9 @@ static long watchdog_ioctl(struct file *file, unsigned int cmd,
 
 	case WDIOC_GETTIMEOUT:
 		return put_user(watchdog.timeout, uarg.i);
-
+		
+	case WDIOC_GETTIMELEFT:
+		return put_user(watchdog_time_left(), uarg.i);
 	default:
 		return -ENOTTY;
 
@@ -331,7 +357,8 @@ static int __init basecpld_wdt_init(void)
 	
 	watchdog.ident.options = WDIOC_SETTIMEOUT
 				| WDIOF_MAGICCLOSE
-				| WDIOF_KEEPALIVEPING;
+				| WDIOF_KEEPALIVEPING
+				| WDIOC_GETTIMELEFT;
 
 	snprintf(watchdog.ident.identity,
 		sizeof(watchdog.ident.identity), "silverstone-x basecpld watchdog");
@@ -362,18 +389,14 @@ static int __init basecpld_wdt_init(void)
 			goto exit_miscdev;
 		}
 
-		watchdog_start();
+		//watchdog_start();
 
-		mutex_lock(&watchdog.lock);
 
-		if (timeout > MAX_TIMER_VALUE) {    /* 0-200ms 1-30s 2-1min 3-3min 4-4min 5-5min 6-7min 7-10min */
-			/* select minutes for timer units */
-			outb(MAX_TIMER_VALUE, WDT_TIMER_REG);
+		if (timeout > MAX_TIMER_VALUE) {
+			watchdog_set_timeout(MAX_TIMER_VALUE);
 		} else {
-			/* select seconds for timer units */
-			outb(timeout, WDT_TIMER_REG);
+			watchdog_set_timeout(timeout);
 		}
-		mutex_unlock(&watchdog.lock);
 
 		if (nowayout)
 			__module_get(THIS_MODULE);

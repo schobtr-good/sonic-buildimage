@@ -53,6 +53,23 @@ class SfpUtil(SfpUtilBase):
     def port_to_i2cbus_mapping(self):
         return self._port_to_i2cbus_mapping
 
+    @property
+    def get_transceiver_status(self):
+        content = 0
+        port = 0
+        try:
+            while port >= self.port_start and port <= self.port_end:
+                if self.get_presence(port):
+		    content = content | (1 << port)
+
+                port = port + 1
+
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        return content 
+
     def get_port_name(self, port_num):
         if port_num in self.osfp_ports:
             self._port_name = "QSFP" + str(port_num - self.OSFP_PORT_START + 1)
@@ -76,22 +93,21 @@ class SfpUtil(SfpUtilBase):
             self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET)
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 x + self.EEPROM_OFFSET)
-            #print ("Nicholas eeprom path '%s'" % self.port_to_eeprom_mapping[x])
+	    # Get Transceiver status
+        self.modprs_register = self.get_transceiver_status
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
         # Check for invalid port_num
-        #print ("Nicholas port num '%d'" % port_num)
         if port_num not in range(self.port_start, self.port_end + 1):
             return False
 
         # Get path for access port presence status
         port_name = self.get_port_name(port_num)
-        #print ("Nicholas port '%s'" % port_name)
         sysfs_filename = "qsfp_modprs" if port_num in self.osfp_ports else "sfp_modabs"
         self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.osfp_ports else self.SFP_PORT_INFO_PATH
         reg_path = "/".join([self.PORT_INFO_PATH, port_name, sysfs_filename])
-        #print ("Nicholas path '%s'" % reg_path)
+
         # Read status
         try:
             reg_file = open(reg_path)
@@ -109,6 +125,7 @@ class SfpUtil(SfpUtilBase):
 
     def get_low_power_mode(self, port_num):
         # Check for invalid QSFP port_num
+        self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.osfp_ports else self.SFP_PORT_INFO_PATH
         if port_num not in self.osfp_ports:
             return False
 
@@ -131,6 +148,7 @@ class SfpUtil(SfpUtilBase):
 
     def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid QSFP port_num
+        self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.osfp_ports else self.SFP_PORT_INFO_PATH
         if port_num not in self.osfp_ports:
             return False
 
@@ -152,6 +170,7 @@ class SfpUtil(SfpUtilBase):
 
     def reset(self, port_num):
         # Check for invalid QSFP port_num
+        self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.osfp_ports else self.SFP_PORT_INFO_PATH
         if port_num not in self.osfp_ports:
             return False
 
@@ -186,7 +205,59 @@ class SfpUtil(SfpUtilBase):
         return True
 
     def get_transceiver_change_event(self, timeout=0):
-        """
-        TBD
-        """
-        raise NotImplementedError
+
+        start_time = time.time()
+        port_dict = {}
+        port = self.port_start
+        forever = False
+
+        if timeout == 0:
+            forever = True
+        elif timeout > 0:
+            timeout = timeout / float(1000) # Convert to secs
+        else:
+            print "get_transceiver_change_event:Invalid timeout value", timeout
+            return False, {}
+
+        end_time = start_time + timeout
+        if start_time > end_time:
+            print 'get_transceiver_change_event:' \
+                       'time wrap / invalid timeout value', timeout
+
+            return False, {} # Time wrap or possibly incorrect timeout
+
+        while timeout >= 0:
+            # Check for OIR events and return updated port_dict
+            reg_value = self.get_transceiver_status
+            if reg_value != self.modprs_register:
+                changed_ports = self.modprs_register ^ reg_value
+                while port >= self.port_start and port <= self.port_end:
+
+                    # Mask off the bit corresponding to our port
+                    mask = (1 << port)
+
+                    if changed_ports & mask:
+                        # ModPrsL is active low
+                        if reg_value & mask == 0:
+                            port_dict[port] = '1'
+                        else:
+                            port_dict[port] = '0'
+
+                    port += 1
+
+                # Update reg value
+                self.modprs_register = reg_value
+                return True, port_dict
+
+            if forever:
+                time.sleep(1)
+            else:
+                timeout = end_time - time.time()
+                if timeout >= 1:
+                    time.sleep(1) # We poll at 1 second granularity
+                else:
+                    if timeout > 0:
+                        time.sleep(timeout)
+                    return True, {}
+        print "get_transceiver_change_event: Should not reach here."
+        return False, {}

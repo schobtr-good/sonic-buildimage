@@ -36,7 +36,7 @@
 #define VERSION_ADDR 0xA100
 #define SCRATCH_ADDR 0xA101
 #define SYS_LED_ADDR 0xA162
-#define CPLD_REGISTER_SIZE 0xA3
+#define CPLD_REGISTER_SIZE 0xFF
 
 struct cpld_b_data {
     struct mutex       cpld_lock;
@@ -336,7 +336,7 @@ static struct attribute_group cpld_b_attrs_grp = {
 static struct resource cpld_b_resources[] = {
     {
         .start  = 0xA100,
-        .end    = 0xA1A2,
+        .end    = 0xA1FF,
         .flags  = IORESOURCE_IO,
     },
 };

@@ -30,6 +30,7 @@ TLV_EEPROM_I2C_ADDR = 56
 class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
     EEPROM_DECODE_HEADLINES = 6
+    _TLV_DISPLAY_VENDOR_EXT = True
 
     def __init__(self):
         self._eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-00{1}/eeprom".format(TLV_EEPROM_I2C_BUS, TLV_EEPROM_I2C_ADDR)

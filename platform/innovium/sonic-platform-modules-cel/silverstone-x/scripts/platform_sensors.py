@@ -74,7 +74,6 @@ def read_temperature_sensors(ipmi_sdr_elist):
         ('TEMP_FB_U17',         'Fan Tray Right Temp'),
         ('TEMP_SW_U52',         'Switchboard Left Inlet Temp'),
         ('TEMP_SW_U16',         'Switchboard Right Inlet Temp'),
-        ('TEMP_BB_U3',          'Baseboard Temp'),
         ('TEMP_CPU',            'CPU Internal Temp'),
         ('TEMP_SW_Internal',    'ASIC Internal Temp'),
         ('TEMP_SW_U2',          'SW Radiator Temp'),
