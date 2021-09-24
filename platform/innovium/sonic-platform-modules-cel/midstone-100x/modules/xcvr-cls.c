@@ -94,7 +94,7 @@ static ssize_t sfp_txfault_show(struct device *dev,
 }
 
 
-static ssize_t sfp_absmod_show(struct device *dev, 
+static ssize_t sfp_modabs_show(struct device *dev, 
 			       struct device_attribute *attr, char *buf)
 {
 	u8 data;
@@ -144,7 +144,7 @@ static ssize_t sfp_txdisable_store(struct device *dev,
 
 
 
-DEVICE_ATTR_RO(sfp_absmod);
+DEVICE_ATTR_RO(sfp_modabs);
 DEVICE_ATTR_RO(sfp_txfault);
 DEVICE_ATTR_RO(sfp_rxlos);
 DEVICE_ATTR_RW(sfp_txdisable);
@@ -152,7 +152,7 @@ DEVICE_ATTR_RW(sfp_txdisable);
 
 /* sfp_attrs */
 static struct attribute *sfp_attrs[] = {
-	&dev_attr_sfp_absmod.attr,
+	&dev_attr_sfp_modabs.attr,
 	&dev_attr_sfp_txfault.attr,
 	&dev_attr_sfp_rxlos.attr,
 	&dev_attr_sfp_txdisable.attr,

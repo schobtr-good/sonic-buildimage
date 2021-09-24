@@ -65,7 +65,7 @@ struct switchboard_data {
 struct sff_device_data{
     int portid;
 	struct i2c_client *client;
-	struct mutex lock;
+    struct mutex *lock;
 };
 
 
@@ -299,11 +299,11 @@ static ssize_t qsfp_reset_show(struct device *dev, struct device_attribute *attr
 	struct i2c_client *client = drvdata->client;
 	u8 portid = drvdata->portid;
 	
-    mutex_lock(&drvdata->lock);
+    mutex_lock(drvdata->lock);
 	i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
 	data = i2c_smbus_read_byte_data(client, PORT_CR_ADDR);
     len = sprintf(buf, "%x\n",(data >> CTRL_RST) & 0x01);
-    mutex_unlock(&drvdata->lock);
+    mutex_unlock(drvdata->lock);
     return len;
 }
 
@@ -316,7 +316,7 @@ static ssize_t qsfp_reset_store(struct device *dev, struct device_attribute *att
 	struct i2c_client *client = drvdata->client;
 	u8 portid = drvdata->portid;
 
-    mutex_lock(&drvdata->lock);
+    mutex_lock(drvdata->lock);
     status = kstrtol(buf, 0, &value);
     if (status == 0) {
 		i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
@@ -329,7 +329,7 @@ static ssize_t qsfp_reset_store(struct device *dev, struct device_attribute *att
 		i2c_smbus_write_byte_data(client, PORT_CR_ADDR, data);
         status = size;
     }
-    mutex_unlock(&drvdata->lock);
+    mutex_unlock(drvdata->lock);
     return status;
 }
 
@@ -340,12 +340,12 @@ static ssize_t qsfp_lpmode_show(struct device *dev, struct device_attribute *att
 	struct i2c_client *client = drvdata->client;
 	u8 portid = drvdata->portid;
 
-	mutex_lock(&drvdata->lock);
+    mutex_lock(drvdata->lock);
 	i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
 	value = i2c_smbus_read_byte_data(client, PORT_CR_ADDR);
 	if(value < 0)
 		return value;
-	mutex_unlock(&drvdata->lock);
+    mutex_unlock(drvdata->lock);
     return sprintf(buf, "%d\n",(value >> CTRL_LPMD) & 0x01);
 
 }
@@ -358,7 +358,7 @@ static ssize_t qsfp_lpmode_store(struct device *dev, struct device_attribute *at
 	struct i2c_client *client = drvdata->client;
 	u8 portid = drvdata->portid;
 
-    mutex_lock(&drvdata->lock);
+    mutex_lock(drvdata->lock);
     status = kstrtol(buf, 0, &value);
     if (status == 0) {
 		i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
@@ -371,7 +371,7 @@ static ssize_t qsfp_lpmode_store(struct device *dev, struct device_attribute *at
 		i2c_smbus_write_byte_data(client, PORT_CR_ADDR, data);
         status = size;
     }
-    mutex_unlock(&drvdata->lock);
+    mutex_unlock(drvdata->lock);
     return status;
 
 }
@@ -384,11 +384,11 @@ static ssize_t qsfp_modprs_show(struct device *dev, struct device_attribute *att
 	struct i2c_client *client = drvdata->client;
 	u8 portid = drvdata->portid;
 	
-    mutex_lock(&drvdata->lock);
+    mutex_lock(drvdata->lock);
 	i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
 	data = i2c_smbus_read_byte_data(client, PORT_SR_ADDR);
     len = sprintf(buf, "%x\n",(data >> SR_MODPRS) & 0x01);
-    mutex_unlock(&drvdata->lock);
+    mutex_unlock(drvdata->lock);
     return len;
 
 }
@@ -401,11 +401,11 @@ static ssize_t qsfp_modirq_show(struct device *dev, struct device_attribute *att
 	struct i2c_client *client = drvdata->client;
 	u8 portid = drvdata->portid;
 	
-    mutex_lock(&drvdata->lock);
+    mutex_lock(drvdata->lock);
 	i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
 	data = i2c_smbus_read_byte_data(client, PORT_SR_ADDR);
     len = sprintf(buf, "%x\n",(data >> SR_INTN) & 0x01);
-    mutex_unlock(&drvdata->lock);
+    mutex_unlock(drvdata->lock);
     return len;
 
 }
@@ -417,11 +417,11 @@ static ssize_t qsfp_modintl_show(struct device *dev, struct device_attribute *at
 	struct i2c_client *client = drvdata->client;
 	u8 portid = drvdata->portid;
 	
-    mutex_lock(&drvdata->lock);
+    mutex_lock(drvdata->lock);
 	i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
 	data = i2c_smbus_read_byte_data(client, PORT_INT_STAT);
     len = sprintf(buf, "%x\n",(data >> INT_STAT_LOS) & 0x01);
-    mutex_unlock(&drvdata->lock);
+    mutex_unlock(drvdata->lock);
     return len;
 
 }
@@ -503,16 +503,22 @@ static struct device * cloverstone_dp_sff_init(struct device *dev, int portid) {
 	struct sff_device_data *new_data;
     struct device *new_device;
 	int device_id = 0;
+	char port_map[4][16] = {
+			{1, 2, 33, 34, 3, 4, 35, 36, 5, 6, 37, 38, 7, 8, 39, 40}, 
+			{9, 10, 41, 42, 11, 12, 43, 44, 13, 14, 45, 46, 15, 16, 47, 48}, 
+			{17, 18, 49, 50, 19, 20, 51, 52, 21, 22, 53, 54, 23, 24, 55, 56}, 
+			{25, 26, 57, 58, 27, 28, 59, 60, 29, 30, 61, 62, 31, 32, 63, 64}
+		};
 	
     new_data = kzalloc(sizeof(*new_data), GFP_KERNEL);
     if (!new_data) {
         printk(KERN_ALERT "Cannot alloc sff device data @port%d", portid);
         return NULL;
-    }
-	mutex_init(&new_data->lock);	
+    } 
     /* The QSFP port ID start from 1 */
     new_data->portid = portid + 1;
 	new_data->client = data->client;
+	new_data->lock = &(data->lock);
 	switch(data->client->addr){
 		case SWCPLD1_I2C_ADDR:{
 			device_id = 0;
@@ -534,7 +540,7 @@ static struct device * cloverstone_dp_sff_init(struct device *dev, int portid) {
 		}
 		break;
 	}
-
+	
 	/* CPLD1(0x30) control QSFP(1-16) and CPLD1(0x32) control QSFP(17-32) and SFP(1-2) */
     new_device = device_create_with_groups(data->class, 
                                            NULL,
@@ -542,15 +548,15 @@ static struct device * cloverstone_dp_sff_init(struct device *dev, int portid) {
                                            new_data, 
                                            sff_attr_grps, 
                                            "%s%d", 
-                                           "QSFP",  (portid + 1) + (device_id * QSFP_PORT_NUM));
+                                           "QSFP",  port_map[device_id][portid]);
 	
 	if (IS_ERR(new_device)) {
-        printk(KERN_ALERT "Cannot create sff device @port%d", (portid + 1) + (device_id * QSFP_PORT_NUM));
+        printk(KERN_ALERT "Cannot create sff device @port%d", port_map[device_id][portid]);
         kfree(new_data);
         return NULL;
     }
 	
-    printk(KERN_INFO "Create sff device @port%d", (portid + 1) + (device_id * QSFP_PORT_NUM));
+    printk(KERN_INFO "Create sff device @port%d", port_map[device_id][portid]);
     return new_device;
 }
 
@@ -676,5 +682,5 @@ module_i2c_driver(switchboard_driver);
 
 MODULE_AUTHOR("Celestica Inc.");
 MODULE_DESCRIPTION("Celestica CPLD switchboard driver");
-MODULE_VERSION("1.0.0");
+MODULE_VERSION("2.0.0");
 MODULE_LICENSE("GPL");

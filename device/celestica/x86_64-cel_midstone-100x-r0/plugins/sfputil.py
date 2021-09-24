@@ -13,15 +13,17 @@ except ImportError as e:
 class SfpUtil(SfpUtilBase):
     """Platform-specific SfpUtil class"""
 
-    PORT_START = 1
-    PORT_END = 34
-    OSFP_PORT_START = 1
-    OSFP_PORT_END = 32
-    SFP_PORT_START = 33
-    SFP_PORT_END = 34
+    PORT_START = 0
+    PORT_END = 65
+    QSFP_PORT_START = 0
+    QSFP_PORT_END = 63
+    SFP_PORT_START = 64
+    SFP_PORT_END = 65
 
-    EEPROM_OFFSET = 9
-    PORT_INFO_PATH = '/sys/class/midstone-100x_fpga'
+    EEPROM_OFFSET = 16
+    QSFP_PORT_INFO_PATH = '/sys/class/SFF'
+    SFP_PORT_INFO_PATH = '/sys/bus/platform/devices/cls-xcvr'
+    PORT_INFO_PATH = QSFP_PORT_INFO_PATH
 
     _port_name = ""
     _port_to_eeprom_mapping = {}
@@ -40,8 +42,8 @@ class SfpUtil(SfpUtilBase):
         return []
 
     @property
-    def osfp_ports(self):
-        return range(self.OSFP_PORT_START, self.OSFP_PORT_END + 1)
+    def qsfp_ports(self):
+        return range(self.QSFP_PORT_START, self.QSFP_PORT_END + 1)
 
     @property
     def port_to_eeprom_mapping(self):
@@ -52,14 +54,14 @@ class SfpUtil(SfpUtilBase):
         return self._port_to_i2cbus_mapping
 
     def get_port_name(self, port_num):
-        if port_num in self.osfp_ports:
-            self._port_name = "QSFP" + str(port_num - self.OSFP_PORT_START + 1)
+        if port_num in self.qsfp_ports:
+            self._port_name = "QSFP" + str(port_num - self.QSFP_PORT_START + 1)
         else:
             self._port_name = "SFP" + str(port_num - self.SFP_PORT_START + 1)
         return self._port_name
 
     def get_eeprom_dom_raw(self, port_num):
-        if port_num in self.osfp_ports:
+        if port_num in self.qsfp_ports:
             # QSFP DOM EEPROM is also at addr 0x50 and thus also stored in eeprom_ifraw
             return None
         else:
@@ -70,10 +72,15 @@ class SfpUtil(SfpUtilBase):
         # Override port_to_eeprom_mapping for class initialization
         eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
 
-        for x in range(self.PORT_START, self.PORT_END+1):
+        for x in range(self.QSFP_PORT_START, self.QSFP_PORT_END+1):
             self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET)
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 x + self.EEPROM_OFFSET)
+
+        for x in range(self.SFP_PORT_START, self.SFP_PORT_END+1):
+            self.port_to_i2cbus_mapping[x] = (x - 52)
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(
+                x - 52)
         SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
@@ -83,7 +90,8 @@ class SfpUtil(SfpUtilBase):
 
         # Get path for access port presence status
         port_name = self.get_port_name(port_num)
-        sysfs_filename = "qsfp_modprs" if port_num in self.osfp_ports else "sfp_modabs"
+        sysfs_filename = "qsfp_modprs" if port_num in self.qsfp_ports else "sfp_modabs"
+        self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.qsfp_ports else self.SFP_PORT_INFO_PATH
         reg_path = "/".join([self.PORT_INFO_PATH, port_name, sysfs_filename])
 
         # Read status
@@ -103,7 +111,7 @@ class SfpUtil(SfpUtilBase):
 
     def get_low_power_mode(self, port_num):
         # Check for invalid QSFP port_num
-        if port_num not in self.osfp_ports:
+        if port_num not in self.qsfp_ports:
             return False
 
         try:
@@ -125,7 +133,7 @@ class SfpUtil(SfpUtilBase):
 
     def set_low_power_mode(self, port_num, lpmode):
         # Check for invalid QSFP port_num
-        if port_num not in self.osfp_ports:
+        if port_num not in self.qsfp_ports:
             return False
 
         try:
@@ -146,7 +154,7 @@ class SfpUtil(SfpUtilBase):
 
     def reset(self, port_num):
         # Check for invalid QSFP port_num
-        if port_num not in self.osfp_ports:
+        if port_num not in self.qsfp_ports:
             return False
 
         try:

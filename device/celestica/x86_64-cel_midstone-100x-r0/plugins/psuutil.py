@@ -16,8 +16,8 @@ class PsuUtil(PsuBase):
 
     def __init__(self):
         self.ipmi_raw = "docker exec -ti pmon ipmitool raw 0x4 0x2d"
-        self.psu1_id = "0x2f"
-        self.psu2_id = "0x39"
+        self.psu1_id = "0x29"
+        self.psu2_id = "0x33"
         PsuBase.__init__(self)
 
     def run_command(self, command):

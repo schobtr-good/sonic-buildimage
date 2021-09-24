@@ -28,7 +28,7 @@
 #include "fpga.h"
 
 
-#define MOD_VERSION "2.1.0-6"
+#define MOD_VERSION "2.0.0"
 #define DRV_NAME "fpga_device_board"
 
 #define I2C_MUX_CHANNEL(_ch, _adap_id, _deselect) \
@@ -36,8 +36,12 @@
 
 #define FPGA_PCIE_DEVICE_ID	0x7021
 #define FPGA_TYPE_ADDR		0x0C
+#define FPGA_OTHER_CR_ADDR  0x14
 
+#define BMC_PRESENT_BIT     0x08
+#define BMC_PRESENT         0x00    /* FPGA_OTHER_CR_ADDR bit8 0-bmc present 1-bmc absent*/
 
+#define FPGA_EXCLUDE_MIN_BUS    8      /* iic core 0-7 is share with BMC, 8 and 9 is for FPGA only, mask 0-7 when BMC is present*/
 #define MMIO_BAR			0
 #define I2C_BUS_LC_OFS		15
 //#define I2C_BUS_LC2_OFS		55
@@ -327,172 +331,104 @@ static struct i2c_board_info i2c_info2[] = {
 };
 
 /* RESOURCE SEPERATES BY FUNCTION */
-/* Resource IOMEM for i2c bus 0 */
+/* Resource IOMEM for FPGA extened i2c bus 0 */
 static struct resource cls_i2c_res_0[] = {
 	{
 		.start = 0x00010000, .end = 0x00010FFF,
-		.flags = IORESOURCE_MEM,
-	}, 
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 1 */
+/* Resource IOMEM for FPGA extened i2c bus 1 */
 static struct resource  cls_i2c_res_1[] = {
 	{
 		.start = 0x00011000, .end = 0x00011FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 2 */
+/* Resource IOMEM for FPGA extened i2c bus 2 */
 static struct resource  cls_i2c_res_2[] = {
 	{
 		.start = 0x00012000, .end = 0x00012FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 3 */
+/* Resource IOMEM for FPGA extened i2c bus 3 */
 static struct  resource cls_i2c_res_3[] = {
 	{
 		.start = 0x00013000, .end = 0x00013FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 4 */
+/* Resource IOMEM for FPGA extened i2c bus 4 */
 static struct resource  cls_i2c_res_4[] = {
 	{
 		.start = 0x00014000, .end = 0x00014FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 5 */
+/* Resource IOMEM for FPGA extened i2c bus 5 */
 static struct resource  cls_i2c_res_5[] = {
 	{
 		.start = 0x00015000, .end = 0x00015FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 6 */
+/* Resource IOMEM for FPGA extened i2c bus 6 */
 static struct resource  cls_i2c_res_6[] = {
 	{
 		.start = 0x00016000, .end = 0x00016FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 7*/
+/* Resource IOMEM for FPGA extened i2c bus 7 */
 static struct resource  cls_i2c_res_7[] = {
 	{
 		.start = 0x00017000, .end = 0x00017FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,},  
 };
 
-/* Resource IOMEM for i2c bus 8 */
+/* Resource IOMEM for FPGA extened i2c bus 8 */
 static struct resource  cls_i2c_res_8[] = {
 	{
 		.start = 0x00018000, .end = 0x00018FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
-/* Resource IOMEM for i2c bus 9 */
+/* Resource IOMEM for FPGA extened i2c bus 9 */
 static struct resource  cls_i2c_res_9[] = {
 	{
 		.start = 0x00019000, .end = 0x00019FFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,}, 
 };
 
 /* Resource IOMEM for i2c bus 10 */
 static struct resource  cls_i2c_res_10[] = {
 	{
 		.start = 0x0001A000, .end = 0x0001AFFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,},
 };
 
 /* Resource IOMEM for i2c bus 11 */
 static struct resource  cls_i2c_res_11[] = {
 	{
 		.start = 0x0001B000, .end = 0x0001BFFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,},
+
 };
 
 /* Resource IOMEM for i2c bus 12 */
 static struct resource  cls_i2c_res_12[] = {
 	{
 		.start = 0x0001C000, .end = 0x0001CFFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,},
+
 };
 
 /* Resource IOMEM for i2c bus 13 */
 static struct resource  cls_i2c_res_13[] = {
 	{
 		.start = 0x0001D000, .end = 0x0001DFFF,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.start = 0x00020000, .end = 0x00020FFF,
-		.flags = IORESOURCE_MEM,	
-	},
+		.flags = IORESOURCE_MEM,},
 };
 
 
@@ -505,8 +441,8 @@ static struct resource xcvr_res[] = {
 
 /* Resource IOMEM for front panel XCVR */
 static struct resource fpga_res[] = {
-	{       
-		.start = 0x00000000, .end = 0x00000FFF,
+	{  
+		.start = 0x00000000, .end = 0x01FFFFFF,
 		.flags = IORESOURCE_MEM,},
 };
 
@@ -715,6 +651,7 @@ static struct i2c_bus_config i2c_bus_configs[] = {
 static struct port_info front_panel_ports[] = {
 	{"SFP1",   1, SFP},
 	{"SFP2",   2, SFP},
+	/* END OF LIST */
 };
 
 
@@ -748,7 +685,8 @@ static struct fpga_platform_data fpga_data[] = {
 static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 {	
 	int err;
-	int num_i2c_bus, i,ret,vector,irq;
+	int num_i2c_bus, i = 0, ret, vector;
+	int bmc_present = 0;   /* 0-present 1-absent */
 	unsigned long rstart;
 	void __iomem *base_addr;
 	struct switchbrd_priv *priv;
@@ -780,9 +718,8 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		dev_err(&dev->dev,  "failed to allocate MSI entry\n");
 		goto err_unmap;
 	}
-	printk("msi irq is %d\n", dev->irq);
 
-#if 0
+#if 0 /* only one FPGA, so not to judge FPGA TYTE*/
 	fpga_type = ioread32(base_addr + FPGA_TYPE_ADDR);
 	printk("fpga Type:0x%8.8x\n",fpga_type);
 	if (fpga_type == FPGA_CMM_TYPE) {
@@ -790,6 +727,12 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		goto err_exit;
 	}
 #endif
+	bmc_present = (ioread32(base_addr + FPGA_OTHER_CR_ADDR) >> BMC_PRESENT_BIT) & 0x01;
+	if (bmc_present == BMC_PRESENT) {
+		printk("BMC present\n");
+	} else {
+		printk("BMC absent\n");
+	}
 
 
 	rstart = pci_resource_start(dev, MMIO_BAR);
@@ -821,14 +764,13 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 				num_i2c_bus * sizeof(struct platform_device*), 
 				GFP_KERNEL);
 
-	printk("after BAR%d res: 0x%lx-0x%llx\n", MMIO_BAR, 
-		rstart, pci_resource_end(dev, MMIO_BAR));
-
 	fpga_res[0].start += rstart;
 	fpga_res[0].end += rstart;
 
 	xcvr_res[0].start += rstart;
 	xcvr_res[0].end += rstart;
+	printk("num_i2c_bus = %x,fpga_res start/end %x/%x,restart=%x\n",num_i2c_bus,fpga_res[0].start ,fpga_res[0].end,rstart );
+    printk("num_i2c_bus = %x,xcvr_res start/end %x/%x,restart=%x\n",num_i2c_bus,xcvr_res[0].start ,xcvr_res[0].end,rstart );
 		
 	priv->i2c_devname = "ocores-i2c-cls";
 	priv->xcvr_devname = "cls-xcvr";
@@ -863,17 +805,21 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 		goto err_unregister_fpga_dev;
 	}
 	printk("register xcvr node\n");
-
-
-	for(i = 0; i < num_i2c_bus; i++){
-
+	
+	if (bmc_present == BMC_PRESENT) {
+		i += FPGA_EXCLUDE_MIN_BUS;       /* skip share bus so there's no dual i2c masters situation */
+	} else {
+		i = 0;
+	}
+	for(; i < num_i2c_bus; i++){
+		/* override resource with MEM/IO resource offset */
 		i2c_bus_configs[i].res[0].start += rstart;
 		i2c_bus_configs[i].res[0].end += rstart;
-		i2c_bus_configs[i].res[1].start += rstart;
-		i2c_bus_configs[i].res[1].end += rstart;
-		i2c_bus_configs[i].pdata.irq = dev->irq;
-		printk("id:i2c_bus_configs[%d].res[0].start/end=%x:%x\n",i,i2c_bus_configs[i].id,i2c_bus_configs[i].res[0].start,i2c_bus_configs[i].res[0].end);
 
+		/* all fpga i2c bus share pci device msi irq */
+		i2c_bus_configs[i].pdata.irq = dev->irq;
+		dev_dbg(&dev->dev, "i2c-bus.%d: 0x%llx - 0x%llx\n",i2c_bus_configs[i].id, i2c_bus_configs[i].res[0].start, i2c_bus_configs[i].res[0].end);
+		printk("bus id:%d, i2c_bus_configs[%d].res[0].start/end=%x:%x\n", i2c_bus_configs[i].id, i, i2c_bus_configs[i].res[0].start,i2c_bus_configs[i].res[0].end);
 
 		switch (i + 1) {
 		case 1:
@@ -943,11 +889,9 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id)
 	priv->base = rstart;
 	priv->num_i2c_bus = num_i2c_bus;
 	priv->i2cbuses_pdev = i2cbuses_pdev;
-	//priv->regio_pdev = regio_pdev;
 	priv->xcvr_pdev = xcvr_pdev;
 	priv->fpga_pdev = fpga_pdev;
-//	fpga_init_index += 1;
-//	printk("base_addr=%x,fpga_init_index = %x\n",base_addr,fpga_init_index);
+	printk("base_addr=%x\n",base_addr);
 	return 0;
 
 err_unregister_ocore:
@@ -1010,8 +954,8 @@ static struct pci_driver cls_pci_driver = {
 
 module_pci_driver(cls_pci_driver);
 
-MODULE_AUTHOR("Akar Lu<akarl@celestica.com>");
-MODULE_DESCRIPTION("Celestica cloverstone switchboard driver");
+MODULE_AUTHOR("Nicholas Wu<nicwu@celestica.com>");
+MODULE_DESCRIPTION("Celestica Midstone100X switchboard driver");
 MODULE_VERSION(MOD_VERSION);
 MODULE_LICENSE("GPL");
 
