@@ -55,3 +55,9 @@ class Fan(PddfFan):
                 if fan_direction == "fb":
                     direction = "EXHAUST"
         return direction
+    
+    def get_status(self):
+        speed = self.get_speed_rpm()
+        status = True if (speed != 0) else False
+        return status
+
