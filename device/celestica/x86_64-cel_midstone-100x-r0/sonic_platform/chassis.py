@@ -21,7 +21,7 @@ NUM_FAN = 2
 NUM_PSU = 2
 NUM_THERMAL = 5
 NUM_SFP = 64
-NUM_COMPONENT = 8
+NUM_COMPONENT = 10
 RESET_REGISTER = "0xA106"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
 REBOOT_CAUSE_FILE = "reboot-cause.txt"
@@ -42,13 +42,13 @@ class Chassis(ChassisBase):
         self.port_end = NUM_SFP - 1
         self.sfp_module_initialized = False
         self.fan_module_initialized = False
-        #self.__initialize_eeprom()
+        self.__initialize_eeprom()
         self.is_host = self._api_helper.is_host()
 
         if not self.is_host:
             self.__initialize_fan()
             self.__initialize_psu()
-            #self.__initialize_thermals()
+            self.__initialize_thermals()
             self.__initialize_sfp()
         else:
             self.__initialize_components()
