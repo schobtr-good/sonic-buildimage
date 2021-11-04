@@ -185,6 +185,8 @@ SONIC_BUILD_INSTRUCTION :=  make \
                            SONIC_INCLUDE_SYSTEM_TELEMETRY=$(INCLUDE_SYSTEM_TELEMETRY) \
                            SONIC_INCLUDE_RESTAPI=$(INCLUDE_RESTAPI) \
                            EXTRA_JESSIE_TARGETS=$(EXTRA_JESSIE_TARGETS) \
+			   GPG_KEY_ID=$(GPG_KEY_ID) \
+			   GPG_PASSWD=$(GPG_PASSWD) \
                            $(SONIC_OVERRIDE_BUILD_VARS)
 
 .PHONY: sonic-slave-build sonic-slave-bash init reset

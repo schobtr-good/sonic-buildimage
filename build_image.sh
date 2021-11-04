@@ -4,6 +4,9 @@
 ## Enable debug output for script
 set -x -e
 
+## Working directory to prepare the file system
+FILESYSTEM_ROOT=./fsroot
+
 ## Read ONIE image related config file
 
 CONFIGURED_ARCH=$([ -f .arch ] && cat .arch || echo amd64)
@@ -51,7 +54,21 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
     mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
     sudo rm -f $OUTPUT_ONIE_IMAGE
 
+    ## Add kernel GPG  signature
+    for kernel in `sudo find  $FILESYSTEM_ROOT/boot -name vmlinuz*`; do
+        sudo gpg --import gpg/pub.key
+        sudo gpg --batch --import gpg/private.key
+        sudo gpg --default-key $GPG_KEY_ID --detach-sign --passphrase $GPG_PASSWD --batch --yes $kernel
+    done
+
+    ## Add initramfs GPG signature
+    for initrd in `sudo find  $FILESYSTEM_ROOT/boot -name initrd*`; do
+        sudo gpg --default-key $GPG_KEY_ID --detach-sign --passphrase $GPG_PASSWD --batch --yes $initrd
+    done
+
     generate_onie_installer_image
+    ## Generate onie installer GPG signature
+    sudo gpg --default-key $GPG_KEY_ID --detach-sign --passphrase $GPG_PASSWD --batch --yes $OUTPUT_ONIE_IMAGE
 
 ## Build a raw partition dump image using the ONIE installer that can be
 ## used to dd' in-lieu of using the onie-nos-installer. Used while migrating
