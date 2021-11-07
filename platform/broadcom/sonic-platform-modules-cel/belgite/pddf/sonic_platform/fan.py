@@ -3,14 +3,14 @@ try:
     import os
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
-FAN_DIRECTION_FROM_TLV_EEPROM = r"/sys/devices/pci0000:00/0000:00:12.0/i2c-0/0-0052/eeprom"
+FAN_DIRECTION_FILE_PATH = "/var/fan_direction"
 
 
 class Fan(PddfFan):
     """PDDF Platform-Specific Fan class"""
 
     def __init__(self, tray_idx, fan_idx=0, pddf_data=None, pddf_plugin_data=None, is_psu_fan=False, psu_index=0):
-        # idx is 0-based 
+        # idx is 0-based
         PddfFan.__init__(self, tray_idx, fan_idx, pddf_data, pddf_plugin_data, is_psu_fan, psu_index)
 
 
@@ -50,14 +50,8 @@ class Fan(PddfFan):
                 direction = "INTAKE"
         else:
             direction = "INTAKE"
-            with open(FAN_DIRECTION_FROM_TLV_EEPROM, "rb") as f:
-                fan_direction = str(f.read())[248:250]
-                if fan_direction == "fb":
+            with open(FAN_DIRECTION_FILE_PATH, "r") as f:
+                fan_direction = f.read()
+                if fan_direction.strip() == "FB":
                     direction = "EXHAUST"
         return direction
-    
-    def get_status(self):
-        speed = self.get_speed_rpm()
-        status = True if (speed != 0) else False
-        return status
-

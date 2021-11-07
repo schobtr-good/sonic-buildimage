@@ -7,8 +7,12 @@
 try:
     from sonic_platform_pddf_base.pddf_chassis import PddfChassis
     from sonic_platform.fan_drawer import FanDrawer
+    from sonic_platform.watchdog import Watchdog
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
+
+FAN_DIRECTION_FILE_PATH = "/var/fan_direction"
+
 
 class Chassis(PddfChassis):
     """
@@ -17,18 +21,18 @@ class Chassis(PddfChassis):
 
     def __init__(self, pddf_data=None, pddf_plugin_data=None):
         PddfChassis.__init__(self, pddf_data, pddf_plugin_data)
-
+        vendor_ext = self.sys_eeprom.vendor_ext_str()
+        with open(FAN_DIRECTION_FILE_PATH, "w+") as f:
+            f.write(vendor_ext)
         for i in range(self.platform_inventory['num_fantrays']):
             fandrawer = FanDrawer(i, self.pddf_obj, self.plugin_data)
             self._fan_drawer_list.append(fandrawer)
             self._fan_list.extend(fandrawer._fan_list)
 
-
     # Provide the functions/variables below for which implementation is to be overwritten
 
     def initizalize_system_led(self):
         return True
-		
 
     def get_sfp(self, index):
         """
@@ -44,11 +48,22 @@ class Chassis(PddfChassis):
         sfp = None
 
         try:
-            if (index == 0):
+            if index == 0:
                 raise IndexError
-            sfp = self._sfp_list[index-1]
+            sfp = self._sfp_list[index - 1]
         except IndexError:
             sys.stderr.write("override: SFP index {} out of range (1-{})\n".format(
                 index, len(self._sfp_list)))
 
         return sfp
+
+    def get_watchdog(self):
+        """
+        Retreives hardware watchdog device on this chassis
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+        """
+        self._watchdog = Watchdog()
+
+        return self._watchdog

@@ -62,6 +62,13 @@ class Eeprom(PddfEeprom):
                     break
 
                 tlv_index += (eeprom[tlv_index+1]) + 2
-    
 
+    def vendor_ext_str(self):
+        """
+        :return: the direction of fan(FB or BF, string)
+        """
+        (is_valid, results) = self.get_tlv_field(self.eeprom_data, self._TLV_CODE_VENDOR_EXT)
+        if not is_valid:
+            return "N/A"
+        return str(hex(int(results[2][2]))).replace("0x", "").upper()
     # Provide the functions/variables below for which implementation is to be overwritten

@@ -39,6 +39,7 @@ FAN_NUMBER = 3
 SENSOR_NUMBER = 4
 CPU_CORE_TEMP = r"/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input"
 
+
 class cel_belgite_monitor(object):
     """
     Make a class we can use to capture stdout and sterr in the log
@@ -82,16 +83,20 @@ class cel_belgite_monitor(object):
         """
         all_temperature_list = list()
         for sensor_index in range(SENSOR_NUMBER):
-            temp = self.platform_chassis_obj.get_thermal(sensor_index).get_temperature() * 1000
-            if temp is None:
+            temp = self.platform_chassis_obj.get_thermal(sensor_index).get_temperature()
+            if temp is None or str(temp).strip() == "":
                 return False
+            temp = temp*1000
             all_temperature_list.append(temp)
         u4_temperature = all_temperature_list[0]
         u7_temperature = all_temperature_list[1]
         # default CPU temperature 70
-        cpu_temperature = 70000   
-        with open(CPU_CORE_TEMP, "r") as f:
-            cpu_temperature = float(f.read().strip())
+        cpu_temperature = 70000
+        try:
+            with open(CPU_CORE_TEMP, "r") as f:
+                cpu_temperature = float(f.read().strip())
+        except Exception as E:
+            logging.debug('Error: %s' % E)
         u60_temperature = all_temperature_list[3]   
         return [u4_temperature, u7_temperature, cpu_temperature, u60_temperature]
 
@@ -100,7 +105,7 @@ class cel_belgite_monitor(object):
         all_temp = self.get_all_temperature()
         logging.debug('INFO: all_temp: %s' % str(all_temp))
 
-        a = 0 if fan1_direction.lower() == "intake" else 1 
+        a = 1 if fan1_direction.lower() == "intake" else 0
         sensor_temp = all_temp[a]
         cup_temp = all_temp[2]
         u60_temp = all_temp[3]
@@ -114,31 +119,58 @@ class cel_belgite_monitor(object):
             update_temp_u60 = False
 
         # U4 U7
-        if sensor_temp <= 35000:
-            sensor_temp_speed = 40
-        elif sensor_temp >= 48000:
-            sensor_temp_speed = 100
-        else:
-            b = 1580/13 if update_temp_sensor else 1400/13
-            sensor_temp_speed = int((60/13) * int(sensor_temp/1000) - b)
+        if not update_temp_sensor:  # temperature down
+            b = 1400/13
+            if sensor_temp <= 32000:
+                sensor_temp_speed = 40
+            elif sensor_temp >= 45000:
+                sensor_temp_speed = 100
+            else:
+                sensor_temp_speed = int((60 / 13) * int(sensor_temp / 1000) - b)
+        else:   # temperature up
+            b = 1580 / 13
+            if sensor_temp <= 35000:
+                sensor_temp_speed = 40
+            elif sensor_temp >= 48000:
+                sensor_temp_speed = 100
+            else:
+                sensor_temp_speed = int((60/13) * int(sensor_temp/1000) - b)
 
         # CPU
-        if cup_temp <= 70000:
-            cpu_temp_speed = 40
-        elif cup_temp >= 85000:
-            cpu_temp_speed = 100
-        else:
-            b = 240 if update_temp_cpu else 228
-            cpu_temp_speed = int(4 * (cup_temp/1000) - b)
+        if not update_temp_cpu:  # temperature down
+            b = 228
+            if cup_temp <= 67000:
+                cpu_temp_speed = 40
+            elif cup_temp >= 82000:
+                cpu_temp_speed = 100
+            else:
+                cpu_temp_speed = int(4 * (cup_temp / 1000) - b)
+        else:   # temperature up
+            b = 240
+            if cup_temp <= 70000:
+                cpu_temp_speed = 40
+            elif cup_temp >= 85000:
+                cpu_temp_speed = 100
+            else:
+                cpu_temp_speed = int(4 * (cup_temp / 1000) - b)
 
         # U60
-        if u60_temp <= 55000:
-            u60_temp_speed = 40
-        elif u60_temp >= 70000:
-            u60_temp_speed = 100
-        else:
-            b = 180 if update_temp_u60 else 168
-            u60_temp_speed = int(4 * (u60_temp/1000) - b)
+        if not update_temp_u60:  # temperature down
+            b = 168
+            if u60_temp <= 52000:
+                u60_temp_speed = 40
+            elif u60_temp >= 67000:
+                u60_temp_speed = 100
+            else:
+                u60_temp_speed = int(4 * (u60_temp / 1000) - b)
+        else:   # temperature up
+            b = 180
+            if u60_temp <= 55000:
+                u60_temp_speed = 40
+            elif u60_temp >= 70000:
+                u60_temp_speed = 100
+            else:
+                u60_temp_speed = int(4 * (u60_temp / 1000) - b)
         return max([sensor_temp_speed, cpu_temp_speed, u60_temp_speed])
 
     def manage_fans(self):
