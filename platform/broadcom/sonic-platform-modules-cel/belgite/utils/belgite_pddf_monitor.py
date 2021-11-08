@@ -102,9 +102,10 @@ class cel_belgite_monitor(object):
 
     def get_fan_speed_by_temperature(self, temp_list):
         fan1_direction = self.platform_chassis_obj.get_fan(0).get_direction()
+        logging.debug('INFO: fan direction: %s' % str(fan1_direction))
         all_temp = self.get_all_temperature()
         logging.debug('INFO: all_temp: %s' % str(all_temp))
-
+        # B2F=intake: U7 temperature， F2B-EXHAUST: U4 temperature
         a = 1 if fan1_direction.lower() == "intake" else 0
         sensor_temp = all_temp[a]
         cup_temp = all_temp[2]
@@ -179,8 +180,10 @@ class cel_belgite_monitor(object):
             if not self.platform_chassis_obj.get_fan(fan_index).get_presence() or not \
                     self.platform_chassis_obj.get_fan(fan_index).get_status():
                 fan_presence_list[fan_index] = False
-                logging.debug('self.platform_chassis_obj.get_fan(fan_index).get_presence():%s' % str(self.platform_chassis_obj.get_fan(fan_index).get_presence())) 
-                logging.debug('self.platform_chassis_obj.get_fan(fan_index).get_status():%s' % str(self.platform_chassis_obj.get_fan(fan_index).get_status())) 
+                logging.debug('self.platform_chassis_obj.get_fan(fan_index).get_presence():%s'
+                              % str(self.platform_chassis_obj.get_fan(fan_index).get_presence()))
+                logging.debug('self.platform_chassis_obj.get_fan(fan_index).get_status():%s'
+                              % str(self.platform_chassis_obj.get_fan(fan_index).get_status()))
             else:
                 fan_presence_list[fan_index] = True
 
