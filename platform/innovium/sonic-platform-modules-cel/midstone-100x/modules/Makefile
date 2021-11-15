@@ -1,0 +1,1 @@
+obj-m := fpga_device.o fpga_i2c_ocores.o xcvr-cls.o mc24lc64t_device.o mc24lc64t.o fpga_system.o i2c_switchcpld.o lpc_basecpld.o optoe.o platform_psu.o platform_fan.o mcp3425_smbus.o tps536c7.o ucd9000.o
