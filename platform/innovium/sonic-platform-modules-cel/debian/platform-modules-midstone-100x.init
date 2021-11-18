@@ -17,7 +17,7 @@ start)
     echo -n "Setting up board... "
     depmod
     modprobe i2c-dev
-    modprobe ipmi_devintf
+    #modprobe ipmi_devintf
     modprobe fpga_device
     modprobe fpga_i2c_ocores
     modprobe fpga_system
@@ -94,7 +94,7 @@ start)
     ;;
 
 stop)
-    rmmod ipmi_devintf
+    #rmmod ipmi_devintf
     rmmod xcvr-cls
     rmmod optoe
     rmmod mc24lc64t
