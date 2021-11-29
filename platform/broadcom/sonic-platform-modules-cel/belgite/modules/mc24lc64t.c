@@ -18,7 +18,7 @@
 #include <linux/delay.h>
 #include <linux/jiffies.h>
 
-#define EEPROM_SIZE 8192  //mc24lt64t eeprom size in bytes.
+#define EEPROM_SIZE 256  //mc24lt64t eeprom size in bytes.
 
 struct mc24lc64t_data {
         struct mutex            update_lock;

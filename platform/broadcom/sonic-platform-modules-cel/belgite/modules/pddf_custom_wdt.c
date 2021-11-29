@@ -183,15 +183,21 @@ static int watchdog_ping(struct cpld_wdt_private *wdt)
 
 static void watchdog_keepalive(struct cpld_wdt_private *wdt)
 {
+	unsigned char val = 0;
 	if(!wdt)
             return;
 
 	mutex_lock(&wdt->wdat.lock);
 	
-	/* start feed watchdog */
-	outb(WDT_START_FEED, WDT_FEED_REG);
-	/* stop feed watchdog */
-	outb(WDT_STOP_FEED, WDT_FEED_REG);
+	val = inb(WDT_FEED_REG);
+
+        val &= 0x1;
+
+        val = ~val;
+
+        val &= 0x1;
+        /* start feed watchdog */
+        outb(val, WDT_FEED_REG);
 	
 	mutex_unlock(&wdt->wdat.lock);
 	return;
