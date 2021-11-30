@@ -314,7 +314,7 @@ static ssize_t reason_show(struct device *dev,
 
 	bootstatus = watchdog_get_reason(wdt);
 
-        return sprintf(buf, "0x%02\n", bootstatus);
+        return sprintf(buf, "0x%02x\n", bootstatus);
 }
 
 static DEVICE_ATTR_RO(reason);
