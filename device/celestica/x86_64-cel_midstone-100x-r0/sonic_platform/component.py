@@ -25,13 +25,14 @@ SWCPLD1_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0030/version"
 SWCPLD2_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0031/version"
 SWCPLD3_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0032/version"
 SWCPLD4_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0033/version"
+COMeCPLD_VERSION_cmd= "ipmitool raw 0x3a 0x3e 1 0x1a 1 0xe0"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 Main_BMC_cmd = "ipmitool raw 0x32 0x8f 0x08 0x01"
 Backup_BMC_cmd = "ipmitool raw 0x32 0x8f 0x08 0x02"
 #Fan_CPLD_cmd = "ipmitool raw 0x3a 0x64 02 01 00"
-COMPONENT_NAME_LIST = ["FPGA", "SYSCPLD", "SWCPLD1", "SWCPLD2", "SWCPLD3","SWCPLD4", "Main_BMC", "Backup_BMC", "Main_BIOS", "Backup_BIOS"]
+COMPONENT_NAME_LIST = ["FPGA", "SYSCPLD", "SWCPLD1", "SWCPLD2", "SWCPLD3","SWCPLD4", "COMeCPLD", "Main_BMC", "Backup_BMC", "Main_BIOS", "Backup_BIOS"]
 COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels", "Used for managing the CPU",
-                      "Used for managing QSFP+ ports (1-16)", "Used for managing QSFP+ ports (17-32)", "Used for managing QSFP+ ports (33-48)", "Used for managing QSFP+ ports (49-64)","Main Baseboard Management Controller", "Backup Baseboard Management Controller", "Main basic Input/Output System", "Backup basic Input/Output System"]
+                      "Used for managing QSFP+ ports (1-16)", "Used for managing QSFP+ ports (17-32)", "Used for managing QSFP+ ports (33-48)", "Used for managing QSFP+ ports (49-64)","Used for managing the COMe","Main Baseboard Management Controller", "Backup Baseboard Management Controller", "Main basic Input/Output System", "Backup basic Input/Output System"]
 
 
 class Component(ComponentBase):
@@ -112,6 +113,9 @@ class Component(ComponentBase):
                     return swcpld4_version.strip()
             except Exception as e:
                 return None
+        elif self.name == "COMeCPLD":
+            status, ver = self._api_helper.run_command(COMeCPLD_VERSION_cmd)
+            return str(ver)
         elif self.name == "FANCPLD":
             status,ver = self._api_helper.run_command(Fan_CPLD_cmd)
             version = int(ver.strip(), 16)
