@@ -36,6 +36,7 @@ except ImportError as e:
 FUNCTION_NAME = 'cel_belgite_monitor'
 DUTY_MAX = 100
 FAN_NUMBER = 3
+PSU_NUMBER = 2
 SENSOR_NUMBER = 4
 CPU_CORE_TEMP = r"/sys/devices/platform/coretemp.0/hwmon/hwmon1/temp1_input"
 
@@ -86,7 +87,7 @@ class cel_belgite_monitor(object):
             temp = self.platform_chassis_obj.get_thermal(sensor_index).get_temperature()
             if temp is None or str(temp).strip() == "":
                 return False
-            temp = temp*1000
+            temp = temp * 1000
             all_temperature_list.append(temp)
         u4_temperature = all_temperature_list[0]
         u7_temperature = all_temperature_list[1]
@@ -97,10 +98,16 @@ class cel_belgite_monitor(object):
                 cpu_temperature = float(f.read().strip())
         except Exception as E:
             logging.debug('Error: %s' % E)
-        u60_temperature = all_temperature_list[3]   
+        u60_temperature = all_temperature_list[3]
         return [u4_temperature, u7_temperature, cpu_temperature, u60_temperature]
 
     def get_fan_speed_by_temperature(self, temp_list):
+        """
+        According to the sensor temperature, the temperature rise and fall are judged,
+        and the fan speed with the highest speed is selected
+        :param temp_list: Sensor temperature list
+        :return: According to the sensor temperature, select the maximum expected fan value at each point(int)
+        """
         fan1_direction = self.platform_chassis_obj.get_fan(0).get_direction()
         logging.debug('INFO: fan direction: %s' % str(fan1_direction))
         all_temp = self.get_all_temperature()
@@ -121,21 +128,21 @@ class cel_belgite_monitor(object):
 
         # U4 U7
         if not update_temp_sensor:  # temperature down
-            b = 1400/13
+            b = 1400 / 13
             if sensor_temp <= 32000:
                 sensor_temp_speed = 40
             elif sensor_temp >= 45000:
                 sensor_temp_speed = 100
             else:
                 sensor_temp_speed = int((60 / 13) * int(sensor_temp / 1000) - b)
-        else:   # temperature up
+        else:  # temperature up
             b = 1580 / 13
             if sensor_temp <= 35000:
                 sensor_temp_speed = 40
             elif sensor_temp >= 48000:
                 sensor_temp_speed = 100
             else:
-                sensor_temp_speed = int((60/13) * int(sensor_temp/1000) - b)
+                sensor_temp_speed = int((60 / 13) * int(sensor_temp / 1000) - b)
 
         # CPU
         if not update_temp_cpu:  # temperature down
@@ -146,7 +153,7 @@ class cel_belgite_monitor(object):
                 cpu_temp_speed = 100
             else:
                 cpu_temp_speed = int(4 * (cup_temp / 1000) - b)
-        else:   # temperature up
+        else:  # temperature up
             b = 240
             if cup_temp <= 70000:
                 cpu_temp_speed = 40
@@ -164,7 +171,7 @@ class cel_belgite_monitor(object):
                 u60_temp_speed = 100
             else:
                 u60_temp_speed = int(4 * (u60_temp / 1000) - b)
-        else:   # temperature up
+        else:  # temperature up
             b = 180
             if u60_temp <= 55000:
                 u60_temp_speed = 40
@@ -175,31 +182,56 @@ class cel_belgite_monitor(object):
         return max([sensor_temp_speed, cpu_temp_speed, u60_temp_speed])
 
     def manage_fans(self):
-        fan_presence_list = [True, True, True]  # whether fan is absent or not 
+        """
+        Set the fan speed according to the PSU status, fan status and fan speed status
+        """
+        fan_duty_speed_list = list()
+
+        # Fan speed setting judgment-PSU
+        psu_presence_list = [True, True]
+        for psu_index in range(PSU_NUMBER):
+            psu_presence = self.platform_chassis_obj.get_psu(psu_index).get_presence()
+            psu_status = self.platform_chassis_obj.get_psu(psu_index).get_status()
+            if not psu_presence or not psu_status:
+                psu_presence_list[psu_index] = False
+                logging.debug("ERROR:psu%s was error,presence():%s, status():%s" %
+                              (psu_index+1, str(psu_presence), str(psu_status)))
+            else:
+                psu_presence_list[psu_index] = True
+        if False in psu_presence_list:
+            fan_duty_speed_list.append(DUTY_MAX)
+
+        # Fan speed setting judgment-FAN
+        fan_presence_list = [True, True, True]  # whether fan is absent or not
         for fan_index in range(FAN_NUMBER):
-            if not self.platform_chassis_obj.get_fan(fan_index).get_presence() or not \
-                    self.platform_chassis_obj.get_fan(fan_index).get_status():
+            fan_presence = self.platform_chassis_obj.get_fan(fan_index).get_presence()
+            fan_status = self.platform_chassis_obj.get_fan(fan_index).get_status()
+            if not fan_presence or not fan_status:
                 fan_presence_list[fan_index] = False
-                logging.debug('self.platform_chassis_obj.get_fan(fan_index).get_presence():%s'
-                              % str(self.platform_chassis_obj.get_fan(fan_index).get_presence()))
-                logging.debug('self.platform_chassis_obj.get_fan(fan_index).get_status():%s'
-                              % str(self.platform_chassis_obj.get_fan(fan_index).get_status()))
+                logging.debug("ERROR:fan%s was error,presence():%s, status():%s" %
+                              (fan_index+1, str(fan_presence), str(fan_status)))
             else:
                 fan_presence_list[fan_index] = True
-
         fans_inserted_num = FAN_NUMBER - fan_presence_list.count(False)
-        if fans_inserted_num == 0:  # all fans broken, power off 
-            self.syslog.critical("No fans inserted. Severe overheating hazard. "
+        if fans_inserted_num == 0:  # all fans broken, power off
+            self.syslog.critical("No fans inserted!!! Severe overheating hazard. "
                                  "Please insert Fans immediately or power off the device\n")
-
-            # power off 
-        elif fans_inserted_num in [1, 2]:   # 1 or 2 present, full speed 
-            self._new_perc = DUTY_MAX
-        else:   # 3 fans normal, manage the fans follow thermal policy 
-            self._new_perc = self.get_fan_speed_by_temperature(self.init_fan_temperature)
-            logging.debug('INFO: 3 fans inserted: self._new_perc: %s' % str(self._new_perc))
+        elif fans_inserted_num in [1, 2]:  # 1 or 2 present, full speed
+            fan_duty_speed_list.append(DUTY_MAX)
+        else:  # 3 fans normal, manage the fans follow thermal policy
+            new_perc = self.get_fan_speed_by_temperature(self.init_fan_temperature)
             self.init_fan_temperature = self.get_all_temperature()
+            fan_duty_speed_list.append(new_perc)
 
+        # Fan speed setting judgment-FAN SPEED
+        for fan_index_ in range(FAN_NUMBER):
+            fan_speed_rpm = self.platform_chassis_obj.get_fan(fan_index_).get_speed_rpm()
+            if fan_speed_rpm <= 1000:
+                fan_duty_speed_list.append(DUTY_MAX)
+                logging.debug("ERROR: fan%s speed rpm:%s, Will increase the fan speed to 100%%"
+                              % (fan_index_, fan_speed_rpm))
+                break
+        self._new_perc = max(fan_duty_speed_list)
         for i in range(FAN_NUMBER):
             aa = self.platform_chassis_obj.get_fan(i).get_speed()
             logging.debug("INFO: Get before setting fan speed: %s" % aa)
@@ -209,9 +241,9 @@ class cel_belgite_monitor(object):
                 self._new_perc = 100
             set_stat = self.platform_chassis_obj.get_fan(i).set_speed(self._new_perc)
             if set_stat is True:
-                logging.debug('INFO: PASS. set_fan%d_duty_cycle (%d)' % (i, self._new_perc))
+                logging.debug('INFO: PASS. set_fan%d duty_cycle (%d)' % (i, self._new_perc))
             else:
-                logging.debug('INFO: FAIL. set_fan%d_duty_cycle (%d)' % (i, self._new_perc))
+                logging.debug('INFO: FAIL. set_fan%d duty_cycle (%d)' % (i, self._new_perc))
 
 
 def handler(signum, frame):
