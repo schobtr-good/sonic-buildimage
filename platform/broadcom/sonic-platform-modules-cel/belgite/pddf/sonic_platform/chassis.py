@@ -67,3 +67,44 @@ class Chassis(PddfChassis):
         self._watchdog = Watchdog()
 
         return self._watchdog
+		
+    def get_reboot_cause(self):
+        """
+        Retrieves the cause of the previous reboot
+        Returns:
+            A tuple (string, string) where the first element is a string
+            containing the cause of the previous reboot. This string must be
+            one of the predefined strings in this class. If the first string
+            is "REBOOT_CAUSE_HARDWARE_OTHER", the second string can be used
+            to pass a description of the reboot cause.
+        """
+        hw_reboot_cause = ""
+        with open("/sys/devices/platform/cpld_wdt/reason", "r") as f:
+            hw_reboot_cause = f.read().strip()
+
+        if hw_reboot_cause == "0x77":
+            reboot_cause = self.REBOOT_CAUSE_WATCHDOG
+            description = 'Hardware Watchdog Reset'
+        elif hw_reboot_cause == "0x66":
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            description = 'GPIO Request Warm Reset'
+        elif hw_reboot_cause == "0x55":
+            reboot_cause = self.REBOOT_CAUSE_HARDWARE_OTHER
+            description = 'CPU Cold Reset'
+        elif hw_reboot_cause == "0x44":
+            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            description = 'CPU Warm Reset'
+        elif hw_reboot_cause == "0x33":
+            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            description = 'Soft-Set Cold Reset'
+        elif hw_reboot_cause == "0x22":
+            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            description = 'Soft-Set Warm Reset'
+        elif hw_reboot_cause == "0x11":
+            reboot_cause = self.REBOOT_CAUSE_POWER_LOSS
+            description = 'Power Loss'			
+        else:
+            reboot_cause = self.REBOOT_CAUSE_NON_HARDWARE
+            description = 'Unkown Reason'
+
+        return (reboot_cause, description)	
