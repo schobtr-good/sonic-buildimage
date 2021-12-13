@@ -115,7 +115,10 @@ class Component(ComponentBase):
                 return None
         elif self.name == "COMeCPLD":
             status, ver = self._api_helper.run_command(COMeCPLD_VERSION_cmd)
-            return str(ver)
+            version1 = int(ver.strip()) / 10
+            version2 = int(ver.strip()) % 10
+            version = "%s.%s" % (version1, version2)
+            return str(version)
         elif self.name == "FANCPLD":
             status,ver = self._api_helper.run_command(Fan_CPLD_cmd)
             version = int(ver.strip(), 16)
