@@ -1,0 +1,5 @@
+depmod -a
+systemctl enable platform-modules-blackstone.service
+systemctl start platform-modules-blackstone.service
+
+/usr/local/bin/platform_api_mgnt.sh install

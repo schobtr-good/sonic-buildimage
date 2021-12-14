@@ -1,0 +1,7 @@
+blackstone/scripts/sensors usr/bin
+blackstone/scripts/platform_sensors.py usr/local/bin
+blackstone/cfg/blackstone-modules.conf etc/modules-load.d
+blackstone/systemd/platform-modules-blackstone.service lib/systemd/system
+blackstone/modules/sonic_platform-1.0-py3-none-any.whl usr/share/sonic/device/x86_64-cel_blackstone-r0
+blackstone/modules/sonic_platform-1.0-py2-none-any.whl usr/share/sonic/device/x86_64-cel_blackstone-r0
+services/platform_api/platform_api_mgnt.sh usr/local/bin

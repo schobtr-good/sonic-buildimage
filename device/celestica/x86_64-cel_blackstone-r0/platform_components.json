@@ -1,0 +1,13 @@
+{
+    "chassis": {
+        "Blackstone": {
+            "component": {
+                "BIOS": { },
+                "CPLD1": { },
+                "CPLD2": { },
+                "CPLD3": { },
+		"CPLD4": { }
+            }
+        }
+    }
+}
