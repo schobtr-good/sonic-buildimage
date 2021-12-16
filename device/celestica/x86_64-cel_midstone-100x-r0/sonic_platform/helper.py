@@ -15,10 +15,12 @@ class APIHelper():
     def __init__(self):
         (self.platform, self.hwsku) = device_info.get_platform_and_hwsku()
 
-    def is_host(self):
+    @staticmethod
+    def is_host():
         return os.system(HOST_CHK_CMD) == 0
 
-    def pci_get_value(self, resource, offset):
+    @staticmethod
+    def pci_get_value(resource, offset):
         status = True
         result = ""
         try:
@@ -27,11 +29,12 @@ class APIHelper():
             mm.seek(int(offset))
             read_data_stream = mm.read(4)
             result = struct.unpack('I', read_data_stream)
-        except:
+        except Exception:
             status = False
         return status, result
 
-    def run_command(self, cmd):
+    @staticmethod
+    def run_command(cmd):
         status = True
         result = ""
         try:
@@ -40,36 +43,40 @@ class APIHelper():
             raw_data, err = p.communicate()
             if err == '':
                 result = raw_data.strip()
-        except:
+        except Exception:
             status = False
         return status, result
 
-    def run_interactive_command(self, cmd):
+    @staticmethod
+    def run_interactive_command(cmd):
         try:
             os.system(cmd)
-        except:
+        except Exception:
             return False
         return True
 
-    def read_txt_file(self, file_path):
+    @staticmethod
+    def read_txt_file(file_path):
         try:
             with open(file_path, 'r') as fd:
                 data = fd.read()
                 return data.strip()
-        except IOError:
+        except Exception:
             pass
         return None
 
-    def read_one_line_file(self, file_path):
+    @staticmethod
+    def read_one_line_file(file_path):
         try:
             with open(file_path, 'r') as fd:
                 data = fd.readline()
                 return data.strip()
-        except IOError:
+        except Exception:
             pass
         return None
 
-    def write_txt_file(self, file_path, value):
+    @staticmethod
+    def write_txt_file(file_path, value):
         try:
             with open(file_path, 'w') as fd: 
                 fd.write(str(value))
@@ -83,7 +90,8 @@ class APIHelper():
         status, result = self.run_command(cmd)
         return result if status else None
 
-    def ipmi_raw(self, netfn, cmd):
+    @staticmethod
+    def ipmi_raw(netfn, cmd):
         status = True
         result = ""
         try:
@@ -95,16 +103,17 @@ class APIHelper():
                 result = raw_data.strip()
             else:
                 status = False
-        except:
+        except Exception:
             status = False
         return status, result
 
-    def ipmi_fru_id(self, id, key=None):
+    @staticmethod
+    def ipmi_fru_id(id, key=None):
         status = True
         result = ""
         try:
-            cmd = "ipmitool fru print {}".format(str(
-                id)) if not key else "ipmitool fru print {0} | grep '{1}' ".format(str(id), str(key))
+            cmd = "ipmitool fru print {}".format(str(id)) if not key else \
+                "ipmitool fru print {0} | grep '{1}' ".format(str(id), str(key))
 
             p = subprocess.Popen(
                 cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -113,11 +122,12 @@ class APIHelper():
                 result = raw_data.strip()
             else:
                 status = False
-        except:
+        except Exception:
             status = False
         return status, result
 
-    def ipmi_set_ss_thres(self, id, threshold_key, value):
+    @staticmethod
+    def ipmi_set_ss_thres(id, threshold_key, value):
         status = True
         result = ""
         try:
@@ -130,6 +140,6 @@ class APIHelper():
                 result = raw_data.strip()
             else:
                 status = False
-        except:
+        except Exception:
             status = False
         return status, result

@@ -10,16 +10,15 @@
 #############################################################################
 
 try:
-    import glob
+    # import glob
     import os
     import sys
-    import imp
     import re
-    from array import array
+    # from array import array
     from cStringIO import StringIO
     from sonic_platform_base.sonic_eeprom import eeprom_dts
     from sonic_platform_base.sonic_eeprom import eeprom_tlvinfo
-except ImportError, e:
+except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 CACHE_ROOT = '/var/cache/sonic/decode-syseeprom'
@@ -27,14 +26,15 @@ CACHE_FILE = 'syseeprom_cache'
 TLV_EEPROM_I2C_BUS = 0
 TLV_EEPROM_I2C_ADDR = 56
 
-class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
+class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
     EEPROM_DECODE_HEADLINES = 6
     # TLV Value Display Switch
     _TLV_DISPLAY_VENDOR_EXT = True
 
     def __init__(self):
-        self._eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-00{1}/eeprom".format(TLV_EEPROM_I2C_BUS, TLV_EEPROM_I2C_ADDR)
+        self._eeprom_path = "/sys/class/i2c-adapter/i2c-{0}/{0}-00{1}/eeprom".format(TLV_EEPROM_I2C_BUS,
+                                                                                     TLV_EEPROM_I2C_ADDR)
         super(Tlv, self).__init__(self._eeprom_path, 0, '', True)
         self._eeprom = self._load_eeprom()
 
@@ -46,14 +46,13 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
         for line in lines:
             try:
-                match = re.search(
-                    '(0x[0-9a-fA-F]{2})([\s]+[\S]+[\s]+)([\S]+)', line)
+                match = re.search('(0x[0-9a-fA-F]{2})([\s]+[\S]+[\s]+)([\S]+)', line)
                 if match is not None:
                     idx = match.group(1)
                     value = match.group(3).rstrip('\0')
 
-                _eeprom_info_dict[idx] = value
-            except:
+                    _eeprom_info_dict[idx] = value
+            except Exception:
                 pass
         return _eeprom_info_dict
 
@@ -62,7 +61,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         sys.stdout = StringIO()
         try:
             self.read_eeprom_db()
-        except:
+        except Exception:
             decode_output = sys.stdout.getvalue()
             sys.stdout = original_stdout
             return self.__parse_output(decode_output)
@@ -74,7 +73,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         if not os.path.exists(CACHE_ROOT):
             try:
                 os.makedirs(CACHE_ROOT)
-            except:
+            except Exception:
                 pass
 
         #
@@ -83,7 +82,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
         #
         try:
             self.set_cache_name(os.path.join(CACHE_ROOT, CACHE_FILE))
-        except:
+        except Exception:
             pass
 
         e = self.read_eeprom()
@@ -92,7 +91,7 @@ class Tlv(eeprom_tlvinfo.TlvInfoDecoder):
 
         try:
             self.update_cache(e)
-        except:
+        except Exception:
             pass
 
         self.decode_eeprom(e)
