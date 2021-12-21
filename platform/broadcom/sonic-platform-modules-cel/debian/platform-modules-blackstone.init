@@ -19,13 +19,14 @@ start)
 
         modprobe i2c-dev
         modprobe ipmi_devintf
+        modprobe cls-i2c-mux-pca954x
         modprobe mc24lc64t
+
         modprobe baseboard-lpc
-        modprobe cls-i2c-ocores
+        modprobe come-lpc
         modprobe cls-fpga
         modprobe xcvr-cls
         modprobe misc_cpld
-        modprobe i2c-mux-pca954x force_deselect_on_exit=1
 
         # Instantiate TLV EEPROM device on I801 bus
         devname=`cat /sys/bus/i2c/devices/i2c-0/name`
@@ -40,11 +41,11 @@ start)
         echo misc_cpld1 0x30 > /sys/bus/i2c/devices/i2c-10/new_device
         echo misc_cpld2 0x31 > /sys/bus/i2c/devices/i2c-11/new_device
 
-        # Attach QSFP-DD i2c devices
-        echo pca9548 0x70 > /sys/bus/i2c/devices/i2c-6/new_device
-        echo pca9548 0x71 > /sys/bus/i2c/devices/i2c-6/new_device
-        echo pca9548 0x72 > /sys/bus/i2c/devices/i2c-12/new_device
-        echo pca9548 0x73 > /sys/bus/i2c/devices/i2c-12/new_device
+        # To control the mux channel idle behavior.
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/6-0070/idle_state
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/6-0071/idle_state
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/12-0072/idle_state
+        echo -2 > /sys/bus/i2c/drivers/cls_pca954x/12-0073/idle_state
 
         # Attach Optical Module EEPROM
         # use optoe2 for SFP+.
