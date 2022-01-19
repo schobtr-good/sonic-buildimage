@@ -1,3 +1,9 @@
+sonic-cel-platform-modules (0.2.3) unstable; urgency=low
+
+  * Add Marvell CPO1 platform module.
+
+ -- Wirut Getbamrung <wgetbumr@celestica.com>  Wed, 19 Jan 2022 16:00:00 +0700
+
 sonic-cel-platform-modules (0.2.2) unstable; urgency=low
 
   * Remove I2c mux ininitialization in init-script.

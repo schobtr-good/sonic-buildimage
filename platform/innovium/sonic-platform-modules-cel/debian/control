@@ -9,3 +9,8 @@ Package: platform-modules-midstone-200i
 Architecture: amd64
 Depends: linux-image-4.9.0-14-2-amd64
 Description: kernel modules for platform devices
+
+Package: platform-modules-mrvl-cpo1
+Architecture: amd64
+Depends: linux-image-4.9.0-14-2-amd64
+Description: kernel modules for platform devices
