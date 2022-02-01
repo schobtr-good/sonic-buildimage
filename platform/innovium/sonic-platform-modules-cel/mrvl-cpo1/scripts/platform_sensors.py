@@ -1,24 +1,29 @@
 #!/usr/bin/python
 #
-# mrvl-cpo1 platform sensors. This script get the sensor data from BMC 
+# MRVL_CPO1 platform sensors. This script get the sensor data from BMC
 # using ipmitool and display them in lm-sensor alike format.
 #
-# The following data is support:
-#  1. Temperature sensors
-#  2. PSUs
-#  3. Fan trays
 
 import sys
 import logging
 import subprocess
 
 IPMI_SDR_CMD = "ipmitool sdr elist"
-MAX_NUM_FANS = 7
-MAX_NUM_PSUS = 2
+SENSOR_GROUPS = [
+    ('TEMP',    'Temperature'),
+    ('Fan',     'Fan'),
+    ('PSU',     'PSU'),
+    ('BMC',     'BMC'),
+    ('BB',      'Base board'),
+    ('COME',    'COM-E'),
+    ('SW',      'Switch board'),
+    ('I89',     'I89'),
+]
 
 
 def ipmi_sensor_dump(cmd):
-    ''' Execute ipmitool command return dump output
+    ''' 
+        Execute ipmitool command return dump output
         exit if any error occur.
     '''
     sensor_dump = ''
@@ -29,142 +34,105 @@ def ipmi_sensor_dump(cmd):
         sys.exit(1)
     return sensor_dump
 
-def get_reading_by_name(sensor_name, sdr_elist_dump):
-    '''
-        Search for the match sensor name, return sensor
-        reading value and unit, return object epmtry string 
-        if search not match.
 
-        The output of sensor dump:
-        TEMP_FAN_U52     | 00h | ok  |  7.1 | 31 degrees C
-        TEMP_FAN_U17     | 01h | ok  |  7.1 | 27 degrees C
-        TEMP_SW_U52      | 02h | ok  |  7.1 | 30 degrees C
-        Fan2_Status      | 07h | ok  | 29.2 | Present
-        Fan2_Front       | 0Eh | ok  | 29.2 | 12000 RPM
-        Fan2_Rear        | 46h | ok  | 29.2 | 14700 RPM
-        PSU2_Status      | 39h | ok  | 10.2 | Presence detected
-        PSU2_Fan         | 3Dh | ok  | 10.2 | 16000 RPM
-        PSU2_VIn         | 3Ah | ok  | 10.2 | 234.30 Volts
-        PSU2_CIn         | 3Bh | ok  | 10.2 | 0.80 Amps
+def get_reading_object(sdr_elist_dump):
     '''
-    found = ''
+        Load sensor data from sdr elist dump to object
+
+        Example format:
+            Input sdr_elist_dump:
+            Fan2_Status      | 07h | ok  | 29.2 | Present
+            Fan2_Front       | 0Eh | ok  | 29.2 | 12000 RPM
+            Fan2_Rear        | 46h | ok  | 29.2 | 14700 RPM
+            PSU2_Status      | 39h | ok  | 10.2 | Presence detected
+            PSU2_Fan         | 3Dh | ok  | 10.2 | 16000 RPM
+            PSU2_VIn         | 3Ah | ok  | 10.2 | 234.30 Volts
+
+            Output sensor_data:
+            {
+                'Fan sensors': [
+                    ('Fan2_Status', 'Present'),
+                    ('Fan2_Front', '12000 RPM'),
+                    ('Fan2_Rear', '14700 RPM')
+                ],
+                'PSU sensors': [
+                    ('PSU2_Status', 'Presence detected'),
+                    ('PSU2_Fan', '16000 RPM'),
+                    ('PSU2_VIn', '234.30 Volts')
+                ]
+            }
+    '''
+    sensor_data = {}
+    max_name_width = 0
 
     for line in sdr_elist_dump.split("\n"):
-        if sensor_name in line:
-            found = line.strip()
-            break
+        for sensor_group in SENSOR_GROUPS:
+            if line.startswith(sensor_group[0]):
+                sensor_name = line.split('|')[0].strip()
+                sensor_val = line.split('|')[4].strip()
 
-    if not found:
-        logging.error('Cannot find sensor name:' + sensor_name)
+                sensor_list = sensor_data.get(sensor_group[1], [])
+                sensor_list.append((sensor_name, sensor_val))
+                sensor_data[sensor_group[1]] = sensor_list
 
-    else:
-        try:
-            found = found.split('|')[4]
-        except IndexError:
-            logging.error('Cannot get sensor data of:' + sensor_name)
+                max_name_width = len(sensor_name) if len(
+                    sensor_name) > max_name_width else max_name_width
 
-    logging.basicConfig(level=logging.DEBUG)
-    return found
+    return sensor_data, max_name_width
 
 
-def read_temperature_sensors(ipmi_sdr_elist):
+def get_sensor_output_str(sensor_data, max_name_width):
+    '''
+        Convert sensor data object to readable string format.
 
-    sensor_list = [
-        ('TEMP_FB_U52',         'Fan Tray Middle Temp'),
-        ('TEMP_FB_U17',         'Fan Tray Right Temp'),
-        ('TEMP_SW_U52',         'Switchboard Left Inlet Temp'),
-        ('TEMP_SW_U16',         'Switchboard Right Inlet Temp'),
-        ('TEMP_CPU',            'CPU Internal Temp'),
-        ('TEMP_SW_Internal',    'ASIC Internal Temp'),
-        ('TEMP_SW_U2',          'SW Radiator Temp'),
-        ('TEMP_DIMM0',          'DIMM0 Temp'),
-        ('TEMP_DIMM1',          'DIMM1 Temp'),
-    ]
+        Example format:
+            Input sensor_data:
+            {
+                'Fan sensors': [
+                    ('Fan2_Status', 'Present'),
+                    ('Fan2_Front', '12000 RPM'),
+                    ('Fan2_Rear', '14700 RPM')
+                    ],
+                'PSU sensors': [
+                    ('PSU2_Status', 'Presence detected'),
+                    ('PSU2_Fan', '16000 RPM'),
+                    ('PSU2_VIn', '234.30 Volts')
+                    ]
+            }
 
-    output = ''
+            Output output_string:
+            Fan sensors
+            Adapter: IPMI adapter
+            Fan2 Status:   Present
+            Fan2 Front:    12000 RPM
+            Fan2 Rear:     14700 RPM
+
+            PSU sensors
+            Adapter: IPMI adapter
+            PSU2 Status:   Presence detected
+            PSU2 Fan:      16000 RPM
+            PSU2 VIn:      234.30 Volts
+    '''
+    output_string = ''
     sensor_format = '{0:{width}}{1}\n'
-    # Find max length of sensor calling name
-    max_name_width = max(len(sensor[1]) for sensor in sensor_list)
-
-    output += "Temperature Sensors\n"
-    output += "Adapter: IPMI adapter\n"
-    for sensor in sensor_list:
-        reading = get_reading_by_name(sensor[0],ipmi_sdr_elist)
-        output += sensor_format.format('{}:'.format(sensor[1]),
-                                       reading,
-                                       width=str(max_name_width+1))
-    output += '\n'
-    return output
-
-
-def read_fan_sensors(num_fans, ipmi_sdr_elist):
-
-    sensor_list = [
-        ('Fan{}_Status',    'Status'),
-        ('Fan{}_Front',     'Fan {} front'),
-        ('Fan{}_Rear',      'Fan {} rear'),
-    ]
-
-    output = ''
-    sensor_format = '{0:{width}}{1}\n'
-    # Find max length of sensor calling name
-    max_name_width = max(len(sensor[1]) for sensor in sensor_list)
-
-    output += "Fan Trays\n"
-    output += "Adapter: IPMI adapter\n"
-    for fan_num in range(1, num_fans+1):
-        for sensor in sensor_list:
-            ipmi_sensor_name = sensor[0].format(fan_num)
-            display_sensor_name = sensor[1].format(fan_num)
-            reading = get_reading_by_name(ipmi_sensor_name, ipmi_sdr_elist)
-            output += sensor_format.format('{}:'.format(display_sensor_name),
-                                           reading,
-                                           width=str(max_name_width+1))
-    output += '\n'
-    return output
-
-
-def read_psu_sensors(num_psus, ipmi_sdr_elist):
-
-    sensor_list = [
-        ('PSU{}_Status',    'PSU {} Status'),
-        ('PSU{}_Fan',       'PSU {} Fan'),
-        ('PSU{}_VIn',       'PSU {} Input Voltag'),
-        ('PSU{}_CIn',       'PSU {} Input Current'),
-        ('PSU{}_PIn',       'PSU {} Input Power'),
-        ('PSU{}_Temp1',     'PSU {} Temp1'),
-        ('PSU{}_Temp2',     'PSU {} Temp2'),
-        ('PSU{}_VOut',      'PSU {} Output Voltag'),
-        ('PSU{}_COut',      'PSU {} Output Current'),
-        ('PSU{}_POut',      'PSU {} Output Power'),
-    ]
-
-    output = ''
-    sensor_format = '{0:{width}}{1}\n'
-    # Find max length of sensor calling name
-    max_name_width = max(len(sensor[1]) for sensor in sensor_list)
-
-    output += "PSU\n"
-    output += "Adapter: IPMI adapter\n"
-    for psu_num in range(1, num_psus+1):
-        for sensor in sensor_list:
-            ipmi_sensor_name = sensor[0].format(psu_num)
-            display_sensor_name = sensor[1].format(psu_num)
-            reading = get_reading_by_name(ipmi_sensor_name, ipmi_sdr_elist)
-            output += sensor_format.format('{}:'.format(display_sensor_name),
-                                           reading,
-                                           width=str(max_name_width+1))
-    output += '\n'
-    return output
+    for key_sensor in sensor_data:
+        output_string += "{}\n".format(key_sensor)
+        output_string += "Adapter: IPMI adapter\n"
+        sensor_list = sensor_data[key_sensor]
+        for sensor_value in sensor_list:
+            display_sensor_name = sensor_value[0].replace('_', ' ')
+            output_string += sensor_format.format('{}:'.format(display_sensor_name),
+                                                  sensor_value[1],
+                                                  width=str(max_name_width+4))
+        output_string += '\n'
+    return output_string
 
 
 def main():
     output_string = ''
-
     ipmi_sdr_elist = ipmi_sensor_dump(IPMI_SDR_CMD)
-    output_string += read_temperature_sensors(ipmi_sdr_elist)
-    output_string += read_psu_sensors(MAX_NUM_PSUS, ipmi_sdr_elist)
-    output_string += read_fan_sensors(MAX_NUM_FANS, ipmi_sdr_elist)
+    sensor_object, max_name_width = get_reading_object(ipmi_sdr_elist)
+    output_string += get_sensor_output_str(sensor_object, max_name_width)
     print(output_string)
 
 
