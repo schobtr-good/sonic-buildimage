@@ -44,35 +44,9 @@ class Component(ComponentBase):
 
     def __get_bios_version(self):
         # Retrieves the BIOS firmware version
-        status, result = self._api_helper.run_command(
-            "ipmitool raw 0x3a 0x64 00 01 0x70")
-        if result.strip() == "01":
-            if self.name == "Main_BIOS":
-                with open(BIOS_VERSION_PATH, 'r') as fd:
-                    bios_version = fd.read()
-                    return bios_version.strip()
-            elif self.name == "Backup_BIOS":
-                bios_version = "na"
-                return bios_version
-
-        elif result.strip() == "03":
-            if self.name == "Backup_BIOS":
-                with open(BIOS_VERSION_PATH, 'r') as fd:
-                    bios_version = fd.read()
-                    return bios_version.strip()
-            elif self.name == "Main_BIOS":
-                bios_version = "na"
-                return bios_version
-
-    def get_register_value(self, register):
-        # Retrieves the cpld register value
-        cmd = "echo {1} > {0}; cat {0}".format(GETREG_PATH, register)
-        p = subprocess.Popen(
-            cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        raw_data, err = p.communicate()
-        if err is not '':
-            return None
-        return raw_data.strip()
+        with open(BIOS_VERSION_PATH, 'r') as fd:
+            bios_version = fd.read()
+            return bios_version.strip()
 
     def __get_cpld_version(self):
         if self.name == "CTRL_CPLD":
@@ -93,6 +67,8 @@ class Component(ComponentBase):
             status, ver = self._api_helper.run_command(FAN_CPLD_VERSION_CMD)
             version = int(ver.strip(), 16)
             return str(version)
+        else:
+            return None
 
     def __get_fpga_version(self):
         # Retrieves the FPGA firmware version
@@ -131,7 +107,7 @@ class Component(ComponentBase):
         Returns:
             string: The firmware versions of the module
         """
-        fw_version = "Unknown"
+        fw_version = None
 
         if "BIOS" in self.name:
             fw_version = self.__get_bios_version()

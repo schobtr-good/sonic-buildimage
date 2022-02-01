@@ -9,8 +9,6 @@
 #############################################################################
 
 try:
-    import sys
-    import time
     from sonic_platform_base.chassis_base import ChassisBase
     from helper import APIHelper
 except ImportError as e:
