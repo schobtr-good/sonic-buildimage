@@ -1,7 +1,7 @@
 /*
- * cls-switchboard.c - PCI device driver for Marvell CPO1 Switch board FPGA.
+ * fpga_device.c - PCI device driver for Marvell CPO1 Switch board FPGA.
  *
- * Author: Nicholas Wu
+ * Author: Wirut Getbamrung
  *
  * Copyright (C) 2021 Celestica Corp.
  *
@@ -10,62 +10,27 @@
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
- FPGA:
- /sys/devices/platform
-                                         ������ fpga-sys
-                                         ��   ������ dump
-                                         ��   ������ getreg
-                                         ��   ������ scratch
-                                         ��   ������ setreg
-                                         ��   ������ version
-                                         ������ fpga-xcvr
-                                         ��   ������ SFP1
-                                         ��   ��	������ sfp_modabs
-                                         ��   ��	������ sfp_rxlos
-                                         ��   ��	������ sfp_txdisable
-                                         ��   ��	������ sfp_txfault
-                                         ��   ������ SFP2
-                                         ��   ��	������ sfp_modabs
-                                         ��   ��	������ sfp_rxlos
-                                         ��   ��	������ sfp_txdisable
-                                         ��   ��  	������ sfp_txfault
- BASE CPLD:
- /sys/devices/platform
-                                         ������ sys_cpld
-                                                                 ������ dump
-                                                                 ������ getreg
-                                                                 ������ scratch
-                                                                 ������ setreg
-                                                                 ������ sys_led
-                                                                 ������
- sys_led_color QSFP: sys/class/SFF ������ QSFP1
-                         ...
-                         ������ QSFP32
-                                         ������ qsfp_lpmode
-                                         ������ qsfp_modirq
-                                         ������ qsfp_modprs
-                                         ������ qsfp_reset
-
- SW CPLD1:
- /sys/bus/i2c/devices/9-0030
-                                       ������ getreg
-                                       ������ scratch
-                                       ������ setreg
-                                           ������ version
-                                           ������ port_led_mode	      # for
- qsfp1~16 ������ port_led_color	  # for qsfp1~16
-
-
- SW CPLD2:
- /sys/bus/i2c/devices/9-0031
-                                       ������ getreg
-                                       ������ scratch
-                                       ������ setreg
-                                           ������ version
-                                           ������ port_led_mode	      # for
- qsfp17~32 ������ port_led_color	  # for qsfp17~32
-
  *
+Baseboard FPGA:
+    /sys/devices/platform/
+                        ├── fpga-sys
+                        │   ├── dump
+                        │   ├── getreg
+                        │   ├── scratch
+                        │   ├── setreg
+                        │   └── version
+                        ├── fpga-xcvr/
+                        │   ├── SFP1
+                        │   │	├── sfp_modabs
+                        │   │	├── sfp_rxlos
+                        │   │	├── sfp_txdisable
+                        │   │	├── sfp_txfault
+                        │   └── SFP2
+                        │       ├── sfp_modabs
+                        │       ├── sfp_rxlos
+                        │       ├── sfp_txdisable
+                        │       └── sfp_txfault
+
  */
 
 #include <linux/acpi.h>
@@ -79,11 +44,11 @@
 #include <linux/platform_device.h>
 #include <linux/stddef.h>
 
-#include "fpga_i2c_ocores.h"
+#include "cls-i2c-xiic.h"
 #include "fpga_xcvr.h"
 
-#define MOD_VERSION "2.0.0"
-#define DRV_NAME "cls-switchboard"
+#define MOD_VERSION "1.0.0"
+#define DRV_NAME "fpga_device"
 
 #define I2C_MUX_CHANNEL(_ch, _adap_id, _deselect) \
     [_ch] = {.adap_id = _adap_id, .deselect_on_exit = _deselect}
@@ -196,198 +161,296 @@ module_param(bus_clock_master_10, int, 0660);
 MODULE_PARM_DESC(bus_clock_master_10,
                  "I2C master 10 bus speed in KHz 50/80/100/200/400");
 
-// NOTE:  Marvell CPO1 i2c channel mapping is very wierd!!!
-/* PCA9548 channel config on MASTER BUS */
-static struct pca954x_platform_mode i2c_mux_71[] = {
-    I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 1, true),
-    I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 2, true),
-    I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 3, true),
-    I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 4, true),
-    I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 5, true),
-    I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 6, true),
-    I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 7, true),
-    I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 8, true),
-};
+static int bus_clock_master_11 = 100;
+module_param(bus_clock_master_11, int, 0660);
+MODULE_PARM_DESC(bus_clock_master_11,
+                 "I2C master 11 bus speed in KHz 50/80/100/200/400");
 
-static struct pca954x_platform_mode i2c_mux_73[] = {
-    I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 9, true),
-    I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 10, true),
-    I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 11, true),
-    I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 12, true),
-    I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 13, true),
-    I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 14, true),
-    I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 15, true),
-    I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 16, true),
-};
+// // NOTE:  Marvell CPO1 i2c channel mapping is very wierd!!!
+// /* PCA9548 channel config on MASTER BUS */
+// static struct pca954x_platform_mode i2c_mux_71[] = {
+//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 1, true),
+//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 2, true),
+//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 3, true),
+//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 4, true),
+//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 5, true),
+//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 6, true),
+//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 7, true),
+//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 8, true),
+// };
 
-static struct pca954x_platform_mode i2c_mux_70[] = {
-    I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 17, true),
-    I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 18, true),
-    I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 19, true),
-    I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 20, true),
-    I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 21, true),
-    I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 22, true),
-    I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 23, true),
-    I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 24, true),
-};
+// static struct pca954x_platform_mode i2c_mux_73[] = {
+//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 9, true),
+//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 10, true),
+//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 11, true),
+//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 12, true),
+//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 13, true),
+//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 14, true),
+//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 15, true),
+//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 16, true),
+// };
 
-static struct pca954x_platform_mode i2c_mux_72[] = {
-    I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 25, true),
-    I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 26, true),
-    I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 27, true),
-    I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 28, true),
-    I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 29, true),
-    I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 30, true),
-    I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 31, true),
-    I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 32, true),
-};
+// static struct pca954x_platform_mode i2c_mux_70[] = {
+//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 17, true),
+//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 18, true),
+//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 19, true),
+//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 20, true),
+//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 21, true),
+//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 22, true),
+//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 23, true),
+//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 24, true),
+// };
 
-/* 33-sfp1 34-sfp2  35-LMK*/
-static struct pca954x_platform_mode i2c_mux_74[] = {
-    I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 33, true),
-    I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 34, true),
-    I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 35, true),
-    I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 36, true),
-    I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 37, true),
-    I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 38, true),
-    I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 39, true),
-    I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 40, true),
-};
+// static struct pca954x_platform_mode i2c_mux_72[] = {
+//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 25, true),
+//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 26, true),
+//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 27, true),
+//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 28, true),
+//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 29, true),
+//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 30, true),
+//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 31, true),
+//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 32, true),
+// };
 
-static struct pca954x_platform_data om_muxes[] = {
-    {
-        .modes = i2c_mux_70,
-        .num_modes = ARRAY_SIZE(i2c_mux_70),
-    },
-    {
-        .modes = i2c_mux_71,
-        .num_modes = ARRAY_SIZE(i2c_mux_71),
-    },
-    {
-        .modes = i2c_mux_72,
-        .num_modes = ARRAY_SIZE(i2c_mux_72),
-    },
-    {
-        .modes = i2c_mux_73,
-        .num_modes = ARRAY_SIZE(i2c_mux_73),
-    },
-    {
-        .modes = i2c_mux_74,
-        .num_modes = ARRAY_SIZE(i2c_mux_74),
-    },
-};
+// /* 33-sfp1 34-sfp2  35-LMK*/
+// static struct pca954x_platform_mode i2c_mux_74[] = {
+//     I2C_MUX_CHANNEL(6, PCA9548_I2C_BUS_OFS + 33, true),
+//     I2C_MUX_CHANNEL(5, PCA9548_I2C_BUS_OFS + 34, true),
+//     I2C_MUX_CHANNEL(7, PCA9548_I2C_BUS_OFS + 35, true),
+//     I2C_MUX_CHANNEL(0, PCA9548_I2C_BUS_OFS + 36, true),
+//     I2C_MUX_CHANNEL(1, PCA9548_I2C_BUS_OFS + 37, true),
+//     I2C_MUX_CHANNEL(2, PCA9548_I2C_BUS_OFS + 38, true),
+//     I2C_MUX_CHANNEL(3, PCA9548_I2C_BUS_OFS + 39, true),
+//     I2C_MUX_CHANNEL(4, PCA9548_I2C_BUS_OFS + 40, true),
+// };
 
-/* Optical Module bus 1-7 i2c muxes info */
-static struct i2c_board_info i2c_info[] = {
-    {
-        I2C_BOARD_INFO("pca9548", 0x70),
-        .platform_data = &om_muxes[0],
-    },
-    {
-        I2C_BOARD_INFO("pca9548", 0x71),
-        .platform_data = &om_muxes[1],
-    },
-    {
-        I2C_BOARD_INFO("pca9548", 0x72),
-        .platform_data = &om_muxes[2],
-    },
-    {
-        I2C_BOARD_INFO("pca9548", 0x73),
-        .platform_data = &om_muxes[3],
-    },
-    {
-        I2C_BOARD_INFO("pca9548", 0x74),
-        .platform_data = &om_muxes[4],
-    },
-};
+// static struct pca954x_platform_data om_muxes[] = {
+//     {
+//         .modes = i2c_mux_70,
+//         .num_modes = ARRAY_SIZE(i2c_mux_70),
+//     },
+//     {
+//         .modes = i2c_mux_71,
+//         .num_modes = ARRAY_SIZE(i2c_mux_71),
+//     },
+//     {
+//         .modes = i2c_mux_72,
+//         .num_modes = ARRAY_SIZE(i2c_mux_72),
+//     },
+//     {
+//         .modes = i2c_mux_73,
+//         .num_modes = ARRAY_SIZE(i2c_mux_73),
+//     },
+//     {
+//         .modes = i2c_mux_74,
+//         .num_modes = ARRAY_SIZE(i2c_mux_74),
+//     },
+// };
 
-/* RESOURCE SEPERATES BY FUNCTION */
-/* Resource IOMEM for FPGA extened i2c bus 0 */
-static struct resource cls_i2c_res_0[] = {
-    {
-        .start = 0x00010000,
-        .end = 0x00010FFF,
-        .flags = IORESOURCE_MEM,
-    },
-};
+// /* Optical Module bus 1-7 i2c muxes info */
+// static struct i2c_board_info i2c_info[] = {
+//     {
+//         I2C_BOARD_INFO("pca9548", 0x70),
+//         .platform_data = &om_muxes[0],
+//     },
+//     {
+//         I2C_BOARD_INFO("pca9548", 0x71),
+//         .platform_data = &om_muxes[1],
+//     },
+//     {
+//         I2C_BOARD_INFO("pca9548", 0x72),
+//         .platform_data = &om_muxes[2],
+//     },
+//     {
+//         I2C_BOARD_INFO("pca9548", 0x73),
+//         .platform_data = &om_muxes[3],
+//     },
+//     {
+//         I2C_BOARD_INFO("pca9548", 0x74),
+//         .platform_data = &om_muxes[4],
+//     },
+// };
 
-/* Resource IOMEM for FPGA extened i2c bus 1 */
+// /* RESOURCE SEPERATES BY FUNCTION */
+// /* Resource IOMEM for FPGA extened i2c bus 0 */
+// static struct resource cls_i2c_res_0[] = {
+//     {
+//         .start = 0x00010000,
+//         .end = 0x00010FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 1 */
+// static struct resource cls_i2c_res_1[] = {
+//     {
+//         .start = 0x00011000,
+//         .end = 0x00011FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 2 */
+// static struct resource cls_i2c_res_2[] = {
+//     {
+//         .start = 0x00012000,
+//         .end = 0x00012FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 3 */
+// static struct resource cls_i2c_res_3[] = {
+//     {
+//         .start = 0x00013000,
+//         .end = 0x00013FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 4 */
+// static struct resource cls_i2c_res_4[] = {
+//     {
+//         .start = 0x00014000,
+//         .end = 0x00014FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 5 */
+// static struct resource cls_i2c_res_5[] = {
+//     {
+//         .start = 0x00015000,
+//         .end = 0x00015FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 6 */
+// static struct resource cls_i2c_res_6[] = {
+//     {
+//         .start = 0x00016000,
+//         .end = 0x00016FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 7 */
+// static struct resource cls_i2c_res_7[] = {
+//     {
+//         .start = 0x00017000,
+//         .end = 0x00017FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 8 */
+// static struct resource cls_i2c_res_8[] = {
+//     {
+//         .start = 0x00018000,
+//         .end = 0x00018FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
+// /* Resource IOMEM for FPGA extened i2c bus 9 */
+// static struct resource cls_i2c_res_9[] = {
+//     {
+//         .start = 0x00019000,
+//         .end = 0x00019FFF,
+//         .flags = IORESOURCE_MEM,
+//     },
+// };
+
 static struct resource cls_i2c_res_1[] = {
     {
-        .start = 0x00011000,
-        .end = 0x00011FFF,
+        .start = 0x800,
+        .end = 0x81F,
         .flags = IORESOURCE_MEM,
     },
 };
-
-/* Resource IOMEM for FPGA extened i2c bus 2 */
+/* Resource IOMEM for i2c bus 2 for FPGA_BMC_I2C2*/
 static struct resource cls_i2c_res_2[] = {
     {
-        .start = 0x00012000,
-        .end = 0x00012FFF,
+        .start = 0x820,
+        .end = 0x83F,
         .flags = IORESOURCE_MEM,
     },
 };
-
-/* Resource IOMEM for FPGA extened i2c bus 3 */
+/* Resource IOMEM for i2c bus 3 for FPGA_BMC_I2C3*/
 static struct resource cls_i2c_res_3[] = {
     {
-        .start = 0x00013000,
-        .end = 0x00013FFF,
+        .start = 0x840,
+        .end = 0x85F,
         .flags = IORESOURCE_MEM,
     },
 };
-
-/* Resource IOMEM for FPGA extened i2c bus 4 */
+/* Resource IOMEM for i2c bus 4 for FPGA_BMC_I2C4*/
 static struct resource cls_i2c_res_4[] = {
     {
-        .start = 0x00014000,
-        .end = 0x00014FFF,
+        .start = 0x860,
+        .end = 0x87F,
         .flags = IORESOURCE_MEM,
     },
 };
-
-/* Resource IOMEM for FPGA extened i2c bus 5 */
+/* Resource IOMEM for i2c bus 5 for FPGA_BMC_I2C5*/
 static struct resource cls_i2c_res_5[] = {
     {
-        .start = 0x00015000,
-        .end = 0x00015FFF,
+        .start = 0x880,
+        .end = 0x89F,
         .flags = IORESOURCE_MEM,
     },
 };
-
-/* Resource IOMEM for FPGA extened i2c bus 6 */
+/* Resource IOMEM for i2c bus 6 for Baseboard FPGA*/
 static struct resource cls_i2c_res_6[] = {
     {
-        .start = 0x00016000,
-        .end = 0x00016FFF,
+        .start = 0x8A0,
+        .end = 0x8BF,
         .flags = IORESOURCE_MEM,
     },
 };
 
-/* Resource IOMEM for FPGA extened i2c bus 7 */
+/* Resource IOMEM for i2c bus 7 for FPGA_BMC_I2C7*/
 static struct resource cls_i2c_res_7[] = {
     {
-        .start = 0x00017000,
-        .end = 0x00017FFF,
+        .start = 0x8C0,
+        .end = 0x8DF,
         .flags = IORESOURCE_MEM,
     },
 };
 
-/* Resource IOMEM for FPGA extened i2c bus 8 */
+/* Resource IOMEM for i2c bus 8 for FPGA_BMC_I2C8*/
 static struct resource cls_i2c_res_8[] = {
     {
-        .start = 0x00018000,
-        .end = 0x00018FFF,
+        .start = 0x8E0,
+        .end = 0x8FF,
         .flags = IORESOURCE_MEM,
     },
 };
 
-/* Resource IOMEM for FPGA extened i2c bus 9 */
+/* Resource IOMEM for i2c bus 9 for FPGA_BMC_I2C9*/
 static struct resource cls_i2c_res_9[] = {
     {
-        .start = 0x00019000,
-        .end = 0x00019FFF,
+        .start = 0x900,
+        .end = 0x91F,
+        .flags = IORESOURCE_MEM,
+    },
+};
+
+/* Resource IOMEM for i2c bus 10 for FPGA_SFPP_0_I2C*/
+static struct resource cls_i2c_res_10[] = {
+    {
+        .start = 0x920,
+        .end = 0x93F,
+        .flags = IORESOURCE_MEM,
+    },
+};
+
+/* Resource IOMEM for i2c bus 11 for FPGA_SFPP_1_I2C*/
+static struct resource cls_i2c_res_11[] = {
+    {
+        .start = 0x940,
+        .end = 0x95F,
         .flags = IORESOURCE_MEM,
     },
 };
@@ -395,8 +458,8 @@ static struct resource cls_i2c_res_9[] = {
 /* Resource IOMEM for front panel XCVR */
 static struct resource xcvr_res[] = {
     {
-        .start = 0x00001000,
-        .end = 0x00001FFF,
+        .start = 0x4000,
+        .end = 0x421F,
         .flags = IORESOURCE_MEM,
     },
 };
@@ -404,28 +467,13 @@ static struct resource xcvr_res[] = {
 /* Resource IOMEM for front panel XCVR */
 static struct resource fpga_res[] = {
     {
-        .start = 0x00000000,
-        .end = 0x01FFFFFF,
+        .start = 0x00,
+        .end = 0xFF,
         .flags = IORESOURCE_MEM,
     },
 };
 
 static struct i2c_bus_config i2c_bus_configs[] = {
-    {
-        .id = 0,
-        .res = cls_i2c_res_0,
-        .num_res = ARRAY_SIZE(cls_i2c_res_0),
-        .pdata =
-            {
-                .reg_shift = OCORE_REGSHIFT,
-                .reg_io_width = OCORE_REG_IO_WIDTH,
-                .clock_khz = OCORE_IP_CLK_khz,
-                .bus_khz = OCORE_BUS_CLK_khz,
-                .big_endian = false,
-                .num_devices = 0,
-                .devices = NULL,
-            },
-    },
     {
         .id = 1,
         .res = cls_i2c_res_1,
@@ -557,8 +605,38 @@ static struct i2c_bus_config i2c_bus_configs[] = {
                 .clock_khz = OCORE_IP_CLK_khz,
                 .bus_khz = OCORE_BUS_CLK_khz,
                 .big_endian = false,
-                .num_devices = 5,
-                .devices = i2c_info,
+                .num_devices = 0,
+                .devices = NULL,
+            },
+    },
+    {
+        .id = 10,
+        .res = cls_i2c_res_10,
+        .num_res = ARRAY_SIZE(cls_i2c_res_10),
+        .pdata =
+            {
+                .reg_shift = OCORE_REGSHIFT,
+                .reg_io_width = OCORE_REG_IO_WIDTH,
+                .clock_khz = OCORE_IP_CLK_khz,
+                .bus_khz = OCORE_BUS_CLK_khz,
+                .big_endian = false,
+                .num_devices = 0,
+                .devices = NULL,
+            },
+    },
+    {
+        .id = 11,
+        .res = cls_i2c_res_11,
+        .num_res = ARRAY_SIZE(cls_i2c_res_11),
+        .pdata =
+            {
+                .reg_shift = OCORE_REGSHIFT,
+                .reg_io_width = OCORE_REG_IO_WIDTH,
+                .clock_khz = OCORE_IP_CLK_khz,
+                .bus_khz = OCORE_BUS_CLK_khz,
+                .big_endian = false,
+                .num_devices = 0,
+                .devices = NULL,
             },
     },
 };
@@ -664,7 +742,7 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
     printk("num_i2c_bus = %x,xcvr_res start/end %x/%x,restart=%x\n",
            num_i2c_bus, xcvr_res[0].start, xcvr_res[0].end, rstart);
 
-    priv->i2c_devname = "fpga-xiic-i2c";
+    priv->i2c_devname = "cls-i2c-xiic";
     priv->xcvr_devname = "fpga-xcvr";
     priv->fpga_devname = "fpga-sys";
 
@@ -737,6 +815,9 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
                 break;
             case 10:
                 i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_10;
+                break;
+            case 11:
+                i2c_bus_configs[i].pdata.bus_khz = bus_clock_master_11;
                 break;
             default:
                 i2c_bus_configs[i].pdata.bus_khz = OCORE_BUS_CLK_khz;
@@ -822,7 +903,7 @@ static struct pci_driver cls_pci_driver = {
 
 module_pci_driver(cls_pci_driver);
 
-MODULE_AUTHOR("Nicholas Wu<nicwu@celestica.com>");
-MODULE_DESCRIPTION("Celestica cloverstone switchboard driver");
+MODULE_AUTHOR("Wirut Getbamrung<wgetbumr@celestica.com>");
+MODULE_DESCRIPTION("Celestica MRVL_CPO1 Baseboard FPGA driver");
 MODULE_VERSION(MOD_VERSION);
 MODULE_LICENSE("GPL");
