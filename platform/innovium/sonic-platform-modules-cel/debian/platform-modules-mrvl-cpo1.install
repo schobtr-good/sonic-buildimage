@@ -2,3 +2,5 @@ mrvl-cpo1/scripts/sensors usr/bin
 mrvl-cpo1/scripts/platform_sensors.py usr/local/bin
 mrvl-cpo1/cfg/mrvl-cpo1-modules.conf etc/modules-load.d
 mrvl-cpo1/systemd/platform-modules-mrvl-cpo1.service lib/systemd/system
+mrvl-cpo1/systemd/sonic_platform-1.0-py2-none-any.whl usr/share/sonic/device/x86_64-cel_marvell_tl7-r0
+services/platform_api/platform_api_mgnt.sh usr/local/bin

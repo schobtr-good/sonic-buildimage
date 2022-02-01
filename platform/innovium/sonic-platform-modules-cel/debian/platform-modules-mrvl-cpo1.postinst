@@ -1,3 +1,5 @@
 depmod -a
 systemctl enable platform-modules-mrvl-cpo1.service
 systemctl start platform-modules-mrvl-cpo1.service
+
+/usr/local/bin/platform_api_mgnt.sh install

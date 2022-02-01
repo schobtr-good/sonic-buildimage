@@ -1,0 +1,16 @@
+{
+    "chassis": {
+        "MRVL_CPO1": {
+            "component": {
+                "BMC": {},
+                "BIOS": {},
+                "CTRL_CPLD": {},
+                "COME_CPLD": {},
+                "FAN_CPLD": {},
+                "LED_CPLD": {},
+                "BASE_FPGA": {},
+                "SW_FPGA": {}
+                }
+        }
+    }
+}
