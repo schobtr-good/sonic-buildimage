@@ -37,6 +37,14 @@ IPMI_FAN_PRESENT_CMD = "0x26 0x03 {}"
 # IPMI_OEM_NETFN + 0x64 + fanboard id + r/w flag + REG
 IPMI_FAN_TARGET_SPEED_CMD = "0x64 0x02 0x01 {}"
 
+# GET Fan RPM
+# IPMI_OEM_NETFN + 0x26 + fan id: 0-7
+IPMI_FAN_SPEED_CMD = "0x2d {}"
+IPMI_SENSOR_NETFN = "0x04"
+FAN_SS_RPM_REG = ["0x43", "0x4A", "0x44", "0x4b", "0x45", "0x4c",
+                  "0x46", "0x4d", "0x47", "0x4e", "0x48", "0x4f", "0x49", "0x50"]
+PSU_FAN_SS_RPM_REG = ["0x2b", "0x34"]
+
 # FAN1-FAN2 FAN CPLD TARGET SPEED REGISTER
 FAN_TARGET_SPEED_REG = ["0x22", "0x32", "0x42", "0x52", "0x62", "0x72", "0x82"]
 
@@ -51,8 +59,8 @@ IPMI_SENSOR_LIST_CMD = "ipmitool sensor"
 IPMI_FRU_MODEL_KEY = "Board Part Number"
 IPMI_FRU_SERIAL_KEY = "Board Serial"
 
-MAX_OUTLET = 30200
-MAX_INLET = 32000
+MAX_OUTLET = 24700
+MAX_INLET = 29700
 SPEED_TOLERANCE = 10
 
 # IPMT_OEM_NETFN + 0x3E + {bus} + {8 bit address} + {read count} + 0x3B:PSU FAN SPEED REG
@@ -110,27 +118,19 @@ class Fan(FanBase):
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
         """
-        max_rpm = MAX_OUTLET if self.fan_index % 2 == 0 else MAX_INLET
-        fan1_ss_start = FAN1_FRONT_SS_ID if self.fan_index % 2 == 0 else FAN1_REAR_SS_ID
+        if self.is_psu_fan:
+            max_rpm = PSU_MAX_RPM
+        else:
+            max_rpm = MAX_OUTLET if self.fan_index % 2 == 0 else MAX_INLET
 
-        ss_id = hex(int(fan1_ss_start, 16) + self.fan_tray_index) if not self.psu_index else hex(
-            int(PSU_FAN1_FRONT_SS_ID, 16) + self.fan_tray_index)
         status, raw_ss_read = self._api_helper.ipmi_raw(
-            IPMI_SENSOR_NETFN, IPMI_FAN_SPEED_CMD.format(ss_id))
+            IPMI_SENSOR_NETFN, IPMI_FAN_SPEED_CMD.format(FAN_SS_RPM_REG[self.index]))
 
         ss_read = raw_ss_read.split()[0]
         rpm_speed = int(ss_read, 16)*150
         speed = int(float(rpm_speed)/max_rpm * 100)
 
         return speed
-
-    def get_target_speed(self):
-        """
-        Retrieves the target (expected) speed of the fan
-        Returns:
-            An integer, the percentage of full fan speed, in the range 0 (off)
-                 to 100 (full speed)
-        """
 
     def get_target_speed(self):
         """
@@ -180,7 +180,7 @@ class Fan(FanBase):
         Returns:
             A boolean, True if speed is set successfully, False if not
         """
-        return False  # controlled by BMC
+        return False  # Controlled by BMC
 
     def set_status_led(self, color):
         """
