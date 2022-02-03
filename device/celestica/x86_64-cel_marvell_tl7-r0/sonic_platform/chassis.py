@@ -17,6 +17,7 @@ except ImportError as e:
 NUM_COMPONENT = 8
 NUM_FAN_TRAY = 7
 NUM_FAN = 2
+NUM_PSU = 2
 
 RESET_REGISTER = "0xA106"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
@@ -36,6 +37,7 @@ class Chassis(ChassisBase):
         self._initialize_eeprom()
         self._initialize_components()
         self._initialize_fan()
+        self._initialize_psu()
 
     def _initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
@@ -53,6 +55,12 @@ class Chassis(ChassisBase):
             for fan_index in range(0, NUM_FAN):
                 fan = Fan(fant_index, fan_index)
                 self._fan_list.append(fan)
+
+    def _initialize_psu(self):
+        from sonic_platform.psu import Psu
+        for index in range(0, NUM_PSU):
+            psu = Psu(index)
+            self._psu_list.append(psu)
 
     def get_base_mac(self):
         """
