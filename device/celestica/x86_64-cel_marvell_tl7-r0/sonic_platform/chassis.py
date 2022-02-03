@@ -15,6 +15,8 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 NUM_COMPONENT = 8
+NUM_FAN_TRAY = 7
+NUM_FAN = 2
 
 RESET_REGISTER = "0xA106"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
@@ -33,6 +35,7 @@ class Chassis(ChassisBase):
 
         self._initialize_eeprom()
         self._initialize_components()
+        self._initialize_fan()
 
     def _initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
@@ -43,6 +46,13 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_COMPONENT):
             component = Component(index)
             self._component_list.append(component)
+
+    def _initialize_fan(self):
+        from sonic_platform.fan import Fan
+        for fant_index in range(0, NUM_FAN_TRAY):
+            for fan_index in range(0, NUM_FAN):
+                fan = Fan(fant_index, fan_index)
+                self._fan_list.append(fan)
 
     def get_base_mac(self):
         """
