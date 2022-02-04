@@ -141,6 +141,27 @@ class Chassis(ChassisBase):
         return prev_reboot_cause
 
     ##############################################################
+    ####################### Other methods ########################
+    ##############################################################
+
+    def get_watchdog(self):
+        """
+        Retreives hardware watchdog device on this chassis
+        Returns:
+            An object derived from WatchdogBase representing the hardware
+            watchdog device
+        """
+        if self._watchdog is None:
+            from watchdog import Watchdog
+            self._watchdog = Watchdog()
+
+        return self._watchdog
+
+    def get_thermal_manager(self):
+        from thermal_manager import ThermalManager
+        return ThermalManager
+
+    ##############################################################
     ###################### Device methods ########################
     ##############################################################
 

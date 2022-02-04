@@ -3,5 +3,5 @@
     "skip_xcvrd": true,
     "skip_psud": true,
     "skip_syseepromd": false,
-    "skip_thermalctld": true
+    "skip_thermalctld": false
 }
