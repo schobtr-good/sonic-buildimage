@@ -16,6 +16,7 @@ except ImportError as e:
 
 NUM_COMPONENT = 8
 NUM_FAN_TRAY = 7
+NUM_THERMAL = 9
 NUM_FAN = 2
 NUM_PSU = 2
 
@@ -38,6 +39,7 @@ class Chassis(ChassisBase):
         self._initialize_components()
         self._initialize_fan()
         self._initialize_psu()
+        self._initialize_thermals()
 
     def _initialize_eeprom(self):
         from sonic_platform.eeprom import Tlv
@@ -61,6 +63,12 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_PSU):
             psu = Psu(index)
             self._psu_list.append(psu)
+
+    def _initialize_thermals(self):
+        from sonic_platform.thermal import Thermal
+        for index in range(0, NUM_THERMAL):
+            thermal = Thermal(index)
+            self._thermal_list.append(thermal)
 
     def get_base_mac(self):
         """
