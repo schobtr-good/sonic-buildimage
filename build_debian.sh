@@ -502,7 +502,7 @@ for kernel in `sudo find  $FILESYSTEM_ROOT/boot -name vmlinuz*`; do
     sudo sbsign --key src/sonic-linux-kernel/x509/rsa_private.pem --cert src/sonic-linux-kernel/x509/cert.pem --out $kernel ${kernel}.unsigned
     sudo rm -rf ${kernel}.unsigned
 done
-## Update initramfs
+## Update modules
 for module in `sudo find  $FILESYSTEM_ROOT -name *.ko`; do
     sudo src/sonic-linux-kernel/x509/sign-file sha256 src/sonic-linux-kernel/x509/rsa_private.pem src/sonic-linux-kernel/x509/cert.pem $module
 done
@@ -510,6 +510,18 @@ done
 
 ## Update initramfs
 sudo chroot $FILESYSTEM_ROOT update-initramfs -u
+
+## Add kernel GPG  signature
+for kernel in `sudo find  $FILESYSTEM_ROOT/boot -name vmlinuz*`; do
+    sudo gpg --import gpg/pub.key
+    sudo gpg --batch --import gpg/private.key
+    sudo gpg --default-key $GPG_KEY_ID --detach-sign --passphrase $GPG_PASSWD --batch --yes $kernel
+done
+
+## Add initramfs GPG signature
+for initrd in `sudo find  $FILESYSTEM_ROOT/boot -name initrd*`; do
+    sudo gpg --default-key $GPG_KEY_ID --detach-sign --passphrase $GPG_PASSWD --batch --yes $initrd
+done
 
 ## Clean up apt
 sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y autoremove

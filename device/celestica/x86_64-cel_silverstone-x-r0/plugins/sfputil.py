@@ -58,14 +58,13 @@ class SfpUtil(SfpUtilBase):
         content = 0
         port = 0
         try:
-            while port >= self.port_start and port <= self.port_end:
+            while self.port_start <= port <= self.port_end:
                 if self.get_presence(port):
-		    content = content | (1 << port)
-
+                    content = content | (1 << port)
                 port = port + 1
 
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+        except IOError as error:
+            print("Error: unable to open file: %s" % str(error))
             return False
 
         return content 
@@ -93,7 +92,7 @@ class SfpUtil(SfpUtilBase):
             self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET)
             self.port_to_eeprom_mapping[x] = eeprom_path.format(
                 x + self.EEPROM_OFFSET)
-	    # Get Transceiver status
+        # Get Transceiver status
         self.modprs_register = self.get_transceiver_status
         SfpUtilBase.__init__(self)
 
@@ -114,7 +113,7 @@ class SfpUtil(SfpUtilBase):
             content = reg_file.readline().rstrip()
             reg_value = int(content)
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print ("Error: unable to open file: %s" % str(e))
             return False
 
         # Module present is active low
@@ -133,8 +132,8 @@ class SfpUtil(SfpUtilBase):
             port_name = self.get_port_name(port_num)
             reg_file = open("/".join([self.PORT_INFO_PATH,
                                       port_name, "qsfp_lpmode"]))
-        except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+        except IOError as error:
+            print ("Error: unable to open file: %s" % str(error))
             return False
 
         # Read status
@@ -157,7 +156,7 @@ class SfpUtil(SfpUtilBase):
             reg_file = open("/".join([self.PORT_INFO_PATH,
                                       port_name, "qsfp_lpmode"]), "r+")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print ("Error: unable to open file: %s" % str(e))
             return False
 
         content = hex(lpmode)
@@ -179,7 +178,7 @@ class SfpUtil(SfpUtilBase):
             reg_file = open("/".join([self.PORT_INFO_PATH,
                                       port_name, "qsfp_reset"]), "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print ("Error: unable to open file: %s" % str(e))
             return False
 
         # Convert our register value back to a hex string and write back
@@ -195,7 +194,7 @@ class SfpUtil(SfpUtilBase):
             reg_file = open(
                 "/".join([self.PORT_INFO_PATH, port_name, "qsfp_reset"]), "w")
         except IOError as e:
-            print "Error: unable to open file: %s" % str(e)
+            print ("Error: unable to open file: %s" % str(e))
             return False
 
         reg_file.seek(0)
@@ -216,13 +215,13 @@ class SfpUtil(SfpUtilBase):
         elif timeout > 0:
             timeout = timeout / float(1000) # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print ("get_transceiver_change_event:Invalid timeout value")
             return False, {}
 
         end_time = start_time + timeout
         if start_time > end_time:
-            print 'get_transceiver_change_event:' \
-                       'time wrap / invalid timeout value', timeout
+            print ('get_transceiver_change_event:' \
+                       'time wrap / invalid timeout value')
 
             return False, {} # Time wrap or possibly incorrect timeout
 
@@ -259,5 +258,5 @@ class SfpUtil(SfpUtilBase):
                     if timeout > 0:
                         time.sleep(timeout)
                     return True, {}
-        print "get_transceiver_change_event: Should not reach here."
+        print ("get_transceiver_change_event: Should not reach here.")
         return False, {}

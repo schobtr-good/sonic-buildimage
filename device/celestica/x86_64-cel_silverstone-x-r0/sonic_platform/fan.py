@@ -22,21 +22,25 @@ try:
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
-
 FAN_NAME_LIST = ["FAN-1F", "FAN-1R", "FAN-2F", "FAN-2R", "FAN-3F", "FAN-3R",
                  "FAN-4F", "FAN-4R", "FAN-5F", "FAN-5R", "FAN-6F", "FAN-6R", "FAN-7F", "FAN-7R"]
 
 IPMI_OEM_NETFN = "0x3A"
 
-IPMI_SET_FAN_SPEED_CMD = "0x26 {} {}"         # IPMI_OEM_NETFN + 0x26 + fan id: 0-7 + pwm:20-100
-IPMI_AIR_FLOW_CMD = "0x62 {}"                 # IPMI_OEM_NETFN + 0x62 + fan id: 0-7
-IPMI_FAN_PRESENT_CMD = "0x26 0x03 {}"         # IPMI_OEM_NETFN + 0x26 + fan id: 0-7 
-IPMI_FAN_TARGET_SPEED_CMD = "0x64 0x02 0x01 {}"   # IPMI_OEM_NETFN + 0x64 + fanboard id + r/w flag + REG 
+IPMI_SET_FAN_SPEED_CMD = "0x26 {} {}"  # IPMI_OEM_NETFN + 0x26 + fan id: 0-7 + pwm:20-100
+IPMI_AIR_FLOW_CMD = "0x62 {}"  # IPMI_OEM_NETFN + 0x62 + fan id: 0-7
+IPMI_FAN_PRESENT_CMD = "0x26 0x03 {}"  # IPMI_OEM_NETFN + 0x26 + fan id: 0-7
+IPMI_FAN_SPEED_CMD = "0x26 0x04 {}" # IPMI_OEM_NETFN + 0x26 + fan id: 0-7; RPM = readback value * 150
+IPMI_FAN_TARGET_SPEED_CMD = "0x64 0x02 0x01 {}"  # IPMI_OEM_NETFN + 0x64 + fanboard id + r/w flag + REG
 
-FAN_TARGET_SPEED_REG = ["0x22", "0x32", "0x42", "0x52", "0x62", "0x72", "0x82"] # FAN1-FAN2 FAN CPLD TARGET SPEED REGISTER
+FAN_TARGET_SPEED_REG = ["0x22", "0x32", "0x42", "0x52", "0x62", "0x72",
+                        "0x82"]  # FAN1-FAN2 FAN CPLD TARGET SPEED REGISTER
 
-IPMI_SET_FAN_LED_CMD = "0x39 0x02 {} {}"      # IPMI_OEM_NETFN + 0x39 + fan led id: 4-0x0a + fan color: 0-2 
-IPMI_GET_FAN_LED_CMD = "0x39 0x01 {}"         # IPMI_OEM_NETFN + 0x39 + fan led id: 4-0x0a
+IPMI_SET_FAN_LED_CMD = "0x39 0x02 {} {}"  # IPMI_OEM_NETFN + 0x39 + fan led id: 4-0x0a + fan color: 0-2
+IPMI_GET_FAN_LED_CMD = "0x39 0x01 {}"  # IPMI_OEM_NETFN + 0x39 + fan led id: 4-0x0a
+
+IPMI_GET_PSU1_FAN_SPEED_CMD = "0x3e 0x06 0xb0 2 0x90"
+IPMI_GET_PSU2_FAN_SPEED_CMD = "0x3e 0x06 0xb2 2 0x90"
 
 IPMI_SET_PWM = "0x02 {} {}"
 IPMI_FRU_PRINT_ID = "ipmitool fru print {}"
@@ -48,11 +52,11 @@ MAX_OUTLET = 30200
 MAX_INLET = 32000
 SPEED_TOLERANCE = 10
 
-IPMI_PSU_TARGET_SPEED_CMD = "0x3E {} {} 1 0x3B"   # IPMT_OEM_NETFN + 0x3E + {bus} + {8 bit address} + {read count} + 0x3B:PSU FAN SPEED REG
+IPMI_PSU_TARGET_SPEED_CMD = "0x3E {} {} 1 0x3B"  # IPMT_OEM_NETFN + 0x3E + {bus} + {8 bit address} + {read count} + 0x3B:PSU FAN SPEED REG
 PSU_I2C_BUS = "0x06"
-PSU_I2C_ADDR = ["0xB0", "0xB2"]    # PSU1 and PSU2 I2C ADDR
+PSU_I2C_ADDR = ["0xB0", "0xB2"]  # PSU1 and PSU2 I2C ADDR
 PSU_FAN = "PSU{}_Fan"
-PSU_MAX_RPM = 26500 
+PSU_MAX_RPM = 26500
 
 FAN_FRONT = "Fan{}_Front"
 FAN_REAR = "Fan{}_Rear"
@@ -64,14 +68,13 @@ FAN1_LED_CMD = "0x04"
 
 FAN_PWM_REGISTER_START = 0x22
 FAN_PWM_REGISTER_STEP = 0x10
-FAN1_FRU_ID = 6 # silverstoneX has no FAN FRU
-FAN_STATUS_FILE = "/var/fan_status.txt"
+FAN1_FRU_ID = 6  # silverstoneX has no FAN FRU
+
 
 class Fan(FanBase):
     """Platform-specific Fan class"""
 
     def __init__(self, fan_tray_index, fan_index=0, is_psu_fan=False, psu_index=0):
-        self.is_get_status = False
         self.fan_index = fan_index
         self.fan_tray_index = fan_tray_index
         self.is_psu_fan = is_psu_fan
@@ -91,7 +94,7 @@ class Fan(FanBase):
         status, raw_flow = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_AIR_FLOW_CMD.format(hex(self.fan_tray_index)))
         if status and raw_flow == "01":
-            direction = self.FAN_DIRECTION_INTAKE
+           direction = self.FAN_DIRECTION_INTAKE
 
         return direction
 
@@ -101,52 +104,33 @@ class Fan(FanBase):
         Returns:
             An integer, the percentage of full fan speed, in the range 0 (off)
                  to 100 (full speed)
-
-        Note:
-            Max F2B = 24700 RPM 
-            Max B2F = 29700 RPM
         """
-        # store "ipmitool sensor" info as a file
-        if self.index == 0 and self.is_psu_fan == False and self.is_get_status == False:
-            file = open(FAN_STATUS_FILE, 'w')
-            try:
-                proc = subprocess.Popen(IPMI_SENSOR_LIST_CMD, shell=True, stdout=subprocess.PIPE)
-                out, err = proc.communicate()
-                file.write(out)
-                if proc.returncode != 0:
-                    sys.exit(proc.returncode)
-            except Exception as e:
-                print(str(e))
-            finally:
-                file.close()
-        else:
-            file = open(FAN_STATUS_FILE, 'r')
-            try:
-                out = file.read()
-            except Exception as e:
-                print(str(e))
-            finally:
-                file.close()
-             
-        
-        self.is_get_status = False
-        all_info_list = out.split("\n")
         if self.is_psu_fan:
-            in_string = [i for i in all_info_list if PSU_FAN.format(self.psu_index + 1) in i]
-            # PSU1_Fan         | 13200.000  | RPM        | ok    | na        | na        | na        | na        | na        | na
-            max_rpm = PSU_MAX_RPM 
-        else:
-            location = FAN_FRONT.format(self.fan_tray_index + 1) if self.fan_index == 0 else FAN_REAR.format(self.fan_tray_index + 1)
-            in_string = [i for i in all_info_list if str(location) in i]
-            # Fan1_Front       | 15300.000  | RPM        | ok    | na        | 1050.000  | na        | na        | na        | na
-            max_rpm = MAX_OUTLET if self.fan_index % 2 == 0 else MAX_INLET
-        rpm_speed = in_string[0].split("|")[1].strip()
-        speed = int(float(rpm_speed)/max_rpm * 100)
-        if speed > 100:
-            return rpm_speed
-        else:
-            return speed
+            max_rpm = PSU_MAX_RPM
+            if self.psu_index % 2 == 0:
+                status, raw_ss_read = self._api_helper.ipmi_raw(IPMI_OEM_NETFN, IPMI_GET_PSU1_FAN_SPEED_CMD)
+            else:
+                status, raw_ss_read = self._api_helper.ipmi_raw(IPMI_OEM_NETFN, IPMI_GET_PSU2_FAN_SPEED_CMD)
 
+            raw_ss_read_reverse = raw_ss_read.split()[::-1]
+            data_high = ('{0:0{1}b}'.format(int(raw_ss_read_reverse[0], 16), len(raw_ss_read_reverse[0]) * 4))
+            n_bin = data_high[:5]
+            n = int(n_bin, 2)
+            data_low = ('{0:0{1}b}'.format(int(raw_ss_read_reverse[1], 16), len((raw_ss_read_reverse[0]) * 4)))
+            y_bin = data_high[-3:] + data_low
+            y = int(y_bin, 2)
+            rpm_speed = float(y * 2 ** n)
+            speed = int(rpm_speed / max_rpm * 100)
+        else:
+            max_rpm = MAX_OUTLET if self.fan_index % 2 == 0 else MAX_INLET
+            status, raw_ss_read = self._api_helper.ipmi_raw(IPMI_OEM_NETFN, IPMI_FAN_SPEED_CMD.format(hex(self.fan_tray_index)))
+            if self.fan_index % 2 == 0:  # Front Speed
+                ss_read = raw_ss_read.split()[0]
+            else:
+                ss_read = raw_ss_read.split()[1]    # Rear Speed
+            rpm_speed = int(ss_read, 16)*150        # RPM = ss_read * 150
+            speed = int(float(rpm_speed) / max_rpm * 100)
+        return speed if speed <= 100 else rpm_speed
 
     def get_target_speed(self):
         """
@@ -161,18 +145,20 @@ class Fan(FanBase):
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
-        if self.is_psu_fan == False:
-            get_target_speed_cmd = IPMI_FAN_TARGET_SPEED_CMD.format(FAN_TARGET_SPEED_REG[self.fan_tray_index]) #raw speed: 0-255
+        if self.is_psu_fan is False:
+            get_target_speed_cmd = IPMI_FAN_TARGET_SPEED_CMD.format(
+                FAN_TARGET_SPEED_REG[self.fan_tray_index])  # raw speed: 0-255
             status, get_target_speed_res = self._api_helper.ipmi_raw(
                 IPMI_OEM_NETFN, get_target_speed_cmd)
             target = int(round(float(int(get_target_speed_res, 16)) * 100 / 255))
         else:
-            get_target_speed_cmd = IPMI_PSU_TARGET_SPEED_CMD.format(PSU_I2C_BUS, PSU_I2C_ADDR[self.psu_index]) # raw speed: 0-100
-            status, get_target_speed_res = self._api_helper.ipmi_raw(
-                IPMI_OEM_NETFN, get_target_speed_cmd)
-
-            target = int(get_target_speed_res, 16)
-  
+            # PSU fan is not used for FCS by BMC, so 0x3B register is not used to set PSU fan speed
+            # get_target_speed_cmd = IPMI_PSU_TARGET_SPEED_CMD.format(PSU_I2C_BUS,
+            #                                                         PSU_I2C_ADDR[self.psu_index])  # raw speed: 0-100
+            # status, get_target_speed_res = self._api_helper.ipmi_raw(
+            #     IPMI_OEM_NETFN, get_target_speed_cmd)
+            # target = int(get_target_speed_res, 16)
+            target = "N/A"
         return target
 
     def get_speed_tolerance(self):
@@ -198,17 +184,17 @@ class Fan(FanBase):
             auto: ipmitool raw 0x3a 0x06 0x01 0x1
         """
 
-        #speed_hex = hex(int(float(speed)/100 * 255))
-        #fan_register_hex = hex(FAN_PWM_REGISTER_START +
+        # speed_hex = hex(int(float(speed)/100 * 255))
+        # fan_register_hex = hex(FAN_PWM_REGISTER_START +
         #                       (self.fan_tray_index*FAN_PWM_REGISTER_STEP))
 
-        #set_speed_cmd = IPMI_SET_PWM.format(fan_register_hex, speed_hex)
-        #status, set_speed_res = self._api_helper.ipmi_raw(
+        # set_speed_cmd = IPMI_SET_PWM.format(fan_register_hex, speed_hex)
+        # status, set_speed_res = self._api_helper.ipmi_raw(
         #    IPMI_OEM_NETFN, set_speed_cmd)
 
-        #set_speed = False if not status else True
+        # set_speed = False if not status else True
 
-        #return set_speed
+        # return set_speed
         return False  # not to set fan speed if BMC exists
 
     def set_status_led(self, color):
@@ -268,8 +254,9 @@ class Fan(FanBase):
             Returns:
             string: The name of the device
         """
-        fan_name = FAN_NAME_LIST[self.fan_tray_index*2 + self.fan_index] if not self.is_psu_fan else "PSU-{} FAN-{}".format(
-            self.psu_index+1, self.fan_index+1)
+        fan_name = FAN_NAME_LIST[
+            self.fan_tray_index * 2 + self.fan_index] if not self.is_psu_fan else "PSU-{} FAN-{}".format(
+            self.psu_index + 1, self.fan_index + 1)
 
         return fan_name
 
@@ -282,7 +269,7 @@ class Fan(FanBase):
         presence = False
         status, raw_present = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_FAN_PRESENT_CMD.format(hex(self.index / 2)))
-        
+
         if status and raw_present == "00":
             presence = True
 
@@ -295,12 +282,12 @@ class Fan(FanBase):
             string: Model/part number of device
         """
         model = "Unknown"
-        #ipmi_fru_idx = self.fan_tray_index + FAN1_FRU_ID
-        #status, raw_model = self._api_helper.ipmi_fru_id(
+        # ipmi_fru_idx = self.fan_tray_index + FAN1_FRU_ID
+        # status, raw_model = self._api_helper.ipmi_fru_id(
         #    ipmi_fru_idx, IPMI_FRU_MODEL_KEY)
 
-        #fru_pn_list = raw_model.split()
-        #if len(fru_pn_list) > 4:
+        # fru_pn_list = raw_model.split()
+        # if len(fru_pn_list) > 4:
         #    model = fru_pn_list[4]
 
         return model
@@ -312,12 +299,12 @@ class Fan(FanBase):
             string: Serial number of device
         """
         serial = "Unknown"
-        #ipmi_fru_idx = self.fan_tray_index + FAN1_FRU_ID
-        #status, raw_model = self._api_helper.ipmi_fru_id(
+        # ipmi_fru_idx = self.fan_tray_index + FAN1_FRU_ID
+        # status, raw_model = self._api_helper.ipmi_fru_id(
         #    ipmi_fru_idx, IPMI_FRU_SERIAL_KEY)
 
-        #fru_sr_list = raw_model.split()
-        #if len(fru_sr_list) > 3:
+        # fru_sr_list = raw_model.split()
+        # if len(fru_sr_list) > 3:
         #    serial = fru_sr_list[3]
 
         return serial
@@ -328,5 +315,4 @@ class Fan(FanBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        self.is_get_status = True
         return self.get_presence() and self.get_speed() > 0

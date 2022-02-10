@@ -20,7 +20,6 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 FPGA_VERSION_PATH = "/sys/devices/platform/fpga-sys/version"
-SYSCPLD_VERSION_PATH = "/sys/devices/platform/sys_cpld/version"
 SWCPLD1_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0030/version"
 SWCPLD2_VERSION_PATH = "/sys/bus/i2c/devices/i2c-10/10-0031/version"
 BCPLD_VERSION_PATH = "/sys/devices/platform/sys_cpld/version"
@@ -28,9 +27,19 @@ BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
 Main_BMC_cmd = "ipmitool raw 0x32 0x8f 0x08 0x01"
 Backup_BMC_cmd = "ipmitool raw 0x32 0x8f 0x08 0x02"
 Fan_CPLD_cmd = "ipmitool raw 0x3a 0x64 02 01 00"
-COMPONENT_NAME_LIST = ["FPGA", "SYSCPLD", "SWCPLD1", "SWCPLD2", "FANCPLD", "BCPLD", "Main_BMC", "Backup_BMC", "Main_BIOS", "Backup_BIOS"]
-COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels", "Used for managing the CPU",
-                      "Used for managing QSFP+ ports (1-16)", "Used for managing QSFP+ ports (17-32)", "Used for managing fans", "Used for managing control the system power & reset", "Main Baseboard Management Controller", "Backup Baseboard Management Controller", "Main basic Input/Output System", "Backup basic Input/Output System"]
+COME_CPLD_cmd = "ipmitool raw 0x3a 0x3e 1 0x1a 1 0xe0"
+COMPONENT_NAME_LIST = ["FPGA", "COME_CPLD", "SWCPLD1", "SWCPLD2", "FANCPLD", "SYSCPLD",
+                       "Main_BMC", "Backup_BMC", "Main_BIOS", "Backup_BIOS"]
+COMPONENT_DES_LIST = ["Used for managering the CPU and expanding I2C channels",
+                      "Used for managing the CPU",
+                      "Used for managing QSFP+ ports (1-16)",
+                      "Used for managing QSFP+ ports (17-32)",
+                      "Used for managing fans",
+                      "Used for managing control the system power & reset",
+                      "Main Baseboard Management Controller",
+                      "Backup Baseboard Management Controller",
+                      "Main basic Input/Output System",
+                      "Backup basic Input/Output System"]
 
 
 class Component(ComponentBase):
@@ -76,13 +85,12 @@ class Component(ComponentBase):
         return raw_data.strip()
 
     def __get_cpld_version(self):
-        if self.name == "SYSCPLD":
-            try:
-                with open(SYSCPLD_VERSION_PATH, 'r') as fd:
-                    syscpld_version = fd.read()
-                    return syscpld_version.strip()
-            except Exception as e:
-                return None
+        if self.name == "COME_CPLD":
+            status, ver = self._api_helper.run_command(COME_CPLD_cmd)
+            version1 = int(ver.strip()) / 10
+            version2 = int(ver.strip()) % 10
+            version = "%s.%s" % (version1, version2)
+            return str(version)
         elif self.name == "SWCPLD1":
             try:
                 with open(SWCPLD1_VERSION_PATH, 'r') as fd:
@@ -90,7 +98,7 @@ class Component(ComponentBase):
                     return swcpld1_version.strip()
             except Exception as e:
                 return None
-        elif self.name == "BCPLD":
+        elif self.name == "SYSCPLD":
             try:
                 with open(BCPLD_VERSION_PATH, 'r') as fd:
                     bcpld_version = fd.read()
@@ -106,7 +114,9 @@ class Component(ComponentBase):
                 return None
         elif self.name == "FANCPLD":
             status,ver = self._api_helper.run_command(Fan_CPLD_cmd)
-            version = int(ver.strip(), 16)
+            version1 = int(ver.strip()) / 10
+            version2 = int(ver.strip()) % 10
+            version = "%s.%s" % (version1, version2)
             return str(version)
                    
     def __get_fpga_version(self):
@@ -177,15 +187,10 @@ class Component(ComponentBase):
         op_cmd = "ipmitool raw 0x32 0xaa 0x00"
         cl_cmd = "ipmitool raw 0x32 0xaa 0x01"
         if "FPGA" in self.name:
-
-            """img_name = os.path.basename(image_path)
-            root, ext = os.path.splitext(img_name)
-            ext = ".vme" if ext == "" else ext
-            new_image_path = os.path.join("/tmp", (root.lower() + ext))
-            shutil.copy(image_path, new_image_path)"""
-            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/fpga_prog /sys/bus/pci/devices/0000:0b:00.0/resource0 %s" % image_path
+            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/fpga_prog " \
+                              "/sys/bus/pci/devices/0000:0b:00.0/resource0 %s" % image_path
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Programing is complete' in result:
                 print("Update success")
@@ -195,10 +200,11 @@ class Component(ComponentBase):
         elif self.name == "Main_BIOS":
             self._api_helper.run_command(op_cmd)
             time.sleep(5)
-            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 1 %s " % image_path
+            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH " \
+                              "-cd -d 2 -mse 1 %s " % image_path
             print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -213,7 +219,7 @@ class Component(ComponentBase):
             install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 2 %s " % image_path
             print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -228,7 +234,7 @@ class Component(ComponentBase):
             install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 1 %s" % image_path
             print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -242,7 +248,7 @@ class Component(ComponentBase):
             install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 2 %s" % image_path
             print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -256,7 +262,7 @@ class Component(ComponentBase):
             install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 4 %s " % image_path
             print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -282,7 +288,7 @@ class Component(ComponentBase):
             shutil.copy(image_path, new_image_path)"""
             install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/fpga_prog /sys/bus/pci/devices/0000:0b:00.0/resource0 %s" % image_path
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Programing is complete' in result:
                 print("Update success")
@@ -295,7 +301,7 @@ class Component(ComponentBase):
             install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 1 %s " % image_path
             print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -310,7 +316,7 @@ class Component(ComponentBase):
             install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 2 %s " % image_path
             print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -323,13 +329,13 @@ class Component(ComponentBase):
             self._api_helper.run_command(op_cmd)
             time.sleep(5)
             install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 1 %s" % image_path
-            print("Updating now...Please wait...")
+            print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
-                print("BMC is rebooting now...Please wait for about 180s")
+                print("BMC is rebooting now...Plz wait for about 180s")
             else:
                 print("Update failed")
             
@@ -337,9 +343,9 @@ class Component(ComponentBase):
             self._api_helper.run_command(op_cmd)
             time.sleep(5)
             install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 2 %s" % image_path
-            print("Updating now...Please wait...")
+            print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")
@@ -351,9 +357,9 @@ class Component(ComponentBase):
             self._api_helper.run_command(op_cmd)
             time.sleep(5)
             install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 4 %s " % image_path
-            print("Updating now...Please wait...")
+            print("Updating now...Plz wait...")
             status, result = self._api_helper.run_command(install_command)
-            if status == False:
+            if status is False:
                 print("Running install command error")
             if 'Beginning to Deactive flashMode...end' in result:
                 print("Update success")

@@ -19,7 +19,7 @@ except ImportError as e:
 NUM_FAN_TRAY = 7
 NUM_FAN = 2
 NUM_PSU = 2
-NUM_THERMAL = 5
+NUM_THERMAL = 19
 NUM_SFP = 34
 NUM_COMPONENT = 10
 RESET_REGISTER = "0xA106"
@@ -28,7 +28,8 @@ REBOOT_CAUSE_FILE = "reboot-cause.txt"
 PREV_REBOOT_CAUSE_FILE = "previous-reboot-cause.txt"
 GETREG_PATH = "/sys/devices/platform/sys_cpld/getreg"
 HOST_CHK_CMD = "docker > /dev/null 2>&1"
-
+IPMI_AIR_FLOW_CMD = "0x62 {}"
+IPMI_OEM_NETFN = "0x3A"
 
 class Chassis(ChassisBase):
     """Platform-specific Chassis class"""
@@ -44,7 +45,7 @@ class Chassis(ChassisBase):
         self.fan_module_initialized = False
         self.__initialize_eeprom()
         self.is_host = self._api_helper.is_host()
-        
+
         if not self.is_host:
             self.__initialize_fan()
             self.__initialize_psu()
@@ -74,7 +75,7 @@ class Chassis(ChassisBase):
                 fan = Fan(fant_index, fan_index)
                 self._fan_list.append(fan)
         self.fan_module_initialized = True
-    
+
     def __initialize_thermals(self):
         from sonic_platform.thermal import Thermal
         airflow = self.__get_air_flow()
@@ -93,9 +94,12 @@ class Chassis(ChassisBase):
             self._component_list.append(component)
 
     def __get_air_flow(self):
-        air_flow_path = '/usr/share/sonic/device/{}/fan_airflow'.format(self._api_helper.platform) if self.is_host else '/usr/share/sonic/platform/fan_airflow'
-        air_flow = self._api_helper.read_one_line_file(air_flow_path)
-        return air_flow or 'B2F'
+        status, air_flow =self._api_helper.ipmi_raw(
+            IPMI_OEM_NETFN, IPMI_AIR_FLOW_CMD.format("00"))
+        if status and air_flow == "01":
+            return 'B2F'
+        elif status and air_flow == "00":
+            return 'F2B'
 
     def get_base_mac(self):
         """
@@ -150,7 +154,7 @@ class Chassis(ChassisBase):
         hw_reboot_cause = self._api_helper.get_cpld_reg_value(
             GETREG_PATH, RESET_REGISTER)
 
-        prev_reboot_cause = {    
+        prev_reboot_cause = {
             '0x11': (self.REBOOT_CAUSE_POWER_LOSS, "The last reset is Power on reset"),
             '0x22': (self.REBOOT_CAUSE_HARDWARE_OTHER, "The last reset is soft-set CPU warm reset"),
             '0x33': (self.REBOOT_CAUSE_HARDWARE_OTHER, "The last reset is soft-set CPU cold reset"),
@@ -158,7 +162,7 @@ class Chassis(ChassisBase):
             '0x55': (self.REBOOT_CAUSE_NON_HARDWARE, "The last reset is CPU cold reset"),
             '0x66': (self.REBOOT_CAUSE_WATCHDOG, "The last reset is watchdog reset"),
             '0x77': (self.REBOOT_CAUSE_HARDWARE_OTHER, "The last reset is power cycle reset")
-            
+
         }.get(hw_reboot_cause, (self.REBOOT_CAUSE_HARDWARE_OTHER, 'Unknown reason'))
 
         if sw_reboot_cause != 'Unknown':
@@ -215,7 +219,7 @@ class Chassis(ChassisBase):
             sfp = self._sfp_list[index]
         except IndexError:
             sys.stderr.write("SFP index {} out of range (0-{})\n".format(
-                             index, len(self._sfp_list)))
+                index, len(self._sfp_list)))
         return sfp
 
     ##############################################################
@@ -283,7 +287,7 @@ class Chassis(ChassisBase):
     def get_thermal_manager(self):
         from .thermal_manager import ThermalManager
         return ThermalManager
-        
+
     def get_fan_status(self):
         if not self.fan_module_initialized:
             self.__initialize_fan()
@@ -294,9 +298,9 @@ class Chassis(ChassisBase):
                 content = content << 1 | 1
             else:
                 content = content << 1
-        
+
         return content
-        
+
     def get_transceiver_status(self):
         if not self.sfp_module_initialized:
             self.__initialize_sfp()
@@ -308,7 +312,7 @@ class Chassis(ChassisBase):
                 content = content | (1 << index)
             index = index + 1
         return content
-        
+
     def get_change_event(self, timeout=0):
         """
         Returns a nested dictionary containing all devices which have
@@ -341,11 +345,11 @@ class Chassis(ChassisBase):
                       status='5' High Temperature,
                       status='6' Bad cable.
         """
-            
+
         start_time = time.time()
         port_dict = {}
         fan_dict = {}
-        change_dict = {'fan':{}, 'sfp':{}}
+        change_dict = {'fan': {}, 'sfp': {}}
         port = self.port_start
         forever = False
         change_event = False
@@ -353,17 +357,17 @@ class Chassis(ChassisBase):
         if timeout == 0:
             forever = True
         elif timeout > 0:
-            timeout = timeout / float(1000) # Convert to secs
+            timeout = timeout / float(1000)  # Convert to secs
         else:
-            print "get_transceiver_change_event:Invalid timeout value", timeout
+            print("get_transceiver_change_event:Invalid timeout value", timeout)
             return False, {}
 
         end_time = start_time + timeout
         if start_time > end_time:
-            print 'get_transceiver_change_event:' \
-                       'time wrap / invalid timeout value', timeout
+            print('get_transceiver_change_event:' \
+                  'time wrap / invalid timeout value', timeout)
 
-            return False, {} # Time wrap or possibly incorrect timeout
+            return False, {}  # Time wrap or possibly incorrect timeout
         while timeout >= 0:
             # Check for OIR events and return updated port_dict
             reg_value = self.get_transceiver_status()
@@ -407,7 +411,7 @@ class Chassis(ChassisBase):
                 self.fan_init_status = value
                 change_dict['fan'] = fan_dict
                 change_event = True
-                
+
             if change_event:
                 return True, change_dict
 
@@ -416,12 +420,12 @@ class Chassis(ChassisBase):
             else:
                 timeout = end_time - time.time()
                 if timeout >= 1:
-                    time.sleep(1) # We poll at 1 second granularity
+                    time.sleep(1)  # We poll at 1 second granularity
                 else:
                     if timeout > 0:
                         time.sleep(timeout)
                     return True, change_dict
-        print "get_transceiver_change_event: Should not reach here."
+        print("get_transceiver_change_event: Should not reach here.")
         return False, change_dict
-    
-    
+
+

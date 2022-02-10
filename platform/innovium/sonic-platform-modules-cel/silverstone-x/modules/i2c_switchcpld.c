@@ -381,9 +381,7 @@ static ssize_t qsfp_modprs_show(struct device *dev, struct device_attribute *att
     mutex_lock(drvdata->lock);
     i2c_smbus_write_byte_data(client, PORT_SL_ADDR, portid);
     data = i2c_smbus_read_byte_data(client, PORT_SR_ADDR);
-    printk("Read back data is 0x%x\n", data);
     len = sprintf(buf, "%x\n",(data >> SR_MODPRS) & 0x01);
-    printk("Return buf is %s\n", buf);
     mutex_unlock(drvdata->lock);
     return len;
 

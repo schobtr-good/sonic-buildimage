@@ -27,7 +27,7 @@ HWMON_PATH = "/sys/bus/i2c/devices/i2c-{0}/{0}-00{1}/hwmon"
 GPIO_DIR = "/sys/class/gpio"
 GPIO_LABEL = "pca9505"
 PSU_NAME_LIST = ["PSU-1", "PSU-2"]
-PSU_NUM_FAN = [1, 1]
+PSU_NUM_FAN = [7, 8]
 PSU_I2C_MAPPING = {
     0: {
         "num": 10,
@@ -63,9 +63,9 @@ class Psu(PsuBase):
         self.i2c_num = PSU_I2C_MAPPING[self.index]["num"]
         self.i2c_addr = PSU_I2C_MAPPING[self.index]["addr"]
         self.hwmon_path = HWMON_PATH.format(self.i2c_num, self.i2c_addr)
-        for fan_index in range(0, PSU_NUM_FAN[self.index]):
-            fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
-            self._fan_list.append(fan)
+        fan_index = PSU_NUM_FAN[self.index]
+        fan = Fan(fan_index, 0, is_psu_fan=True, psu_index=self.index)
+        self._fan_list.append(fan)
 
     def __search_file_by_contain(self, directory, search_str, file_start):
         for dirpath, dirnames, files in os.walk(directory):

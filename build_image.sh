@@ -45,7 +45,7 @@ generate_onie_installer_image()
     ## Generate an ONIE installer image
     ## Note: Don't leave blank between lines. It is single line command.
     ./onie-mk-demo.sh $TARGET_PLATFORM $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
-          installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
+          installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE DIAG $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
           $ONIE_INSTALLER_PAYLOAD
 }
 
@@ -53,18 +53,6 @@ if [ "$IMAGE_TYPE" = "onie" ]; then
     echo "Build ONIE installer"
     mkdir -p `dirname $OUTPUT_ONIE_IMAGE`
     sudo rm -f $OUTPUT_ONIE_IMAGE
-
-    ## Add kernel GPG  signature
-    for kernel in `sudo find  $FILESYSTEM_ROOT/boot -name vmlinuz*`; do
-        sudo gpg --import gpg/pub.key
-        sudo gpg --batch --import gpg/private.key
-        sudo gpg --default-key $GPG_KEY_ID --detach-sign --passphrase $GPG_PASSWD --batch --yes $kernel
-    done
-
-    ## Add initramfs GPG signature
-    for initrd in `sudo find  $FILESYSTEM_ROOT/boot -name initrd*`; do
-        sudo gpg --default-key $GPG_KEY_ID --detach-sign --passphrase $GPG_PASSWD --batch --yes $initrd
-    done
 
     generate_onie_installer_image
     ## Generate onie installer GPG signature
