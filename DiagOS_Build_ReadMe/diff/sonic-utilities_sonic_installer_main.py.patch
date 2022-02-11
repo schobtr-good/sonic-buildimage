@@ -1,0 +1,4 @@
+18c18
+< IMAGE_PREFIX = 'SONiC-OS-'
+---
+> IMAGE_PREFIX = 'SONiC-DIAG-'

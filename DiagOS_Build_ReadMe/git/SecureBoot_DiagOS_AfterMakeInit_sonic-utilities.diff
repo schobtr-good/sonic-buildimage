@@ -1,0 +1,26 @@
+diff --git a/scripts/reboot b/scripts/reboot
+index 404bb18..a1f1e5b 100755
+--- a/scripts/reboot
++++ b/scripts/reboot
+@@ -61,7 +61,7 @@ function show_help_and_exit()
+ function setup_reboot_variables()
+ {
+     NEXT_SONIC_IMAGE=$(sonic_installer list | grep "Next: " | cut -d ' ' -f 2)
+-    IMAGE_PATH="/host/image-${NEXT_SONIC_IMAGE#SONiC-OS-}"
++    IMAGE_PATH="/host/image-${NEXT_SONIC_IMAGE#SONiC-DIAG-}"
+ }
+ 
+ function reboot_pre_check()
+diff --git a/sonic_installer/main.py b/sonic_installer/main.py
+index 04f6615..ec1b7b0 100644
+--- a/sonic_installer/main.py
++++ b/sonic_installer/main.py
+@@ -15,7 +15,7 @@ from swsssdk import SonicV2Connector
+ import collections
+ 
+ HOST_PATH = '/host'
+-IMAGE_PREFIX = 'SONiC-OS-'
++IMAGE_PREFIX = 'SONiC-DIAG-'
+ IMAGE_DIR_PREFIX = 'image-'
+ ONIE_DEFAULT_IMAGE_PATH = '/tmp/sonic_image'
+ ABOOT_DEFAULT_IMAGE_PATH = '/tmp/sonic_image.swi'

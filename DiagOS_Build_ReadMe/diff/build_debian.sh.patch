@@ -1,0 +1,4 @@
+499c499
+< sudo http_proxy=$http_proxy LANG=C apt-get -y install  sbsigntool
+---
+> #sudo http_proxy=$http_proxy LANG=C apt-get -y install  sbsigntool

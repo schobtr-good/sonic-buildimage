@@ -1,0 +1,73 @@
+diff --git a/functions.sh b/functions.sh
+index 6015704d..321a7884 100644
+--- a/functions.sh
++++ b/functions.sh
+@@ -54,9 +54,9 @@ sonic_get_version() {
+     local describe=$(git describe --tags)
+     local latest_tag=$(git describe --tags --abbrev=0)
+     local branch_name=$(git rev-parse --abbrev-ref HEAD)
+-    if [ -n "$(git status --untracked-files=no -s --ignore-submodules)" ]; then
+-        local dirty="-dirty-$BUILD_TIMESTAMP"
+-    fi
++    #if [ -n "$(git status --untracked-files=no -s --ignore-submodules)" ]; then
++    #    local dirty="-dirty-$BUILD_TIMESTAMP"
++    #fi
+     BUILD_NUMBER=${BUILD_NUMBER:-0}
+     ## Check if we are on tagged commit
+     ## Note: escape the version string by sed: / -> _
+diff --git a/onie-image.conf b/onie-image.conf
+index 30c7dcaf..2ea8ae8b 100644
+--- a/onie-image.conf
++++ b/onie-image.conf
+@@ -6,7 +6,7 @@
+ ## The default size is 32GB
+ #: ${ONIE_IMAGE_PART_SIZE:=32768}
+ # Change default size to 16GB
+-: ${ONIE_IMAGE_PART_SIZE:=16384}
++: ${ONIE_IMAGE_PART_SIZE:=6144}
+ 
+ ## Target hardware information
+ : ${TARGET_PLATFORM:=x86_64}
+diff --git a/sonic-slave-stretch/Dockerfile.j2 b/sonic-slave-stretch/Dockerfile.j2
+index 184442af..b04445a6 100644
+--- a/sonic-slave-stretch/Dockerfile.j2
++++ b/sonic-slave-stretch/Dockerfile.j2
+@@ -10,6 +10,7 @@ MAINTAINER gulv@microsoft.com
+ 
+ COPY ["no-check-valid-until", "/etc/apt/apt.conf.d/"]
+ 
++RUN export GIT_SSL_NO_VERIFY=1
+ RUN echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian/ stretch main contrib non-free" >> /etc/apt/sources.list && \
+         echo "deb-src [arch=amd64] http://debian-archive.trafficmanager.net/debian/ stretch main contrib non-free" >> /etc/apt/sources.list && \
+         echo "deb [arch=amd64] http://debian-archive.trafficmanager.net/debian-security/ stretch/updates main contrib non-free" >> /etc/apt/sources.list && \
+diff --git a/build_image.sh b/build_image.sh
+index 9635201ae..55d22af1d 100755
+--- a/build_image.sh
++++ b/build_image.sh
+@@ -42,7 +42,7 @@ generate_onie_installer_image()
+     ## Generate an ONIE installer image
+     ## Note: Don't leave blank between lines. It is single line command.
+     ./onie-mk-demo.sh $TARGET_PLATFORM $TARGET_MACHINE $TARGET_PLATFORM-$TARGET_MACHINE-$ONIEIMAGE_VERSION \
+-          installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
++          installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE DIAG $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
+           $ONIE_INSTALLER_PAYLOAD
+ }
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        new file:   gpg/private.key
+        new file:   gpg/pub.key
+
+diff --git a/home/jersey/work/nicholas/SONIC-DEV/201911_SX_MX_SecureBoot_build/sonic-buildimage/build_debian.sh b/build_debian.sh
+index f56c82c8..0307bfb4 100755
+--- a/home/jersey/work/nicholas/SONIC-DEV/201911_SX_MX_SecureBoot_build/sonic-buildimage/build_debian.sh
++++ b/build_debian.sh
+@@ -496,7 +496,7 @@ sudo LANG=C DEBIAN_FRONTEND=noninteractive chroot $FILESYSTEM_ROOT apt-get -y re
+ 
+ sudo LANG=C chroot $FILESYSTEM_ROOT apt-get -y install u-boot-tools mtd-utils device-tree-compiler sbsigntool
+ ## Sign kernel
+-sudo http_proxy=$http_proxy LANG=C apt-get -y install  sbsigntool
++#sudo http_proxy=$http_proxy LANG=C apt-get -y install  sbsigntool
+ for kernel in `sudo find  $FILESYSTEM_ROOT/boot -name vmlinuz*`; do
+     sudo mv $kernel ${kernel}.unsigned
+     sudo sbsign --key src/sonic-linux-kernel/x509/rsa_private.pem --cert src/sonic-linux-kernel/x509/cert.pem --out $kernel ${kernel}.unsigned

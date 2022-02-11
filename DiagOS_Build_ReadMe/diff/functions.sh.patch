@@ -1,0 +1,8 @@
+57,59c57,59
+<     if [ -n "$(git status --untracked-files=no -s --ignore-submodules)" ]; then
+<         local dirty="-dirty-$BUILD_TIMESTAMP"
+<     fi
+---
+>     #if [ -n "$(git status --untracked-files=no -s --ignore-submodules)" ]; then
+>     #    local dirty="-dirty-$BUILD_TIMESTAMP"
+>     #fi

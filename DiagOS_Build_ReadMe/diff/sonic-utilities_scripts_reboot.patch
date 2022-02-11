@@ -1,0 +1,4 @@
+64c64
+<     IMAGE_PATH="/host/image-${NEXT_SONIC_IMAGE#SONiC-OS-}"
+---
+>     IMAGE_PATH="/host/image-${NEXT_SONIC_IMAGE#SONiC-DIAG-}"

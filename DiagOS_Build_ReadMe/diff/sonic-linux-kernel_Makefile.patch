@@ -1,0 +1,10 @@
+78a79,87
+> 	# add kernel option to support ipmitool command via usb on SONiC
+> 	echo "CONFIG_SCSI_PROC_FS=y" >> debian/build/build_amd64_none_amd64/.config
+> 	 # add kernel options to support secure boot
+> 	cp ../x509/certs/signing_key.pem certs/
+> 	echo "CONFIG_MODULE_SIG=y" >> debian/build/build_amd64_none_amd64/.config
+> 	echo "CONFIG_MODULE_SIG_ALL=y" >> debian/build/build_amd64_none_amd64/.config
+> 	echo "CONFIG_MODULE_SIG_SHA256=y" >> debian/build/build_amd64_none_amd64/.config
+> 	echo "CONFIG_MODULE_SIG_KEY=\"certs/signing_key.pem\"" >> debian/build/build_amd64_none_amd64/.config
+> 	make -C debian/build/build_amd64_none_amd64/ olddefconfig

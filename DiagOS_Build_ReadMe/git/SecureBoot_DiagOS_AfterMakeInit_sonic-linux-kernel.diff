@@ -1,0 +1,31 @@
+diff --git a/Makefile b/Makefile
+index 037e1b1..2f9b4d4 100644
+--- a/Makefile
++++ b/Makefile
+@@ -76,6 +76,15 @@ $(addprefix $(DEST)/, $(MAIN_TARGET)): $(DEST)/% :
+ 
+ 	# generate linux build file for amd64_none_amd64
+ 	fakeroot make -f debian/rules.gen setup_amd64_none_amd64
++	# add kernel option to support ipmitool command via usb on SONiC
++	echo "CONFIG_SCSI_PROC_FS=y" >> debian/build/build_amd64_none_amd64/.config
++	 # add kernel options to support secure boot
++	cp ../x509/certs/signing_key.pem certs/
++	echo "CONFIG_MODULE_SIG=y" >> debian/build/build_amd64_none_amd64/.config
++	echo "CONFIG_MODULE_SIG_ALL=y" >> debian/build/build_amd64_none_amd64/.config
++	echo "CONFIG_MODULE_SIG_SHA256=y" >> debian/build/build_amd64_none_amd64/.config
++	echo "CONFIG_MODULE_SIG_KEY=\"certs/signing_key.pem\"" >> debian/build/build_amd64_none_amd64/.config
++	make -C debian/build/build_amd64_none_amd64/ olddefconfig
+ 
+ 	# Applying patches and configuration changes
+ 	git add debian/build/build_amd64_none_amd64/.config -f
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        new file:   x509/SilverstoneX_pkcs8_rsa_private_key.pem
+        new file:   x509/SilverstoneX_private.key
+        new file:   x509/SilverstoneX_public.key
+        new file:   x509/cert.der
+        new file:   x509/cert.pem
+        new file:   x509/certs/signing_key.pem
+        new file:   x509/rsa_private.pem
+        new file:   x509/sign-file

@@ -181,191 +181,194 @@ class Component(ComponentBase):
         Returns:
             A boolean, True if install successfully, False if not
         """
-        if not os.path.isfile(image_path):
-            return False
-
-        op_cmd = "ipmitool raw 0x32 0xaa 0x00"
-        cl_cmd = "ipmitool raw 0x32 0xaa 0x01"
-        if "FPGA" in self.name:
-            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/fpga_prog " \
-                              "/sys/bus/pci/devices/0000:0b:00.0/resource0 %s" % image_path
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Programing is complete' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-
-        elif self.name == "Main_BIOS":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH " \
-                              "-cd -d 2 -mse 1 %s " % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-            time.sleep(10)
-            self._api_helper.run_command(cl_cmd)
-            
-        elif self.name == "Backup_BIOS":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 2 %s " % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-            time.sleep(10)
-            self._api_helper.run_command(cl_cmd)
-         
-        elif self.name == "Main_BMC":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 1 %s" % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-                print("BMC is rebooting now...Plz wait for about 180s")
-            else:
-                print("Update failed")
-            
-        elif self.name == "Backup_BMC":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 2 %s" % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-                print("BMC is rebooting now...")
-            else:
-                print("Update failed")
-            
-        elif "CPLD" in self.name:
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 4 %s " % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-            time.sleep(10)
-            self._api_helper.run_command(cl_cmd)
-
-        return status
+        return False
+        # if not os.path.isfile(image_path):
+        #     return False
+        #
+        # op_cmd = "ipmitool raw 0x32 0xaa 0x00"
+        # cl_cmd = "ipmitool raw 0x32 0xaa 0x01"
+        # if "FPGA" in self.name:
+        #     install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/fpga_prog " \
+        #                       "/sys/bus/pci/devices/0000:0b:00.0/resource0 %s" % image_path
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Programing is complete' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #
+        # elif self.name == "Main_BIOS":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH " \
+        #                       "-cd -d 2 -mse 1 %s " % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #     time.sleep(10)
+        #     self._api_helper.run_command(cl_cmd)
+        #
+        # elif self.name == "Backup_BIOS":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 2 %s " % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #     time.sleep(10)
+        #     self._api_helper.run_command(cl_cmd)
+        #
+        # elif self.name == "Main_BMC":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 1 %s" % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #         print("BMC is rebooting now...Plz wait for about 180s")
+        #     else:
+        #         print("Update failed")
+        #
+        # elif self.name == "Backup_BMC":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 2 %s" % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #         print("BMC is rebooting now...")
+        #     else:
+        #         print("Update failed")
+        #
+        # elif "CPLD" in self.name:
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 4 %s " % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #     time.sleep(10)
+        #     self._api_helper.run_command(cl_cmd)
+        # 
+        # return status
     def update_firmware(self, image_path):
+        #Not support
+        return False
 
-        if not os.path.isfile(image_path):
-            return False
-
-        op_cmd = "ipmitool raw 0x32 0xaa 0x00"
-        cl_cmd = "ipmitool raw 0x32 0xaa 0x01"
-        if "FPGA" in self.name:
-
-            """img_name = os.path.basename(image_path)
-            root, ext = os.path.splitext(img_name)
-            ext = ".vme" if ext == "" else ext
-            new_image_path = os.path.join("/tmp", (root.lower() + ext))
-            shutil.copy(image_path, new_image_path)"""
-            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/fpga_prog /sys/bus/pci/devices/0000:0b:00.0/resource0 %s" % image_path
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Programing is complete' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-
-        elif self.name == "Main_BIOS":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 1 %s " % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-            time.sleep(10)
-            self._api_helper.run_command(cl_cmd)
-            
-        elif self.name == "Backup_BIOS":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 2 %s " % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-            time.sleep(10)
-            self._api_helper.run_command(cl_cmd)
-         
-        elif self.name == "Main_BMC":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 1 %s" % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-                print("BMC is rebooting now...Plz wait for about 180s")
-            else:
-                print("Update failed")
-            
-        elif self.name == "Backup_BMC":
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 2 %s" % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-                print("BMC is rebooting now...")
-            else:
-                print("Update failed")
-            
-        elif "CPLD" in self.name:
-            self._api_helper.run_command(op_cmd)
-            time.sleep(5)
-            install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 4 %s " % image_path
-            print("Updating now...Plz wait...")
-            status, result = self._api_helper.run_command(install_command)
-            if status is False:
-                print("Running install command error")
-            if 'Beginning to Deactive flashMode...end' in result:
-                print("Update success")
-            else:
-                print("Update failed")
-            time.sleep(10)
-            self._api_helper.run_command(cl_cmd)
-
-        return status
+        # if not os.path.isfile(image_path):
+        #     return False
+        #
+        # op_cmd = "ipmitool raw 0x32 0xaa 0x00"
+        # cl_cmd = "ipmitool raw 0x32 0xaa 0x01"
+        # if "FPGA" in self.name:
+        #
+        #     """img_name = os.path.basename(image_path)
+        #     root, ext = os.path.splitext(img_name)
+        #     ext = ".vme" if ext == "" else ext
+        #     new_image_path = os.path.join("/tmp", (root.lower() + ext))
+        #     shutil.copy(image_path, new_image_path)"""
+        #     install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/fpga_prog /sys/bus/pci/devices/0000:0b:00.0/resource0 %s" % image_path
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Programing is complete' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #
+        # elif self.name == "Main_BIOS":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 1 %s " % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #     time.sleep(10)
+        #     self._api_helper.run_command(cl_cmd)
+        #
+        # elif self.name == "Backup_BIOS":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 2 -mse 2 %s " % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #     time.sleep(10)
+        #     self._api_helper.run_command(cl_cmd)
+        #
+        # elif self.name == "Main_BMC":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 1 %s" % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #         print("BMC is rebooting now...Plz wait for about 180s")
+        #     else:
+        #         print("Update failed")
+        #
+        # elif self.name == "Backup_BMC":
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "/usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -fb -d 1 -mse 2 %s" % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #         print("BMC is rebooting now...")
+        #     else:
+        #         print("Update failed")
+        #
+        # elif "CPLD" in self.name:
+        #     self._api_helper.run_command(op_cmd)
+        #     time.sleep(5)
+        #     install_command = "echo y | /usr/local/lib/firmware/x86_64-cel_silverstone-x-r0/CFUFLASH -cd -d 4 %s " % image_path
+        #     print("Updating now...Plz wait...")
+        #     status, result = self._api_helper.run_command(install_command)
+        #     if status is False:
+        #         print("Running install command error")
+        #     if 'Beginning to Deactive flashMode...end' in result:
+        #         print("Update success")
+        #     else:
+        #         print("Update failed")
+        #     time.sleep(10)
+        #     self._api_helper.run_command(cl_cmd)
+        #
+        # return status

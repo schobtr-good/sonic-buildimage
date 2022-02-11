@@ -1,0 +1,7 @@
+1. git patch for understaning how patch is applied.
+2. diff patch will be applied for real to suit DiagOS changes.
+3. apply.sh should be run after "make init" commmand manually.
+4. gpg pair keys directory located in project server path should be added in sonic-buildimage manually.
+5. x509 pair keys directory located in project server path should be added in sonic-buildimage/src/sonic-linux-kernel/ manually.
+6. Build SONiC with command "make target/sonic-innovium.bin GPG_KEY_ID=XXXXX GPG_PASSWD=XXXXXX" and enter GPG password when prompting otherwise it
+   will show "gpg: signing failed: Timeout". 

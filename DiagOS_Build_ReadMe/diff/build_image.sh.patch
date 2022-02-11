@@ -1,0 +1,4 @@
+48c48
+<           installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE OS $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
+---
+>           installer platform/$TARGET_MACHINE/platform.conf $OUTPUT_ONIE_IMAGE DIAG $IMAGE_VERSION $ONIE_IMAGE_PART_SIZE \
