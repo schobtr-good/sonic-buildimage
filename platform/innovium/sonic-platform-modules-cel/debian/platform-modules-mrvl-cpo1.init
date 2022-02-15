@@ -14,58 +14,64 @@
 
 case "$1" in
 start)
-        echo -n "Setting up board... "
+	echo -n "Setting up board... "
 
-        modprobe i2c-dev
-		modprobe mc24lc64t
+	modprobe i2c-dev
+	modprobe mc24lc64t
+	modprobe ipmi_devintf
 
-		# CPLD driver load
-		modprobe ctrl_cpld
-		modprobe come_cpld
+	# CPLD driver load
+	modprobe ctrl_cpld
+	modprobe come_cpld
 
-		# FPGA driver load
-		modprobe fpga_device
-		modprobe fpga_system
-		modprobe cls_i2c_xiic
-		modprobe fpga_xcvr
-       	
-		# Instantiate TLV EEPROM device on I801/ISMT bus 
-		devname=`cat /sys/bus/i2c/devices/i2c-0/name`
-		if [[ $devname == 'SMBus'* ]]; then
-				echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
-		fi
+	# FPGA driver load
+	modprobe fpga_b_device
+	modprobe fpga_b_sys
+	modprobe cls-i2c-ocores
+	modprobe fpga-xcvr
+	modprobe fpga_sw
 
-        decode-syseeprom --init 2> /dev/null &
 
-        /bin/sh /usr/local/bin/platform_api_mgnt.sh init
+	# Instantiate TLV EEPROM device on I801/ISMT bus 
+	devname=`cat /sys/bus/i2c/devices/i2c-0/name`
+	if [[ $devname == 'SMBus'* ]]; then
+			echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
+	fi
 
-        echo "done."
-        ;;
+	decode-syseeprom --init 2> /dev/null &
+
+	/bin/sh /usr/local/bin/platform_api_mgnt.sh init
+
+	echo "done."
+	;;
 
 stop)
-        echo 0x56 > /sys/bus/i2c/devices/i2c-0/delete_device
+	echo 0x56 > /sys/bus/i2c/devices/i2c-0/delete_device
 
-		# FPGA driver unload
-		rmmod fpga_xcvr
-		rmmod cls_i2c_xiic
-		rmmod fpga_system
-		rmmod fpga_device
+	# FPGA driver unload
+	rmmod fpga-xcvr
+	rmmod cls-i2c-ocores
+	rmmod fpga_b_sys
+	rmmod fpga_b_device
 
-		# CPLD driver unload
-		rmmod mc24lc64t
-		rmmod i2c-dev
+	# CPLD driver unload
+	rmmod come_cpld
+	rmmod ctrl_cpld
 
-        echo "done."
-        ;;
+	rmmod mc24lc64t
+	rmmod i2c-dev
+
+	echo "done."
+	;;
 
 force-reload|restart)
-        echo "Not supported"
-        ;;
+	echo "Not supported"
+	;;
 
 *)
-        echo "Usage: /etc/init.d/platform-modules-mrvl-cpo1.init {start|stop}"
-        exit 1
-        ;;
+	echo "Usage: /etc/init.d/platform-modules-mrvl-cpo1.init {start|stop}"
+	exit 1
+	;;
 esac
 
 exit 0

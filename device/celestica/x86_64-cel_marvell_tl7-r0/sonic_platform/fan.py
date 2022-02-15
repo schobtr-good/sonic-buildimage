@@ -78,10 +78,7 @@ FAN_LED_GREEN_CMD = "0x01"
 FAN_LED_RED_CMD = "0x02"
 FAN1_LED_CMD = "0x04"
 
-FAN_PWM_REGISTER_START = 0x22
-FAN_PWM_REGISTER_STEP = 0x10
-FAN1_FRU_ID = 6  # silverstoneX has no FAN FRU
-FAN_STATUS_FILE = "/var/fan_status.txt"
+FAN1_FRU_ID = 6
 
 
 class Fan(FanBase):
@@ -120,11 +117,13 @@ class Fan(FanBase):
         """
         if self.is_psu_fan:
             max_rpm = PSU_MAX_RPM
+            fan_reg = PSU_FAN_SS_RPM_REG[self.psu_index]
         else:
             max_rpm = MAX_OUTLET if self.fan_index % 2 == 0 else MAX_INLET
+            fan_reg = FAN_SS_RPM_REG[self.index]
 
         status, raw_ss_read = self._api_helper.ipmi_raw(
-            IPMI_SENSOR_NETFN, IPMI_FAN_SPEED_CMD.format(FAN_SS_RPM_REG[self.index]))
+            IPMI_SENSOR_NETFN, IPMI_FAN_SPEED_CMD.format(fan_reg))
 
         ss_read = raw_ss_read.split()[0]
         rpm_speed = int(ss_read, 16)*150
@@ -145,20 +144,15 @@ class Fan(FanBase):
             0   : when PWM mode is use
             pwm : when pwm mode is not use
         """
-        if self.is_psu_fan == False:
+        if self.is_psu_fan:
+            target = self.get_speed()
+        else:
             get_target_speed_cmd = IPMI_FAN_TARGET_SPEED_CMD.format(
                 FAN_TARGET_SPEED_REG[self.fan_tray_index])  # raw speed: 0-255
             status, get_target_speed_res = self._api_helper.ipmi_raw(
                 IPMI_OEM_NETFN, get_target_speed_cmd)
             target = int(
                 round(float(int(get_target_speed_res, 16)) * 100 / 255))
-        else:
-            get_target_speed_cmd = IPMI_PSU_TARGET_SPEED_CMD.format(
-                PSU_I2C_BUS, PSU_I2C_ADDR[self.psu_index])  # raw speed: 0-100
-            status, get_target_speed_res = self._api_helper.ipmi_raw(
-                IPMI_OEM_NETFN, get_target_speed_cmd)
-
-            target = int(get_target_speed_res, 16)
 
         return target
 
@@ -244,6 +238,9 @@ class Fan(FanBase):
             bool: True if FAN is present, False if not
         """
         presence = False
+        if self.is_psu_fan:
+            return True
+
         status, raw_present = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_FAN_PRESENT_CMD.format(hex(self.index / 2)))
 
@@ -292,5 +289,4 @@ class Fan(FanBase):
         Returns:
             A boolean value, True if device is operating properly, False if not
         """
-        self.is_get_status = True
         return self.get_presence() and self.get_speed() > 0

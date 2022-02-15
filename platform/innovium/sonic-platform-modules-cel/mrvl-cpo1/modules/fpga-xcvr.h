@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * xcvr-cls.h
+ * fpga-xcvr.h
  *
  * Pradchaya Phucharoen <pphuchar@celestica.com>
  * Copyright (C) 2019 Celestica Corp.

@@ -10,6 +10,8 @@
 
 try:
     from sonic_platform_base.chassis_base import ChassisBase
+    from sonic_platform_base.sonic_sfp.sfputilhelper import SfpUtilHelper
+    from sonic_py_common import device_info
     from helper import APIHelper
 except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
@@ -19,6 +21,7 @@ NUM_FAN_TRAY = 7
 NUM_THERMAL = 9
 NUM_FAN = 2
 NUM_PSU = 2
+NUM_SFP = 32
 
 RESET_REGISTER = "0xA106"
 HOST_REBOOT_CAUSE_PATH = "/host/reboot-cause/"
@@ -69,6 +72,17 @@ class Chassis(ChassisBase):
         for index in range(0, NUM_THERMAL):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
+
+    def __initialize_sfp(self):
+        sfputil_helper = SfpUtilHelper()
+        port_config_file_path = device_info.get_path_to_port_config_file()
+        sfputil_helper.read_porttab_mappings(port_config_file_path, 0)
+
+        from sonic_platform.sfp import Sfp
+        for index in range(0, NUM_SFP):
+            sfp = Sfp(index, sfputil_helper.logical[index])
+            self._sfp_list.append(sfp)
+        self.sfp_module_initialized = True
 
     def get_base_mac(self):
         """
@@ -162,6 +176,48 @@ class Chassis(ChassisBase):
         return ThermalManager
 
     ##############################################################
+    ######################## SFP methods #########################
+    ##############################################################
+
+    def get_num_sfps(self):
+        """
+        Retrieves the number of sfps available on this chassis
+        Returns:
+            An integer, the number of sfps available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        return len(self._sfp_list)
+
+    def get_all_sfps(self):
+        """
+        Retrieves all sfps available on this chassis
+        Returns:
+            A list of objects derived from SfpBase representing all sfps
+            available on this chassis
+        """
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+
+        return self._sfp_list
+
+    def get_sfp(self, index):
+        """
+        Retrieves sfp represented by (1-based) index <index>
+        Args:
+            index: An integer, the index (1-based) of the sfp to retrieve.
+            The index should be the sequence of a physical port in a chassis,
+            starting from 1.
+            For example, 1 for Ethernet0, 2 for Ethernet4 and so on.
+        Returns:
+            An object dervied from SfpBase representing the specified sfp
+        """
+        if not self.sfp_module_initialized:
+            self.__initialize_sfp()
+        return super(Chassis, self).get_sfp(index-1)
+
+    ##############################################################
     ###################### Device methods ########################
     ##############################################################
 
@@ -179,7 +235,6 @@ class Chassis(ChassisBase):
         Returns:
             bool: True if Chassis is present, False if not
         """
-
         return True
 
     def get_model(self):
