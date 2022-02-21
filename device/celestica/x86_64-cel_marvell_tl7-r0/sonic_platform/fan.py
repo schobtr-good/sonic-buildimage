@@ -8,15 +8,8 @@
 #
 #############################################################################
 
-import json
-import math
-import os.path
-import re
-import sys
-import time
-import subprocess
-
 try:
+    import re
     from sonic_platform_base.fan_base import FanBase
     from helper import APIHelper
 except ImportError as e:
@@ -39,7 +32,7 @@ IPMI_FAN_TARGET_SPEED_CMD = "0x64 0x02 0x01 {}"
 
 # GET Fan RPM
 # IPMI_OEM_NETFN + 0x26 + fan id: 0-7
-IPMI_FAN_SPEED_CMD = "0x2d {}"
+IPMI_SS_READ_CMD = "0x2d {}"
 IPMI_SENSOR_NETFN = "0x04"
 FAN_SS_RPM_REG = ["0x43", "0x4A", "0x44", "0x4b", "0x45", "0x4c",
                   "0x46", "0x4d", "0x47", "0x4e", "0x48", "0x4f", "0x49", "0x50"]
@@ -59,8 +52,8 @@ IPMI_SENSOR_LIST_CMD = "ipmitool sensor"
 IPMI_FRU_MODEL_KEY = "Board Part Number"
 IPMI_FRU_SERIAL_KEY = "Board Serial"
 
-MAX_OUTLET = 24700
-MAX_INLET = 29700
+MAX_OUTLET = 29600
+MAX_INLET = 31700
 SPEED_TOLERANCE = 10
 
 # IPMT_OEM_NETFN + 0x3E + {bus} + {8 bit address} + {read count} + 0x3B:PSU FAN SPEED REG
@@ -78,7 +71,8 @@ FAN_LED_GREEN_CMD = "0x01"
 FAN_LED_RED_CMD = "0x02"
 FAN1_LED_CMD = "0x04"
 
-FAN1_FRU_ID = 6
+PSU1_STATUS_REG = "0x3a"
+PSU2_STATUS_REG = "0x3b"
 
 
 class Fan(FanBase):
@@ -123,7 +117,7 @@ class Fan(FanBase):
             fan_reg = FAN_SS_RPM_REG[self.index]
 
         status, raw_ss_read = self._api_helper.ipmi_raw(
-            IPMI_SENSOR_NETFN, IPMI_FAN_SPEED_CMD.format(fan_reg))
+            IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(fan_reg))
 
         ss_read = raw_ss_read.split()[0]
         rpm_speed = int(ss_read, 16)*150
@@ -231,6 +225,10 @@ class Fan(FanBase):
 
         return fan_name
 
+    def _find_value(self, in_string):
+        result = re.search("^.+ ([0-9a-f]{2}) .+$", in_string)
+        return result.group(1) if result else result
+
     def get_presence(self):
         """
         Retrieves the presence of the FAN
@@ -239,7 +237,18 @@ class Fan(FanBase):
         """
         presence = False
         if self.is_psu_fan:
-            return True
+            psu_presence = False
+            psu_pstatus_key = globals(
+            )['PSU{}_STATUS_REG'.format(self.psu_index+1)]
+            status, raw_status_read = self._api_helper.ipmi_raw(
+                IPMI_SENSOR_NETFN, IPMI_SS_READ_CMD.format(psu_pstatus_key))
+            status_byte = self._find_value(raw_status_read)
+
+            if status:
+                presence_int = (int(status_byte, 16) >> 0) & 1
+                psu_presence = True if presence_int else False
+
+            return psu_presence
 
         status, raw_present = self._api_helper.ipmi_raw(
             IPMI_OEM_NETFN, IPMI_FAN_PRESENT_CMD.format(hex(self.index / 2)))

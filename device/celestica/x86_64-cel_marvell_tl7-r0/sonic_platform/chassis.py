@@ -36,6 +36,7 @@ class Chassis(ChassisBase):
         ChassisBase.__init__(self)
 
         self._api_helper = APIHelper()
+        self.sfp_module_initialized = False
         self._is_host = self._api_helper.is_host()
 
         self._initialize_eeprom()
@@ -73,7 +74,7 @@ class Chassis(ChassisBase):
             thermal = Thermal(index)
             self._thermal_list.append(thermal)
 
-    def __initialize_sfp(self):
+    def _initialize_sfp(self):
         sfputil_helper = SfpUtilHelper()
         port_config_file_path = device_info.get_path_to_port_config_file()
         sfputil_helper.read_porttab_mappings(port_config_file_path, 0)
@@ -186,7 +187,7 @@ class Chassis(ChassisBase):
             An integer, the number of sfps available on this chassis
         """
         if not self.sfp_module_initialized:
-            self.__initialize_sfp()
+            self._initialize_sfp()
 
         return len(self._sfp_list)
 
@@ -198,7 +199,7 @@ class Chassis(ChassisBase):
             available on this chassis
         """
         if not self.sfp_module_initialized:
-            self.__initialize_sfp()
+            self._initialize_sfp()
 
         return self._sfp_list
 
@@ -214,7 +215,7 @@ class Chassis(ChassisBase):
             An object dervied from SfpBase representing the specified sfp
         """
         if not self.sfp_module_initialized:
-            self.__initialize_sfp()
+            self._initialize_sfp()
         return super(Chassis, self).get_sfp(index-1)
 
     ##############################################################

@@ -16,8 +16,8 @@ except ImportError as e:
 IPMI_SENSOR_NETFN = "0x04"
 IPMI_SS_READ_CMD = "0x2D {}"
 IPMI_SS_THRESHOLD_CMD = "0x27 {}"
-DEFUALT_LOWER_TRESHOLD = 0.0
 HIGH_TRESHOLD_SET_KEY = "unc"
+NOT_AVALIABLE = "N/A"
 
 
 class Thermal(ThermalBase):
@@ -71,7 +71,7 @@ class Thermal(ThermalBase):
         if status and len(raw_up_thres_read.split()) > 6:
             ss_read = raw_up_thres_read.split()[4]
             high_threshold = float(int(ss_read, 16))
-        return high_threshold
+        return high_threshold if high_threshold != 0.0 else self.get_high_critical_threshold()
 
     def get_low_threshold(self):
         """
@@ -80,7 +80,7 @@ class Thermal(ThermalBase):
             A float number, the low threshold temperature of thermal in Celsius
             up to nearest thousandth of one degree Celsius, e.g. 30.125
         """
-        return DEFUALT_LOWER_TRESHOLD
+        return NOT_AVALIABLE
 
     def set_high_threshold(self, temperature):
         """
@@ -91,7 +91,7 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        return False
+        return False  # Controlled by BMC
 
     def set_low_threshold(self, temperature):
         """
@@ -102,7 +102,7 @@ class Thermal(ThermalBase):
         Returns:
             A boolean, True if threshold is set successfully, False if not
         """
-        return False
+        return False  # Controlled by BMC
 
     def get_high_critical_threshold(self):
         """
@@ -117,7 +117,7 @@ class Thermal(ThermalBase):
         if status and len(raw_up_thres_read.split()) > 6:
             ss_read = raw_up_thres_read.split()[5]
             high_critical_threshold = float(int(ss_read, 16))
-        return high_critical_threshold
+        return high_critical_threshold if high_critical_threshold != 0.0 else NOT_AVALIABLE
 
     ##############################################################
     ###################### Device methods ########################

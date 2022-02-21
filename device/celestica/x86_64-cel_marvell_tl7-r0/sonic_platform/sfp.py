@@ -282,7 +282,7 @@ QSFP_DD_PORT_END = 32
 QSFP_DD_I2C_OFFSET = 12
 
 
-class SFP(SfpBase):
+class Sfp(SfpBase):
     """Platform-specific SFP class"""
 
     def __init__(self, sfp_index, sfp_name=None):
@@ -290,7 +290,6 @@ class SFP(SfpBase):
         self.port_num = self._index + 1
         self._api_helper = APIHelper()
         self._name = sfp_name
-        self._port_info_name = self._get_port_info_name()
 
         self._read_porttab_mappings()
         self._detect_sfp_type()
@@ -315,9 +314,10 @@ class SFP(SfpBase):
 
     def _get_eeprom_path(self):
         self.port_to_eeprom_mapping = {}
-        for i in range(QSFP_DD_PORT_START, QSFP_DD_PORT_END + 1){
+        self.port_to_i2c_mapping = {}
+        for i in range(QSFP_DD_PORT_START, QSFP_DD_PORT_END + 1):
             self.port_to_i2c_mapping[i] = QSFP_DD_I2C_OFFSET + i
-        }
+
         return I2C_EEPROM_PATH.format(self.port_to_i2c_mapping.get(self.port_num))
 
     def _read_eeprom_specific_bytes(self, offset, num_bytes):
