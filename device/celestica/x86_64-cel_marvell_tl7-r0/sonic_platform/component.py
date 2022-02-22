@@ -8,11 +8,6 @@
 #
 #############################################################################
 
-import os.path
-import shutil
-import subprocess
-import time
-
 try:
     from sonic_platform_base.component_base import ComponentBase
     from helper import APIHelper
@@ -20,6 +15,7 @@ except ImportError as e:
     raise ImportError(str(e) + "- required module not found")
 
 FPGA_VERSION_PATH = "/sys/devices/platform/fpga-sys/version"
+FPGA_SW_VERSION_PATH = "/sys/devices/platform/Marvell_Switch_FPGA/FPGA/version"
 CTRL_CPLD_VERSION_PATH = "/sys/devices/platform/ctrl_cpld/version"
 COME_CPLD_VERSION_PATH = "/sys/devices/platform/come_cpld/version"
 BIOS_VERSION_PATH = "/sys/class/dmi/id/bios_version"
@@ -41,6 +37,13 @@ class Component(ComponentBase):
         self.index = component_index
         self._api_helper = APIHelper()
         self.name = self.get_name()
+
+    def _isfloat(self, num):
+        try:
+            float(num)
+            return True
+        except ValueError:
+            return False
 
     def __get_bios_version(self):
         # Retrieves the BIOS firmware version
@@ -72,12 +75,16 @@ class Component(ComponentBase):
 
     def __get_fpga_version(self):
         # Retrieves the FPGA firmware version
+        version_path = FPGA_VERSION_PATH if "BASE" in self.name else FPGA_SW_VERSION_PATH
         try:
-            with open(FPGA_VERSION_PATH, 'r') as fd:
+            with open(version_path, 'r') as fd:
                 version = fd.read()
-                fpga_version = (version.strip().split("x")[1])
-                return fpga_version.strip()
+                version_list = version.strip().split("x")
+                fpga_version = version_list[1] if len(
+                    version_list) > 1 else version_list[0]
+                return float(fpga_version) if self._isfloat(fpga_version) else fpga_version.strip()
         except Exception as e:
+            print(e)
             return None
 
     def __get_bmc_version(self):
@@ -113,7 +120,7 @@ class Component(ComponentBase):
             fw_version = self.__get_bios_version()
         elif "CPLD" in self.name:
             fw_version = self.__get_cpld_version()
-        elif self.name == "BASE_FPGA":
+        elif "FPGA" in self.name:
             fw_version = self.__get_fpga_version()
         elif "BMC" in self.name:
             version = self.__get_bmc_version()
