@@ -188,7 +188,7 @@ begin:
 	if (i < count) {
 		buf[i++] = inb(START_ADDR + off);
 		off++;
-		usleep_range(1000);
+		usleep_range(1000, 1100);
 		goto begin;
 	}
 	status = count;
