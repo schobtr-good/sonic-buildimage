@@ -471,7 +471,7 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
     struct platform_device **i2cbuses_pdev;
     struct platform_device *fpga_pdev;
     struct platform_device *xcvr_pdev;
-    // uint32_t fpga_type;
+    uint32_t fpga_type;
 
     err = pci_enable_device(dev);
     if (err) {
@@ -488,11 +488,20 @@ static int cls_fpga_probe(struct pci_dev *dev, const struct pci_device_id *id) {
         goto err_disable_device;
     }
 
-    ret = pci_enable_msi(dev);
-    if (ret) {
-        dev_err(&dev->dev, "failed to allocate MSI entry\n");
+    // device type checking
+    fpga_type = ioread32(base_addr + 0x0014);
+    printk("board type val: 0x%lx\n", fpga_type);
+    if (fpga_type != 0x01) {
+        printk("unknow board type val: 0x%lx\n", fpga_type);
+        err = -ENXIO;
         goto err_unmap;
     }
+
+    // ret = pci_enable_msi(dev);
+    // if (ret) {
+    //     dev_err(&dev->dev, "failed to allocate MSI entry\n");
+    //     goto err_unmap;
+    // }
 
 #if 0 /* only one FPGA, so not to judge FPGA TYTE*/
 	fpga_type = ioread32(base_addr + FPGA_TYPE_ADDR);
@@ -674,6 +683,9 @@ err_exit:
 static void cls_fpga_remove(struct pci_dev *dev) {
     int i;
     struct switchbrd_priv *priv = pci_get_drvdata(dev);
+
+    if (priv == NULL)
+	    return;
 
     for (i = 0; i < priv->num_i2c_bus; i++) {
         if (priv->i2cbuses_pdev[i])

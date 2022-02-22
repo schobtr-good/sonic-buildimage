@@ -57,7 +57,28 @@
 #define SPI_R_DATA_REG_OFFSET_ADDR      0x4200
 
 #ifdef ENABLE_DEBUG_MSG
-#define PRINTK(level, fmt,args...) printk(level fmt,##args)
+#define PRINTK(level, fmt, args...) printk(level fmt,##args)
 #else
-#define PRINTK(level, fmt,args...)
+#define PRINTK(level, fmt, args...)
 #endif
+
+// MARVELL SW_FPGA REG
+#define MRVL_FPGA_VER_REG       0x0000
+#define MRVL_FPGA_IMG_DATE      0x0004
+#define MRVL_PCIE_SCRTCH_REG    0x0008
+#define MRVL_BOARD_TYPE_REG     0x000c
+#define MRVL_BOARD_VER_REG      0x0010
+#define MRVL_FPGA_TYPE_REG      0x0014
+
+#define MRVL_OBO_LPWR_RST_CTRL_REG  0x0080
+#define MRVL_OBO_TXDIS_CTRL_REG     0x0084
+#define MRVL_OBO_DC7A_INT_STAT_REG  0x0088
+
+#define MRVL_SPI_CLK_DVD_REG     0x1000
+#define MRVL_SPI_CTRL_REG        0x1004
+#define MRVL_SPI_STAT_REG        0x1008  
+#define MRVL_SPI_XFER_INFO_REG   0x100c  /* */
+#define MRVL_SPI_FLOW_CTRL_REG   0x1010  /* */
+#define MRVL_SPI_W_DATA_REG      0x1100  /* 0x1100 - 0x117f */
+#define MRVL_SPI_R_DATA_REG      0x1180  /* 0x1180 - 0x11ff */
+#define MRVL_SPI_CFG_REG_SIZE    0x200

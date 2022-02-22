@@ -15,7 +15,7 @@
 #include <linux/spinlock.h>
 
 #define FPGA_VERSION 0x0000
-#define FPGA_SCRATCH 0x0004
+#define FPGA_SCRATCH 0x0008
 #define FPGA_REGISTER_SIZE 0x1000
 
 /*
@@ -229,6 +229,7 @@ static int cls_fpga_probe(struct platform_device *pdev) {
     struct fpga_priv *fpga;
     struct resource *res;
     int ret;
+    uint32_t fpga_type;
 
     fpga = devm_kzalloc(&pdev->dev, sizeof(struct fpga_priv), GFP_KERNEL);
     if (!fpga) {
@@ -249,6 +250,15 @@ static int cls_fpga_probe(struct platform_device *pdev) {
             goto mem_unmap;
         }
     }
+
+    // device type checking
+    fpga_type = ioread32(fpga->base + 0x0014);
+    printk("board type val: 0x%lx\n", fpga_type);
+    if (fpga_type != 0x01) {
+        printk("unknow board type val: 0x%lx\n", fpga_type);
+        goto mem_unmap;
+    }
+
     printk("FPGA version: 0x%x\n", ioread32(fpga->base + FPGA_VERSION));
 
     ret = sysfs_create_group(&pdev->dev.kobj, &fpga_attr_grp);
