@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+
 // IOB Level Register Address Offset
 #define IOB_REV_REG_OFFSET_ADDR      0x0000
 #define IOB_SCRTCHPD_REG_OFFSET_ADDR 0x0004
@@ -57,7 +59,7 @@
 #define SPI_R_DATA_REG_OFFSET_ADDR      0x4200
 
 #ifdef ENABLE_DEBUG_MSG
-#define PRINTK(level, fmt, args...) printk(level fmt,##args)
+#define PRINTK(level, fmt, args...) printk(level fmt, ##args)
 #else
 #define PRINTK(level, fmt, args...)
 #endif
@@ -76,7 +78,7 @@
 
 #define MRVL_SPI_CLK_DVD_REG     0x1000
 #define MRVL_SPI_CTRL_REG        0x1004
-#define MRVL_SPI_STAT_REG        0x1008  
+#define MRVL_SPI_STAT_REG        0x1008
 #define MRVL_SPI_XFER_INFO_REG   0x100c  /* */
 #define MRVL_SPI_FLOW_CTRL_REG   0x1010  /* */
 #define MRVL_SPI_W_DATA_REG      0x1100  /* 0x1100 - 0x117f */
