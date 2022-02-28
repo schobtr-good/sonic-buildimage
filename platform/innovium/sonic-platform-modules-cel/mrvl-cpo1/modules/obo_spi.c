@@ -129,7 +129,7 @@ uint32_t mrvl_obo_spi_read(void __iomem *base_addr, u32 obo_idx, u32 bank,
 
 	// SPI Transfer Addr Reg
 	spi_xfer_info_reg_val = 0;
-	spi_xfer_info_reg_val |= (byte_len - 1) << 24;
+	spi_xfer_info_reg_val |= (byte_len + 6) << 24;
 	spi_xfer_info_reg_val |= (bank & 0x3) << 16;
 	spi_xfer_info_reg_val |= (page & 0xff) << 8;
 	spi_xfer_info_reg_val |= (start & 0xff);
@@ -226,7 +226,7 @@ uint32_t mrvl_obo_spi_write(void __iomem *base_addr, u32 obo_idx, u32 bank,
 
 	// SPI Transfer Addr Reg
 	spi_xfer_info_reg_val = 0;
-	spi_xfer_info_reg_val |= (byte_len - 1) << 24;
+	spi_xfer_info_reg_val |= (byte_len + 6) << 24;
 	spi_xfer_info_reg_val |= (bank & 0x3) << 16;
 	spi_xfer_info_reg_val |= (page & 0xff) << 8;
 	spi_xfer_info_reg_val |= (start & 0xff);
