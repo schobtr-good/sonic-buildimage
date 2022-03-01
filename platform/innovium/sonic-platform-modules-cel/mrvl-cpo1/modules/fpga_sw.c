@@ -299,7 +299,7 @@ static ssize_t version_show(struct device *dev, struct device_attribute *attr,
 	mutex_lock(&fpga_data->fpga_lock);
 	data = ioread32(fpga_dev.data_base_addr+IOB_REV_REG_OFFSET_ADDR);
 	mutex_unlock(&fpga_data->fpga_lock);
-	return sprintf(buf, "%x\n", data);
+	return sprintf(buf, "0x%8.8x\n", data);
 }
 
 static ssize_t dump_read(struct file *filp, struct kobject *kobj,
