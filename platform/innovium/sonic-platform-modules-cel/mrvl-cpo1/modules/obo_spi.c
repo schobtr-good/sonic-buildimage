@@ -57,7 +57,9 @@ u32 wait_spi_busy(void __iomem *base_addr, u32 reg, u32 bitmask, u32 *done,
 	}
 
 	if (i >= timeout_count) {
-		PRINTK(KERN_INFO, "%d us timed out in waiting spi_busy (reg 0x%x)\n", timeout_us, reg);
+		PRINTK(KERN_INFO,
+			"%d us timed out in waiting spi_busy (reg 0x%x)\n",
+			timeout_us, reg);
 		return -1;
 	}
 
@@ -133,13 +135,15 @@ uint32_t mrvl_obo_spi_read(void __iomem *base_addr, u32 obo_idx, u32 bank,
 	spi_xfer_info_reg_val |= (bank & 0x3) << 16;
 	spi_xfer_info_reg_val |= (page & 0xff) << 8;
 	spi_xfer_info_reg_val |= (start & 0xff);
-	PRINTK(KERN_INFO, "1. writing 0x%08x to 0x%04x", spi_xfer_info_reg_val, spi_xfer_info_reg);
+	PRINTK(KERN_INFO, "1. writing 0x%08x to 0x%04x", spi_xfer_info_reg_val,
+			spi_xfer_info_reg);
 	iowrite32(spi_xfer_info_reg_val, base_addr + spi_xfer_info_reg);
 	usleep_range(5000, 5001);
 
 	// SPI Control Reg
 	spi_ctrl_reg_val = 0;
-	PRINTK(KERN_INFO, "2. writing 0x%08x to 0x%04x", spi_ctrl_reg_val, spi_ctrl_reg);
+	PRINTK(KERN_INFO, "2. writing 0x%08x to 0x%04x", spi_ctrl_reg_val,
+			spi_ctrl_reg);
 	iowrite32(spi_ctrl_reg_val, base_addr + spi_ctrl_reg);
 	usleep_range(5000, 5001);
 
@@ -181,7 +185,8 @@ uint32_t mrvl_obo_spi_read(void __iomem *base_addr, u32 obo_idx, u32 bank,
 
 	// for returning the 2nd byte (Write Ready status) to spi_check_status
 	flow_ctrl_reg_val = ioread32(base_addr + spi_flow_ctrl_reg);
-	PRINTK(KERN_INFO, "flow_ctrl 0x%04x: 0x%08x\n", spi_flow_ctrl_reg, flow_ctrl_reg_val);
+	PRINTK(KERN_INFO, "flow_ctrl 0x%04x: 0x%08x\n", spi_flow_ctrl_reg,
+			flow_ctrl_reg_val);
 	usleep_range(5000, 5001);
 
 	if ((flow_ctrl_reg_val & 0xff) == 0x00)

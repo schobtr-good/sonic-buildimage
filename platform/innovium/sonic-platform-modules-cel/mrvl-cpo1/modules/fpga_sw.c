@@ -3,18 +3,27 @@
 /* ref sysfs from seastone2 with obo_spi_sysfs
  *   \--sys
  *       \--devices
- *            \--platform
- *                \--Marvell_Switch
- *                    |--FPGA
- *                    \--OBO
- *							\
- *							OBO1
- *							.   \__lopwr/rst_l/presence/int_l/spi_read_data/spi_write_data
- *							.   |__obo_id/bank/page/offset/len/spi_read_data/spi_write_data
- *							.
- *							.
- *							.
- *							OBO16 - lopwr/rst_l/presence/int_l/spi_read_data/spi_write_data
+ *          \--platform
+ *             \--Marvell_Switch
+ *                |--FPGA
+ *                \--OBO
+ *			\
+ *			OBO1
+ *			.   \_lopwr
+ *			.   |_rst_l
+ *			.   |_presence
+ *			.   |_int_l
+ *			.   |_spi_read_data
+ *			.   |_spi_write_data
+ *			.   |_obo_id
+ *			.   |_bank
+ *			.   |_page
+ *			.   |_offset
+ *			.   \_len
+ *			.
+ *			.
+ *			.
+ *			OBO16
  */
 
 
@@ -158,8 +167,8 @@ static struct resource marvell_switch_resources[] = {
 };
 
 struct each_obo_device_data {
-    int portid;
-    enum PORT_TYPE port_type;
+	int portid;
+	enum PORT_TYPE port_type;
 };
 
 static void marvell_switch_dev_release(struct device *dev)
@@ -350,7 +359,7 @@ static ssize_t obo_id_show(struct device *dev,
 			       struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 	return sprintf(buf, "%d\n", fpga_data->obo_spi_t_cfg[portid].obo_id);
 }
@@ -359,7 +368,7 @@ static ssize_t bank_show(struct device *dev,
 			       struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 	return sprintf(buf, "%d\n", fpga_data->obo_spi_t_cfg[portid].bank);
 }
@@ -368,7 +377,7 @@ static ssize_t page_show(struct device *dev,
 			       struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 	return sprintf(buf, "%d\n", fpga_data->obo_spi_t_cfg[portid].page);
 }
@@ -377,7 +386,7 @@ static ssize_t offset_show(struct device *dev,
 			       struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 	return sprintf(buf, "%d\n", fpga_data->obo_spi_t_cfg[portid].offset);
 }
@@ -386,7 +395,7 @@ static ssize_t len_show(struct device *dev,
 			       struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 	return sprintf(buf, "%d\n", fpga_data->obo_spi_t_cfg[portid].len);
 }
@@ -396,7 +405,7 @@ static ssize_t obo_id_store(struct device *dev,
 				const char *buf, size_t count)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 	long val = 0;
 	int ret;
 
@@ -415,7 +424,7 @@ static ssize_t bank_store(struct device *dev,
 				const char *buf, size_t count)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 	long val = 0;
 	int ret;
 
@@ -434,7 +443,7 @@ static ssize_t page_store(struct device *dev,
 				const char *buf, size_t count)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 	long val = 0;
 	int ret;
 
@@ -453,7 +462,7 @@ static ssize_t offset_store(struct device *dev,
 				const char *buf, size_t count)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 	long val = 0;
 	int ret;
 
@@ -472,7 +481,7 @@ static ssize_t len_store(struct device *dev,
 				const char *buf, size_t count)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 	long val = 0;
 	int ret;
 
@@ -491,7 +500,7 @@ static ssize_t spi_read_data_show(struct device *dev,
 					char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 	uint8_t data[140] = {0};
 	int output_len;
 	int remaining = fpga_data->obo_spi_t_cfg[portid].len;
@@ -500,14 +509,14 @@ static ssize_t spi_read_data_show(struct device *dev,
 	uint8_t *pch, ch;
 	uint32_t ret;
 	int round = 1;
-	
+
 
 
 	mutex_lock(&fpga_data->fpga_lock);
 	while (round <= SPI_MAX_RETRY_BUSY) {
 		ret = mrvl_spi_check_status(fpga_dev.data_base_addr,
-						fpga_data->obo_spi_t_cfg[portid].obo_id,
-						fpga_data->obo_spi_t_cfg[portid].bank);
+					fpga_data->obo_spi_t_cfg[portid].obo_id,
+					fpga_data->obo_spi_t_cfg[portid].bank);
 		if (ret == 0) {
 			mrvl_obo_spi_read(fpga_dev.data_base_addr,
 					fpga_data->obo_spi_t_cfg[portid].obo_id,
@@ -537,8 +546,8 @@ static ssize_t spi_read_data_show(struct device *dev,
 	while (remaining > 0) {
 		if (!(count & 0xf)) {
 			output_len += sprintf(buf + output_len, "%06x:  ",
-						fpga_data->obo_spi_t_cfg[portid].offset
-						+ count);
+					fpga_data->obo_spi_t_cfg[portid].offset
+					+ count);
 			pch = p;
 		} else if (!(count & 0x7)) {
 			output_len += sprintf(buf + output_len, " ");
@@ -583,7 +592,7 @@ static ssize_t spi_write_data_store(struct device *dev,
 	uint8_t spi_w_data[128] = {0};
 	int round = 1;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	memset(buf_dup, 0x00, sizeof(buf_dup));
@@ -615,23 +624,24 @@ static ssize_t spi_write_data_store(struct device *dev,
 
 	if (byte_count != fpga_data->obo_spi_t_cfg[portid].len) {
 		pr_err("%s line#%d amount of data not equal to desired spi len [%d]\n",
-		       __func__, __LINE__, fpga_data->obo_spi_t_cfg[portid].len);
+		       __func__, __LINE__,
+		       fpga_data->obo_spi_t_cfg[portid].len);
 		return -1;
 	}
 
 	//
 	while (round <= SPI_MAX_RETRY_BUSY) {
 		ret = mrvl_spi_check_status(fpga_dev.data_base_addr,
-					    fpga_data->obo_spi_t_cfg[portid].obo_id,
-					    fpga_data->obo_spi_t_cfg[portid].bank);
+					fpga_data->obo_spi_t_cfg[portid].obo_id,
+					fpga_data->obo_spi_t_cfg[portid].bank);
 		if (ret == 0) {
 			mrvl_obo_spi_write(fpga_dev.data_base_addr,
-					   fpga_data->obo_spi_t_cfg[portid].obo_id,
-					   fpga_data->obo_spi_t_cfg[portid].bank,
-					   fpga_data->obo_spi_t_cfg[portid].page,
-					   fpga_data->obo_spi_t_cfg[portid].offset,
-					   fpga_data->obo_spi_t_cfg[portid].len,
-					   spi_w_data);
+					fpga_data->obo_spi_t_cfg[portid].obo_id,
+					fpga_data->obo_spi_t_cfg[portid].bank,
+					fpga_data->obo_spi_t_cfg[portid].page,
+					fpga_data->obo_spi_t_cfg[portid].offset,
+					fpga_data->obo_spi_t_cfg[portid].len,
+					spi_w_data);
 			break;
 		} else {
 			PRINTK(KERN_INFO, "%s line#%d Cannot write value SPI .. Retry - %d\n",
@@ -651,13 +661,13 @@ static ssize_t rst_l_show(struct device *dev,
 {
 	u32 temp32 = 0;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_TXDIS_RST_L_CTRL_REG);
 
-	return sprintf(buf, "%d\n", (temp32 & (0x1 << portid))? 1:0 );
+	return sprintf(buf, "%d\n", (temp32 & (0x1 << portid)) ? 1:0);
 }
 
 static ssize_t lopwr_show(struct device *dev,
@@ -665,13 +675,13 @@ static ssize_t lopwr_show(struct device *dev,
 {
 	u32 temp32 = 0;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_LOPWR_CTRL_REG);
 
-	return sprintf(buf, "%d\n", (temp32 & (0x1 << portid))? 1:0 );
+	return sprintf(buf, "%d\n", (temp32 & (0x1 << portid)) ? 1:0);
 }
 
 static ssize_t tx_dis_show(struct device *dev,
@@ -679,13 +689,13 @@ static ssize_t tx_dis_show(struct device *dev,
 {
 	u32 temp32 = 0;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_TXDIS_RST_L_CTRL_REG);
 
-	return sprintf(buf, "%d\n", (temp32 & (0x1 << (portid + 16)))? 1:0 );
+	return sprintf(buf, "%d\n", (temp32 & (0x1 << (portid + 16))) ? 1:0);
 }
 
 static ssize_t presence_show(struct device *dev,
@@ -693,13 +703,13 @@ static ssize_t presence_show(struct device *dev,
 {
 	u32 temp32 = 0;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_INT_L_DC7A_STAT_REG);
 
-	return sprintf(buf, "%d\n", (temp32 & (0x1 << portid))? 1:0 );
+	return sprintf(buf, "%d\n", (temp32 & (0x1 << portid)) ? 1:0);
 }
 
 static ssize_t int_l_show(struct device *dev,
@@ -707,13 +717,13 @@ static ssize_t int_l_show(struct device *dev,
 {
 	u32 temp32 = 0;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_INT_L_DC7A_STAT_REG);
 
-	return sprintf(buf, "%d\n", (temp32 & (0x1 << (portid + 16)))? 1:0 );
+	return sprintf(buf, "%d\n", (temp32 & (0x1 << (portid + 16))) ? 1:0);
 }
 
 static ssize_t rst_l_store(struct device *dev,
@@ -725,7 +735,7 @@ static ssize_t rst_l_store(struct device *dev,
 	u32 writing_val = 0;
 	int ret;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	ret = kstrtol(buf, 0, &val);
@@ -734,17 +744,16 @@ static ssize_t rst_l_store(struct device *dev,
 
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_TXDIS_RST_L_CTRL_REG);
-	
-	if (val == 1) {
+
+	if (val == 1)
 		writing_val = temp32 | (0x1 << portid);
-	} else if (val == 0) {
+	else if (val == 0)
 		writing_val = temp32 & ~(0x1 << portid);
-	} else {
+	else
 		return -1;
-	}
 
 	iowrite32(writing_val,
-				fpga_dev.data_base_addr + MRVL_OBO_TXDIS_RST_L_CTRL_REG);
+		fpga_dev.data_base_addr + MRVL_OBO_TXDIS_RST_L_CTRL_REG);
 
 	return count;
 }
@@ -758,7 +767,7 @@ static ssize_t lopwr_store(struct device *dev,
 	u32 writing_val = 0;
 	int ret;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	ret = kstrtol(buf, 0, &val);
@@ -768,13 +777,12 @@ static ssize_t lopwr_store(struct device *dev,
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_LOPWR_CTRL_REG);
 
-	if (val == 1) {
+	if (val == 1)
 		writing_val = temp32 | (0x1 << portid);
-	} else if (val == 0) {
+	else if (val == 0)
 		writing_val = temp32 & ~(0x1 << portid);
-	} else {
+	else
 		return -1;
-	}
 
 	iowrite32(writing_val,
 		fpga_dev.data_base_addr + MRVL_OBO_LOPWR_CTRL_REG);
@@ -791,7 +799,7 @@ static ssize_t tx_dis_store(struct device *dev,
 	int ret;
 	u32 writing_val = 0;
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
-    unsigned int portid = dev_data->portid;
+	unsigned int portid = dev_data->portid;
 
 
 	ret = kstrtol(buf, 0, &val);
@@ -801,13 +809,12 @@ static ssize_t tx_dis_store(struct device *dev,
 	temp32 = ioread32(fpga_dev.data_base_addr +
 					MRVL_OBO_TXDIS_RST_L_CTRL_REG);
 
-	if (val == 1) {
+	if (val == 1)
 		writing_val = temp32 | (0x1 << (portid + 16));
-	} else if (val == 0) {
+	else if (val == 0)
 		writing_val = temp32 & ~(0x1 << (portid + 16));
-	} else {
+	else
 		return -1;
-	}
 
 	iowrite32(writing_val,
 		fpga_dev.data_base_addr + MRVL_OBO_TXDIS_RST_L_CTRL_REG);
@@ -852,8 +859,8 @@ static struct attribute_group obo_spi_attr_grp = {
 };
 
 static const struct attribute_group *obo_spi_attr_grps[] = {
-    &obo_spi_attr_grp,
-    NULL
+	&obo_spi_attr_grp,
+	NULL
 };
 
 
@@ -986,8 +993,8 @@ static int fpga_i2c_access(struct i2c_adapter *adapter, u16 addr,
 			mutex_lock(&fpga_data->fpga_lock);
 
 			// ret = spi_check_status(fpga_dev.data_base_addr,
-			//                        1,
-			//                        fpga_data->obo_spi_t_cfg.obo_id);
+			//		1,
+			//		fpga_data->obo_spi_t_cfg.obo_id);
 			if (ret == 0) {
 				if (cmd < 0x80) { /* lower page */
 					obo_spi_read_mock(fpga_dev.data_base_addr,
@@ -1107,101 +1114,114 @@ static struct i2c_adapter *i2c_master_init(struct platform_device *pdev,
 	return new_adapter;
 };
 
-static struct device * seastone2_sff_init(int portid) {
-    struct each_obo_device_data *new_data;
-    struct device *new_device;
+static struct device *seastone2_sff_init(int portid)
+{
+	struct each_obo_device_data *new_data;
+	struct device *new_device;
 
-    new_data = kzalloc(sizeof(*new_data), GFP_KERNEL);
-    if (!new_data) {
-        printk(KERN_ALERT "Cannot alloc sff device data @port%d", portid);
-        return NULL;
-    }
-    /* The QSFP port ID start from 1 */
-    new_data->portid = portid;
-    new_device = device_create_with_groups(fpgafwclass, sff_dev, MKDEV(0,0), new_data, obo_spi_attr_grps, "OBO%d",portid+1);
-    if (IS_ERR(new_device)) {
-        printk(KERN_ALERT "Cannot create sff device @port%d", portid);
-        kfree(new_data);
-        return NULL;
-    }
-    return new_device;
+	new_data = kzalloc(sizeof(*new_data), GFP_KERNEL);
+	if (!new_data) {
+		printk(KERN_ALERT "Cannot alloc sff device data @port%d",
+			portid);
+		return NULL;
+	}
+
+	/* The QSFP port ID start from 1 */
+	new_data->portid = portid;
+	new_device = device_create_with_groups(fpgafwclass, sff_dev,
+			MKDEV(0, 0), new_data, obo_spi_attr_grps,
+			"OBO%d", portid+1);
+	if (IS_ERR(new_device)) {
+		printk(KERN_ALERT "Cannot create sff device @port%d", portid);
+		kfree(new_data);
+		return NULL;
+	}
+
+	return new_device;
 }
 enum{
-    READREG,
-    WRITEREG
+	READREG,
+	WRITEREG
 };
 
 struct fpga_reg_data {
-    uint32_t addr;
-    uint32_t value;
+	uint32_t addr;
+	uint32_t value;
 };
 
-static long fpgafw_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned long arg){
-    int ret = 0;
-    struct fpga_reg_data data;
-    mutex_lock(&fpga_data->fpga_lock);
+static long fpgafw_unlocked_ioctl(struct file *file, unsigned int cmd,
+				unsigned long arg)
+{
+	int ret = 0;
+	struct fpga_reg_data data;
+
+
+	mutex_lock(&fpga_data->fpga_lock);
 
 #ifdef TEST_MODE
-    static  uint32_t status_reg;
+	static  uint32_t status_reg;
 #endif
     // Switch function to read and write.
-    switch (cmd){
-        case READREG:
-            if (copy_from_user(&data, (void __user*)arg, sizeof(data)) != 0){
-                mutex_unlock(&fpga_data->fpga_lock);
-                return -EFAULT;
-            }
-            data.value = ioread32(fpga_dev.data_base_addr+data.addr);
-            if (copy_to_user((void __user*)arg ,&data, sizeof(data)) != 0){
-                mutex_unlock(&fpga_data->fpga_lock);
-                return -EFAULT;
-            }
+	switch (cmd) {
+	case READREG:
+		if (copy_from_user(&data, (void __user *)arg, sizeof(data))
+		!= 0) {
+			mutex_unlock(&fpga_data->fpga_lock);
+			return -EFAULT;
+		}
+		data.value = ioread32(fpga_dev.data_base_addr+data.addr);
+		if (copy_to_user((void __user *)arg, &data, sizeof(data))
+		!= 0) {
+			mutex_unlock(&fpga_data->fpga_lock);
+			return -EFAULT;
+		}
 #ifdef TEST_MODE
-            if(data.addr == 0x1210){
-                switch (status_reg){
-                    case 0x0000 : status_reg=0x8000;
-                    break;
+		if (data.addr == 0x1210) {
+			switch (status_reg) {
+			case 0x0000:
+				status_reg = 0x8000;
+				break;
+			case 0x8080:
+				status_reg = 0x80C0;
+				break;
+			case 0x80C0:
+				status_reg = 0x80F0;
+				break;
+			case 0x80F0:
+				status_reg = 0x80F8;
+				break;
+			}
+			iowrite32(status_reg, fpga_dev.data_base_addr+0x1210);
+		}
+#endif
+		break;
+	case WRITEREG:
+		if (copy_from_user(&data, (void __user *)arg, sizeof(data))
+		!= 0) {
+			mutex_unlock(&fpga_data->fpga_lock);
+			return -EFAULT;
+		}
+		iowrite32(data.value, fpga_dev.data_base_addr+data.addr);
 
-                    case 0x8080 : status_reg=0x80C0;
-                    break;
-                    case 0x80C0 : status_reg=0x80F0;
-                    break;
-                    case 0x80F0 : status_reg=0x80F8;
-                    break;
-
-                }
-                iowrite32(status_reg,fpga_dev.data_base_addr+0x1210);
-            }
+#ifdef TEST_MODE
+		if (data.addr == 0x1204) {
+			status_reg = 0x8080;
+			iowrite32(status_reg, fpga_dev.data_base_addr+0x1210);
+		}
 #endif
 
-
-            break;
-        case WRITEREG:
-            if (copy_from_user(&data, (void __user*)arg, sizeof(data)) != 0){
-                mutex_unlock(&fpga_data->fpga_lock);
-                return -EFAULT;
-            }
-            iowrite32(data.value,fpga_dev.data_base_addr+data.addr);
-
-#ifdef TEST_MODE
-            if(data.addr == 0x1204){
-                status_reg=0x8080;
-                iowrite32(status_reg,fpga_dev.data_base_addr+0x1210);
-            }
-#endif
-
-            break;
-        default:
-            mutex_unlock(&fpga_data->fpga_lock);
-            return -EINVAL;
-    }
-    mutex_unlock(&fpga_data->fpga_lock);
-    return ret;
+		break;
+	default:
+		mutex_unlock(&fpga_data->fpga_lock);
+		return -EINVAL;
+	}
+	mutex_unlock(&fpga_data->fpga_lock);
+	return ret;
 }
 
 const struct file_operations fpgafw_fops = {
-    .owner      = THIS_MODULE,
-    .unlocked_ioctl = fpgafw_unlocked_ioctl,
+	.owner      = THIS_MODULE,
+	.unlocked_ioctl = fpgafw_unlocked_ioctl,
 };
 
 static int fpga_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
@@ -1267,19 +1287,22 @@ static int fpga_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
 	// fpgafw_init();
 	majorNumber = register_chrdev(0, DEVICE_NAME, &fpgafw_fops);
-   	if (majorNumber<0){
-   	   printk(KERN_ALERT "Failed to register a major number\n");
-   	   return majorNumber;
-   	}
-   	printk(KERN_INFO "Device registered correctly with major number %d\n", majorNumber);
+	if (majorNumber < 0) {
+		printk(KERN_ALERT "Failed to register a major number\n");
+		return majorNumber;
+	}
+	printk(KERN_INFO "Device registered correctly with major number %d\n",
+		majorNumber);
 
 	fpgafwclass = class_create(THIS_MODULE, CLASS_NAME);
-   	if (IS_ERR(fpgafwclass)){                // Check for error and clean up if there is
-   	   unregister_chrdev(majorNumber, DEVICE_NAME);
-   	   printk(KERN_ALERT "Failed to register device class\n");
-   	   return PTR_ERR(fpgafwclass);          // Correct way to return an error on a pointer
-   	}
-   	printk(KERN_INFO "Device class registered correctly\n");
+	if (IS_ERR(fpgafwclass)) {   // Check for error and clean up if there is
+		unregister_chrdev(majorNumber, DEVICE_NAME);
+		printk(KERN_ALERT "Failed to register device class\n");
+
+		// Correct way to return an error on a pointer
+		return PTR_ERR(fpgafwclass);
+	}
+	printk(KERN_INFO "Device class registered correctly\n");
 
 	// sysfs create
 
@@ -1350,34 +1373,26 @@ static int marvell_switch_drv_probe(struct platform_device *pdev)
 	}
 
 	// each OBO sysfs
-	sff_dev = device_create(fpgafwclass, NULL, MKDEV(0,0), NULL, "OBO");
-    if (IS_ERR(sff_dev)){
-        printk(KERN_ERR "Failed to create sff device\n");
-        sysfs_remove_group(fpga, &fpga_attr_grp);
-        kobject_put(fpga);
-        kzfree(fpga_data);
-        return PTR_ERR(sff_dev);
-    }
+	sff_dev = device_create(fpgafwclass, NULL, MKDEV(0, 0), NULL, "OBO");
+	if (IS_ERR(sff_dev)) {
+		printk(KERN_ERR "Failed to create sff device\n");
+		sysfs_remove_group(fpga, &fpga_attr_grp);
+		kobject_put(fpga);
+		kzfree(fpga_data);
+		return PTR_ERR(sff_dev);
+	}
 
-    ret = sysfs_create_link(&pdev->dev.kobj,&sff_dev->kobj,"OBO");
-    if (ret != 0) {
-        device_destroy(fpgafwclass, MKDEV(0,0));
-        sysfs_remove_group(fpga, &fpga_attr_grp);
-        kobject_put(fpga);
-        kzfree(fpga_data);
-        return ret;
-    }
+	ret = sysfs_create_link(&pdev->dev.kobj, &sff_dev->kobj, "OBO");
+	if (ret != 0) {
+		device_destroy(fpgafwclass, MKDEV(0, 0));
+		sysfs_remove_group(fpga, &fpga_attr_grp);
+		kobject_put(fpga);
+		kzfree(fpga_data);
+		return ret;
+	}
 
-	for(i = 0; i < 16; i++) {
-        
-        fpga_data->sff_devices[i] = seastone2_sff_init(i);
-        // struct sff_device_data *sff_data = dev_get_drvdata(fpga_data->sff_devices[portid_count]);
-		
-        // sysfs_create_link(&fpga_data->sff_devices[portid_count]->kobj,
-        //     &fpga_data->sff_i2c_clients[portid_count]->dev.kobj,
-        //     "i2c");
-
-    }
+	for (i = 0; i < 16; i++)
+		fpga_data->sff_devices[i] = seastone2_sff_init(i);
 
 	// virtual i2c bus create
 	for (i = 0; i < TOTAL_OBO; i++)
@@ -1391,10 +1406,18 @@ static int marvell_switch_drv_probe(struct platform_device *pdev)
 static void fpga_pci_remove(struct pci_dev *pdev)
 {
 	// fpgafw_exit();
-	device_destroy(fpgafwclass, MKDEV(majorNumber, 0));     // remove the device
-   	class_unregister(fpgafwclass);                          // unregister the device class
-   	class_destroy(fpgafwclass);                             // remove the device class
-   	unregister_chrdev(majorNumber, DEVICE_NAME);            // unregister the major number
+
+	// remove the device
+	device_destroy(fpgafwclass, MKDEV(majorNumber, 0));
+
+	// unregister the device class
+	class_unregister(fpgafwclass);
+
+	// remove the device class
+	class_destroy(fpgafwclass);
+
+	// unregister the major number
+	unregister_chrdev(majorNumber, DEVICE_NAME);
 	pci_iounmap(pdev, fpga_dev.data_base_addr);
 	pci_release_regions(pdev);
 	pci_disable_device(pdev);
@@ -1449,13 +1472,13 @@ static int marvell_switch_drv_remove(struct platform_device *pdev)
 	}
 
 	for (i = 0 ; i < TOTAL_OBO ; i++) {
-        if(fpga_data->sff_devices[i] != NULL) {
-            rem_data = dev_get_drvdata(fpga_data->sff_devices[i]);
-            device_unregister(fpga_data->sff_devices[i]);
-            put_device(fpga_data->sff_devices[i]);
-            kfree(rem_data);
-        }
-    }
+		if (fpga_data->sff_devices[i] != NULL) {
+			rem_data = dev_get_drvdata(fpga_data->sff_devices[i]);
+			device_unregister(fpga_data->sff_devices[i]);
+			put_device(fpga_data->sff_devices[i]);
+			kfree(rem_data);
+		}
+	}
 
 	sysfs_remove_group(fpga, &fpga_attr_grp);
 
