@@ -53,7 +53,7 @@
 #include "fpga_sw.h"
 #include "obo_spi.h"
 
-#define VERSION "0.5.0"
+#define VERSION "0.6.0"
 
 #define TOTAL_OBO 16
 
@@ -951,11 +951,13 @@ static int fpga_i2c_access(struct i2c_adapter *adapter, u16 addr,
 	int error;
 	struct i2c_dev_data *dev_data;
 	int ret;
+	unsigned int portid;
 
 
 	dev_data = i2c_get_adapdata(adapter);
 	ret = 0;
 	error = 0;
+	portid = dev_data->portid;
 
 	if (addr != 0x50)
 		return -1;
@@ -984,22 +986,26 @@ static int fpga_i2c_access(struct i2c_adapter *adapter, u16 addr,
 			dev_data->obo_i2c_data.calling_name);
 
 	if (rw == I2C_SMBUS_READ) {
+		if (size != I2C_SMBUS_BYTE_DATA &&
+			size == I2C_SMBUS_BYTE &&
+			size == I2C_SMBUS_I2C_BLOCK_DATA)
+			return -1;
+
+		// i2cdetect, i2cget (no data-addr specified)
+		if (size == I2C_SMBUS_BYTE)
+			return 0;
+
+		// i2cget (with data-addr specified)
 		if (size == I2C_SMBUS_BYTE_DATA) {
-			// data->block[0] = 5;
-			// data->block[1] = 0xaa;
-			// data->block[2] = 0x01;
-			// data->block[3] = 0x02;
-			// data->block[4] = 0x03;
 			mutex_lock(&fpga_data->fpga_lock);
 
-			// ret = spi_check_status(fpga_dev.data_base_addr,
-			//		1,
-			//		fpga_data->obo_spi_t_cfg.obo_id);
+			ret = mrvl_spi_check_status(fpga_dev.data_base_addr,
+							portid, 0);
 			if (ret == 0) {
 				if (cmd < 0x80) { /* lower page */
-					obo_spi_read_mock(fpga_dev.data_base_addr,
-							1,
-							dev_data->portid,
+					mrvl_obo_spi_read(fpga_dev.data_base_addr,
+							portid,
+							0,
 							0,
 							cmd,
 							1,
@@ -1010,13 +1016,48 @@ static int fpga_i2c_access(struct i2c_adapter *adapter, u16 addr,
 						fpga_data->obo_spi_t_cfg[dev_data->portid].current_page_sel_byte_for_i2cif = data->byte;
 					}
 				} else {  /* upper page */
-					obo_spi_read_mock(fpga_dev.data_base_addr,                                                       /* base_addr */
-							1,                                                                             /* pim, force to 1 for marvell project */
-							dev_data->portid,                                                              /* obo_idx */
-							fpga_data->obo_spi_t_cfg[dev_data->portid].current_page_sel_byte_for_i2cif,    /* page */
-							cmd,                                                                           /* offset */
-							1,                                                                             /* len */
-							&(data->byte));                                                                   /* buf */
+					mrvl_obo_spi_read(fpga_dev.data_base_addr,
+							portid,
+							0,
+							fpga_data->obo_spi_t_cfg[dev_data->portid].current_page_sel_byte_for_i2cif,
+							cmd,
+							1,
+							&(data->byte));
+				}
+			} else {
+				PRINTK(KERN_INFO, "%s line#%d Cannot read value SPI\n", __func__, __LINE__);
+				mutex_unlock(&fpga_data->fpga_lock);
+				return -2;
+			}
+			mutex_unlock(&fpga_data->fpga_lock);
+		} else if (size == I2C_SMBUS_I2C_BLOCK_DATA) { // i2cdump mode=i
+			data->block[0] = 32;
+
+			mutex_lock(&fpga_data->fpga_lock);
+			ret = mrvl_spi_check_status(fpga_dev.data_base_addr,
+							portid, 0);
+			if (ret == 0) {
+				if (cmd < 0x80) { /* lower page */
+					mrvl_obo_spi_read(fpga_dev.data_base_addr,
+							portid,
+							0,
+							0,
+							cmd,
+							32,
+							&(data->block[1]));
+
+					if (cmd == 0x60) { /* page_sel byte */
+						// current page_sel_byte
+						fpga_data->obo_spi_t_cfg[dev_data->portid].current_page_sel_byte_for_i2cif = data->block[32];
+					}
+				} else {  /* upper page */
+					mrvl_obo_spi_read(fpga_dev.data_base_addr,
+							portid,
+							0,
+							fpga_data->obo_spi_t_cfg[dev_data->portid].current_page_sel_byte_for_i2cif,
+							cmd,
+							32,
+							&(data->block[1]));
 				}
 			} else {
 				PRINTK(KERN_INFO, "%s line#%d Cannot read value SPI\n", __func__, __LINE__);
@@ -1025,27 +1066,47 @@ static int fpga_i2c_access(struct i2c_adapter *adapter, u16 addr,
 			}
 			mutex_unlock(&fpga_data->fpga_lock);
 
-		} else if (size == I2C_SMBUS_BYTE) {
-			return 0;
-		} else {
-			return -1;
 		}
-
-
-		// 0. which obo to read ? (from dev_data->portid)
-		// 1. read lower memory page 0x00
-		// 2. extract byte 127 (page)
-		// 3. read upper memory from page got in step 2
-		// 4. display:
-		//     4.1 all 256 bytes
-		//     4.2 byte
-		//     4.3 word
-		//     4.4 block
 	} else if (rw == I2C_SMBUS_WRITE) {
 		PRINTK(KERN_INFO, "%s line#%d data[%02x]\n",
 				__func__,
 				__LINE__,
 				data->block[0]);
+
+		if (size != I2C_SMBUS_BYTE_DATA)
+			return -1;
+
+		ret = mrvl_spi_check_status(fpga_dev.data_base_addr, portid, 0);
+		if (ret == 0) {
+			if (cmd < 0x80) {
+				mrvl_obo_spi_write(fpga_dev.data_base_addr,
+							portid,
+							0,
+							0,
+							cmd,
+							1,
+							&(data->byte));
+			} else {
+				mrvl_obo_spi_read(fpga_dev.data_base_addr,
+							portid,
+							0,
+							0,
+							0x7f,
+							1,
+							&(fpga_data->obo_spi_t_cfg[dev_data->portid].current_page_sel_byte_for_i2cif));
+
+				mrvl_obo_spi_write(fpga_dev.data_base_addr,
+							portid,
+							0,
+							fpga_data->obo_spi_t_cfg[dev_data->portid].current_page_sel_byte_for_i2cif,
+							cmd,
+							1,
+							&(data->byte));
+			}
+		} else {
+			PRINTK(KERN_INFO, "%s line#%d Cannot write value SPI\n",
+			       __func__, __LINE__);
+		}
 	}
 
 	return 0;
