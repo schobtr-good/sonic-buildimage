@@ -298,8 +298,8 @@ static int misc_cpld_probe(struct i2c_client *client,
 
 	return 0;
 
-err_link:
-	sysfs_remove_link(&client->dev.kobj, device_name);
+// err_link:
+// 	sysfs_remove_link(&client->dev.kobj, device_name);
 
 exit:
 	dev_err(&client->dev, "probe error %d\n", err);
@@ -309,7 +309,7 @@ exit:
 static int misc_cpld_remove(struct i2c_client *client)
 {
 	struct misc_cpld_data *data = dev_get_drvdata(&client->dev);
-	char *device_name = data->link_name;
+	const char *device_name = data->link_name;
 
 	sysfs_remove_link(&client->dev.kobj, device_name);
 	return 0;
