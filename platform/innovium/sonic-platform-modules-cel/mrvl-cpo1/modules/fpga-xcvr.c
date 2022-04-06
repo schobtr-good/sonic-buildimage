@@ -2,7 +2,6 @@
 /*
  * fpga-xcvr.c - front panel port control.
  *
- * Pradchaya Phucharoen <pphuchar@celestica.com>
  * Copyright (C) 2019 Celestica Corp.
  */
 
@@ -17,63 +16,17 @@
 #include <linux/spinlock.h>
 
 /* FPGA front panel  */
-#define PORT_CTRL 0
-#define PORT_STATUS 0x4
-#define PORT_INT_STATUS 0x8
-#define PORT_INT_MASK 0xC
+#define PORT_STATUS 0x90
 
-/*
- * Port control degister
- * LPMOD    : active high, RW
- * RST      : active low,  RW
- * TXDIS    : active high, RW
- */
-#define CTRL_LPMOD BIT(6)
-#define CTRL_RST_L BIT(4)
-#define CTRL_TXDIS BIT(0)
+#define STAT_TXFAULT_SFP1 BIT(0)
+#define STAT_TXFAULT_SFP2 BIT(1)
+#define STAT_TXDISABLE_SFP1 BIT(2)
+#define STAT_TXDISABLE_SFP2 BIT(3)
+#define STAT_RXLOS_SFP1 BIT(4)
+#define STAT_RXLOS_SFP2 BIT(5)
+#define STAT_MODABS_SFP1 BIT(6)
+#define STAT_MODABS_SFP2 BIT(7)
 
-/*
- * Port status register
- * IRQ      : active low, RO
- * PRESENT  : active low,  RO, for QSFP
- * TXFAULT  : active high, RO
- * RXLOS    : active high, RO
- * MODABS   : active high, RO, for SFP
- */
-#define STAT_IRQ_L BIT(5)
-#define STAT_PRESENT_L BIT(4)
-#define STAT_TXFAULT BIT(2)
-#define STAT_RXLOS BIT(1)
-#define STAT_MODABS BIT(0)
-
-/*
- * NOTE: Interrupt and mask must be expose as bitfeild.
- *       Because the registers of interrupt flags are read-clear.
- *
- * Port interrupt flag resgister
- * INT_N    : interrupt flag, set when INT_N is assert.
- * PRESENT  : interrupt flag, set when QSFP module plugin/plugout.
- * RXLOS    : interrupt flag, set when rxlos is assert.
- * MODABS   : interrupt flag, set when SFP module plugin/plugout.
- */
-#define INTR_INT_N BIT(5)
-#define INTR_PRESENT BIT(4)
-#define INTR_TXFAULT BIT(2)
-#define INTR_RXLOS BIT(1)
-#define INTR_MODABS BIT(0)
-
-/*
- * Port interrupt mask register
- * INT_N     : active low
- * PRESENT   : active low
- * RXLOS_INT : active low
- * MODABS    : active low
- */
-#define MASK_INT_N_L BIT(5)
-#define MASK_PRESENT_L BIT(4)
-#define MASK_TXFAULT_L BIT(2)
-#define MASK_RXLOS_L BIT(1)
-#define MASK_MODABS_L BIT(0)
 
 /*
  * port_data - optical port data
@@ -102,150 +55,82 @@ struct xcvr_priv {
 	struct device **fp_devs;
 };
 
-static inline void port_setreg(struct xcvr_priv *xcvr, int reg, int index,
-				u8 value)
+static inline void port_setreg(struct xcvr_priv *xcvr, int reg, u8 value)
 {
-	return iowrite8(value, xcvr->base + reg +
-			(index - 1) * xcvr->port_reg_size);
+	return iowrite8(value, xcvr->base + reg);
 }
 
-static inline u8 port_getreg(struct xcvr_priv *xcvr, int reg, int index)
+static inline u8 port_getreg(struct xcvr_priv *xcvr, int reg)
 {
-	return ioread8(xcvr->base + reg + (index - 1) * xcvr->port_reg_size);
-}
+	uint32_t fpga_type;
 
-static ssize_t qsfp_modprsL_show(struct device *dev,
-				struct device_attribute *attr, char *buf)
-{
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	data = port_getreg(port_data->xcvr, PORT_STATUS, index);
-	return sprintf(buf, "%d\n", (data & STAT_PRESENT_L) ? 1 : 0);
-}
-
-static ssize_t qsfp_irqL_show(struct device *dev, struct device_attribute *attr,
-				char *buf)
-{
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	data = port_getreg(port_data->xcvr, PORT_STATUS, index);
-	return sprintf(buf, "%d\n", (data & STAT_IRQ_L) ? 1 : 0);
-}
-
-static ssize_t qsfp_lpmode_show(struct device *dev,
-				struct device_attribute *attr, char *buf)
-{
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	data = port_getreg(port_data->xcvr, PORT_CTRL, index);
-	return sprintf(buf, "%d\n", (data & CTRL_LPMOD) ? 1 : 0);
-}
-
-static ssize_t qsfp_lpmode_store(struct device *dev,
-				struct device_attribute *attr, const char *buf,
-				size_t size)
-{
-	ssize_t status;
-	long value;
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	status = kstrtol(buf, 0, &value);
-	if (status == 0) {
-		data = port_getreg(port_data->xcvr, PORT_CTRL, index);
-		if (value == 0)
-			data &= ~CTRL_LPMOD;
-		else
-			data |= CTRL_LPMOD;
-		port_setreg(port_data->xcvr, PORT_CTRL, index, data);
-		status = size;
-	}
-	return status;
-}
-
-static ssize_t qsfp_resetL_show(struct device *dev,
-				struct device_attribute *attr, char *buf)
-{
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	data = port_getreg(port_data->xcvr, PORT_CTRL, index);
-	return sprintf(buf, "%d\n", (data & CTRL_RST_L) ? 1 : 0);
-}
-
-static ssize_t qsfp_resetL_store(struct device *dev,
-				 struct device_attribute *attr, const char *buf,
-				 size_t size)
-{
-	ssize_t status;
-	long value;
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	status = kstrtol(buf, 0, &value);
-	if (status == 0) {
-		data = port_getreg(port_data->xcvr, PORT_CTRL, index);
-		if (value == 0)
-			data &= ~CTRL_RST_L;
-		else
-			data |= CTRL_RST_L;
-		port_setreg(port_data->xcvr, PORT_CTRL, index, data);
-		status = size;
-	}
-	return status;
+	fpga_type = ioread8(xcvr->base + 0x0014);
+	return ioread32(xcvr->base + reg);
 }
 
 static ssize_t sfp_modabs_show(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	u8 data;
+	u32 data;
 	struct port_data *port_data = dev_get_drvdata(dev);
 	unsigned int index = port_data->index;
 
-	data = port_getreg(port_data->xcvr, PORT_STATUS, index);
-	return sprintf(buf, "%d\n", (data & STAT_MODABS) ? 1 : 0);
+	data = port_getreg(port_data->xcvr, PORT_STATUS);
+	if (index == 1)
+		return sprintf(buf, "%d\n", (data & STAT_MODABS_SFP1) ? 1 : 0);
+	else if (index == 2)
+		return sprintf(buf, "%d\n", (data & STAT_MODABS_SFP2) ? 1 : 0);
+	else
+		return -ENOMEM;
 }
 
 static ssize_t sfp_txfault_show(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	u8 data;
+	u32 data;
 	struct port_data *port_data = dev_get_drvdata(dev);
 	unsigned int index = port_data->index;
 
-	data = port_getreg(port_data->xcvr, PORT_STATUS, index);
-	return sprintf(buf, "%d\n", (data & STAT_TXFAULT) ? 1 : 0);
+	data = port_getreg(port_data->xcvr, PORT_STATUS);
+	if (index == 1)
+		return sprintf(buf, "%d\n", (data & STAT_TXFAULT_SFP1) ? 1 : 0);
+	else if (index == 2)
+		return sprintf(buf, "%d\n", (data & STAT_TXFAULT_SFP2) ? 1 : 0);
+	else
+		return -ENOMEM;
+
 }
 
 static ssize_t sfp_rxlos_show(struct device *dev, struct device_attribute *attr,
 			      char *buf)
 {
-	u8 data;
+	u32 data;
 	struct port_data *port_data = dev_get_drvdata(dev);
 	unsigned int index = port_data->index;
 
-	data = port_getreg(port_data->xcvr, PORT_STATUS, index);
-	return sprintf(buf, "%d\n", (data & STAT_RXLOS) ? 1 : 0);
+	data = port_getreg(port_data->xcvr, PORT_STATUS);
+	if (index == 1)
+		return sprintf(buf, "%d\n", (data & STAT_RXLOS_SFP1) ? 1 : 0);
+	else if (index == 2)
+		return sprintf(buf, "%d\n", (data & STAT_RXLOS_SFP2) ? 1 : 0);
+	else
+		return -ENOMEM;
 }
 
 static ssize_t sfp_txdisable_show(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
-	u8 data;
+	u32 data;
 	struct port_data *port_data = dev_get_drvdata(dev);
 	unsigned int index = port_data->index;
 
-	data = port_getreg(port_data->xcvr, PORT_CTRL, index);
-	return sprintf(buf, "%d\n", (data & CTRL_TXDIS) ? 1 : 0);
+	data = port_getreg(port_data->xcvr, PORT_STATUS);
+	if (index == 1)
+		return sprintf(buf, "%d\n", (data & STAT_TXDISABLE_SFP1) ? 1 : 0);
+	else if (index == 2)
+		return sprintf(buf, "%d\n", (data & STAT_TXDISABLE_SFP2) ? 1 : 0);
+	else
+		return -ENOMEM;
 }
 
 static ssize_t sfp_txdisable_store(struct device *dev,
@@ -254,108 +139,49 @@ static ssize_t sfp_txdisable_store(struct device *dev,
 {
 	ssize_t status;
 	long value;
-	u8 data;
+	u32 data;
 	struct port_data *port_data = dev_get_drvdata(dev);
 	unsigned int index = port_data->index;
 
 	status = kstrtol(buf, 0, &value);
 	if (status == 0) {
-		data = port_getreg(port_data->xcvr, PORT_CTRL, index);
-		if (value == 0)
-			data &= ~CTRL_TXDIS;
-		else
-			data |= CTRL_TXDIS;
-		port_setreg(port_data->xcvr, PORT_CTRL, index, data);
+		data = port_getreg(port_data->xcvr, PORT_STATUS);
+		if (value == 0) {
+			if (index == 1)
+				data &= ~STAT_TXDISABLE_SFP1;
+			else if (index == 2)
+				data &= ~STAT_TXDISABLE_SFP2;
+			else
+				return -ENOMEM;
+		} else {
+			if (index == 1)
+				data |= STAT_TXDISABLE_SFP1;
+			else if (index == 2)
+				data |= STAT_TXDISABLE_SFP2;
+			else
+				return -ENOMEM;
+		}
+		port_setreg(port_data->xcvr, PORT_STATUS, data);
 		status = size;
 	}
 	return status;
 }
 
-static ssize_t interrupt_show(struct device *dev, struct device_attribute *attr,
-				char *buf)
-{
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	data = port_getreg(port_data->xcvr, PORT_INT_STATUS, index);
-	return sprintf(buf, "0x%2.2x\n", data);
-}
-
-static ssize_t interrupt_store(struct device *dev,
-				struct device_attribute *attr, const char *buf,
-				size_t size)
-{
-	ssize_t status;
-	long value;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	status = kstrtoul(buf, 0, &value);
-	if (status == 0) {
-		port_setreg(port_data->xcvr, PORT_INT_STATUS, index, value);
-		status = size;
-	}
-	return status;
-}
-
-static ssize_t interrupt_mask_show(struct device *dev,
-				struct device_attribute *attr, char *buf)
-{
-	u8 data;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	data = port_getreg(port_data->xcvr, PORT_INT_MASK, index);
-	return sprintf(buf, "0x%2.2x\n", data);
-}
-
-static ssize_t interrupt_mask_store(struct device *dev,
-				struct device_attribute *attr,
-				const char *buf, size_t size)
-{
-	ssize_t status;
-	long value;
-	struct port_data *port_data = dev_get_drvdata(dev);
-	unsigned int index = port_data->index;
-
-	status = kstrtoul(buf, 0, &value);
-	if (status == 0) {
-		port_setreg(port_data->xcvr, PORT_INT_MASK, index, value);
-		status = size;
-	}
-	return status;
-}
-
-DEVICE_ATTR_RO(qsfp_modprsL);
-DEVICE_ATTR_RO(qsfp_irqL);
-DEVICE_ATTR_RW(qsfp_lpmode);
-DEVICE_ATTR_RW(qsfp_resetL);
 
 DEVICE_ATTR_RO(sfp_modabs);
 DEVICE_ATTR_RO(sfp_txfault);
 DEVICE_ATTR_RO(sfp_rxlos);
 DEVICE_ATTR_RW(sfp_txdisable);
 
-DEVICE_ATTR_RW(interrupt);
-DEVICE_ATTR_RW(interrupt_mask);
-
-/* qsfp_attrs */
-static struct attribute *qsfp_attrs[] = {
-	&dev_attr_qsfp_modprsL.attr,   &dev_attr_qsfp_lpmode.attr,
-	&dev_attr_qsfp_resetL.attr,    &dev_attr_interrupt.attr,
-	&dev_attr_interrupt_mask.attr, NULL};
 
 /* sfp_attrs */
 static struct attribute *sfp_attrs[] = {&dev_attr_sfp_modabs.attr,
 					&dev_attr_sfp_txfault.attr,
 					&dev_attr_sfp_rxlos.attr,
 					&dev_attr_sfp_txdisable.attr,
-					&dev_attr_interrupt.attr,
-					&dev_attr_interrupt_mask.attr,
+
 					NULL};
 
-ATTRIBUTE_GROUPS(qsfp);
 ATTRIBUTE_GROUPS(sfp);
 
 /* A single port device init */
@@ -414,7 +240,7 @@ static int cls_xcvr_probe(struct platform_device *pdev)
 	/* mmap resource */
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (res) {
-		xcvr->base = devm_ioremap_resource(&pdev->dev, res);
+		xcvr->base = ioremap_nocache(res->start, res->end - res->start);
 		if (IS_ERR(xcvr->base)) {
 			ret = PTR_ERR(xcvr->base);
 			goto err_exit;
@@ -449,10 +275,6 @@ static int cls_xcvr_probe(struct platform_device *pdev)
 					init_port(&pdev->dev, xcvr,
 						pdata->devices[i],
 						sfp_groups);
-			} else {
-				fp_dev =
-					init_port(&pdev->dev, xcvr,
-						pdata->devices[i], qsfp_groups);
 			}
 			if (IS_ERR(fp_dev)) {
 				dev_err(&pdev->dev, "Failed to init port %s\n",
@@ -500,8 +322,7 @@ static struct platform_driver cls_xcvr_driver = {
 
 module_platform_driver(cls_xcvr_driver);
 
-MODULE_AUTHOR("Pradchaya Phucharoen<pphuchar@celestica.com>");
-MODULE_DESCRIPTION("Celestica xcvr control driver");
-MODULE_VERSION("0.0.1");
+MODULE_DESCRIPTION("MRVL CPO xcvr control driver");
+MODULE_VERSION("0.1.0");
 MODULE_LICENSE("GPL");
 MODULE_ALIAS("platform:fpga-xcvr");

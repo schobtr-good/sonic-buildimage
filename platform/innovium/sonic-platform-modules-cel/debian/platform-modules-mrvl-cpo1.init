@@ -30,6 +30,7 @@ start)
 	modprobe cls-i2c-ocores
 	modprobe fpga-xcvr
 	modprobe marvell_switch_fpga
+	modprobe misc_cpld
 
 
 	# Instantiate TLV EEPROM device on I801/ISMT bus 
@@ -37,6 +38,8 @@ start)
 	if [[ $devname == 'SMBus'* ]]; then
 		echo 24lc64t 0x56 > /sys/bus/i2c/devices/i2c-0/new_device
 	fi
+
+	echo misc_cpld1 0x30 > /sys/bus/i2c/devices/i2c-10/new_device
 
 	decode-syseeprom --init 2> /dev/null &
 
