@@ -262,8 +262,8 @@ static struct resource cls_i2c_res_11[] = {
 /* Resource IOMEM for front panel XCVR */
 static struct resource xcvr_res[] = {
 	{
-		.start = 0x4000,
-		.end = 0x421F,
+		.start = 0x00,
+		.end = 0xFF,
 		.flags = IORESOURCE_MEM,
 	},
 };
