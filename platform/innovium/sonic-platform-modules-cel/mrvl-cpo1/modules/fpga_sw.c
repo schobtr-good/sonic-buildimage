@@ -53,7 +53,7 @@
 #include "fpga_sw.h"
 #include "obo_spi.h"
 
-#define VERSION "0.6.0"
+#define VERSION "0.6.3"
 
 #define TOTAL_OBO 16
 
@@ -199,8 +199,8 @@ static ssize_t getreg_show(struct device *dev,
 }
 
 static ssize_t getreg_store(struct device *dev,
-				    struct device_attribute *devattr,
-				    const char *buf, size_t count)
+					struct device_attribute *devattr,
+					const char *buf, size_t count)
 {
 	uint32_t addr;
 	char *last;
@@ -248,10 +248,11 @@ static ssize_t setreg_store(struct device *dev,
 	uint32_t value;
 	uint32_t mode = 8;
 	char *tok;
-	char clone[count];
+	char clone[count+1];
 	char *pclone = clone;
 	char *last;
 
+	memset(clone, 0x00, count+1);
 	strcpy(clone, buf);
 
 	mutex_lock(&fpga_data->fpga_lock);
@@ -298,7 +299,7 @@ static ssize_t setreg_store(struct device *dev,
 }
 
 static ssize_t version_show(struct device *dev, struct device_attribute *attr,
-			    char *buf)
+				char *buf)
 {
 	u32 data;
 
@@ -356,7 +357,7 @@ static struct attribute_group fpga_attr_grp = {
 };
 
 static ssize_t obo_id_show(struct device *dev,
-			       struct device_attribute *devattr, char *buf)
+				   struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
 	unsigned int portid = dev_data->portid;
@@ -365,7 +366,7 @@ static ssize_t obo_id_show(struct device *dev,
 }
 
 static ssize_t bank_show(struct device *dev,
-			       struct device_attribute *devattr, char *buf)
+				   struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
 	unsigned int portid = dev_data->portid;
@@ -374,7 +375,7 @@ static ssize_t bank_show(struct device *dev,
 }
 
 static ssize_t page_show(struct device *dev,
-			       struct device_attribute *devattr, char *buf)
+				   struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
 	unsigned int portid = dev_data->portid;
@@ -383,7 +384,7 @@ static ssize_t page_show(struct device *dev,
 }
 
 static ssize_t offset_show(struct device *dev,
-			       struct device_attribute *devattr, char *buf)
+				   struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
 	unsigned int portid = dev_data->portid;
@@ -392,7 +393,7 @@ static ssize_t offset_show(struct device *dev,
 }
 
 static ssize_t len_show(struct device *dev,
-			       struct device_attribute *devattr, char *buf)
+				   struct device_attribute *devattr, char *buf)
 {
 	struct each_obo_device_data *dev_data = dev_get_drvdata(dev);
 	unsigned int portid = dev_data->portid;
@@ -529,7 +530,9 @@ static ssize_t spi_read_data_show(struct device *dev,
 			// memcpy(data, data+6, fpga_data->obo_spi_t_cfg.len);
 			break;
 		} else {
-			PRINTK(KERN_INFO, "%s line#%d Cannot read value SPI .. Retry - %d\n", __func__, __LINE__, round);
+			PRINTK(KERN_INFO,
+			"%s line#%d Cannot read value SPI .. Retry - %d\n",
+			__func__, __LINE__, round);
 		}
 		usleep_range(3000, 3001);
 		round++;
@@ -606,7 +609,8 @@ static ssize_t spi_write_data_store(struct device *dev,
 		byte_count++;
 
 		if (byte_count > fpga_data->obo_spi_t_cfg[portid].len) {
-			pr_err("%s line#%d total data exceed desired spi len [%d]\n", __func__, __LINE__, fpga_data->obo_spi_t_cfg[portid].len);
+			pr_err("%s line#%d total data exceed desired spi len [%d]\n",
+			__func__, __LINE__, fpga_data->obo_spi_t_cfg[portid].len);
 			return -1;
 		}
 
@@ -624,8 +628,8 @@ static ssize_t spi_write_data_store(struct device *dev,
 
 	if (byte_count != fpga_data->obo_spi_t_cfg[portid].len) {
 		pr_err("%s line#%d amount of data not equal to desired spi len [%d]\n",
-		       __func__, __LINE__,
-		       fpga_data->obo_spi_t_cfg[portid].len);
+			   __func__, __LINE__,
+			   fpga_data->obo_spi_t_cfg[portid].len);
 		return -1;
 	}
 
@@ -644,8 +648,9 @@ static ssize_t spi_write_data_store(struct device *dev,
 					spi_w_data);
 			break;
 		} else {
-			PRINTK(KERN_INFO, "%s line#%d Cannot write value SPI .. Retry - %d\n",
-			       __func__, __LINE__, round);
+			PRINTK(KERN_INFO,
+			"%s line#%d Cannot write value SPI .. Retry - %d\n",
+			__func__, __LINE__, round);
 		}
 		usleep_range(3000, 3001);
 		round++;
@@ -884,15 +889,152 @@ static const struct attribute_group *obo_spi_attr_grps[] = {
 
 static u32 fpga_i2c_func(struct i2c_adapter *a)
 {
-	return I2C_FUNC_SMBUS_QUICK  |
-		I2C_FUNC_SMBUS_BYTE      |
+	return I2C_FUNC_I2C |
+		I2C_FUNC_SMBUS_PROC_CALL |
+		I2C_FUNC_SMBUS_QUICK |
+		I2C_FUNC_SMBUS_BYTE |
 		I2C_FUNC_SMBUS_BYTE_DATA |
 		I2C_FUNC_SMBUS_WORD_DATA |
-		I2C_FUNC_SMBUS_BLOCK_DATA|
+		I2C_FUNC_SMBUS_BLOCK_DATA |
 		I2C_FUNC_SMBUS_I2C_BLOCK;
 }
 
+struct obo_i2c_data_t {
+	char calling_name[20];
+};
+
+struct i2c_dev_data {
+	int portid;
+	struct obo_i2c_data_t obo_i2c_data;
+};
+
+static int vi2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs,
+			   int num)
+{
+	struct i2c_dev_data *dev_data;
+	unsigned int obo_id;
+	// int i = 0;
+	// int j = 0;
+	int ret;
+	uint8_t offset, req_len, write_val, current_page_sel_byte;
+
+
+	dev_data = i2c_get_adapdata(adap);
+	obo_id = dev_data->portid;
+
+	PRINTK(KERN_INFO, "%s line#%d num: %d obo_id: %d\n",
+				   __func__, __LINE__, num, obo_id);
+
+	mutex_lock(&fpga_data->fpga_lock);
+	if (num == 2) { /* read */
+		offset = msgs[0].buf[0];
+		req_len = msgs[1].len;
+
+		PRINTK(KERN_INFO, "%s line#%d offset: 0x%02x req_len: %d\n",
+			   __func__, __LINE__, offset, req_len);
+
+		/* dummy return */
+		// if (offset == 2 && req_len == 1) {
+		// 	msgs[1].buf[0] = 0x08; // force return CMIS 0x0002 to 0x08
+		// 	mutex_unlock(&fpga_data->fpga_lock);
+		// 	return num;
+		// }
+
+		// for (i = 0; i < req_len; i++) {
+		// 	PRINTK(KERN_INFO, "%s line#%d i:%d [%02x]\n",
+		//        __func__, __LINE__, i, offset + i);
+		// 	msgs[1].buf[i] = offset + i;
+		// } /* end of dummy return */
+
+		ret = mrvl_spi_check_status(fpga_dev.data_base_addr,
+							obo_id, 0);
+		if (ret == 0) {
+			if (offset < 0x80) { /* lower page */
+				mrvl_obo_spi_read(fpga_dev.data_base_addr,
+						obo_id,
+						0,
+						0,
+						offset,
+						req_len,
+						msgs[1].buf);
+			} else {  /* upper page */
+
+				mrvl_obo_spi_read(fpga_dev.data_base_addr,
+						obo_id,
+						0,
+						0,
+						0x7f,
+						1,
+						&current_page_sel_byte);
+
+				mrvl_obo_spi_read(fpga_dev.data_base_addr,
+						obo_id,
+						0,
+						current_page_sel_byte,
+						offset,
+						req_len,
+						msgs[1].buf);
+			}
+		} else {
+			PRINTK(KERN_INFO, "%s line#%d Cannot read value SPI\n",
+				__func__, __LINE__);
+			mutex_unlock(&fpga_data->fpga_lock);
+			return -2;
+		}
+	} else if (num == 1) { /* write */
+		req_len = msgs[0].len;
+		offset = msgs[0].buf[0];
+		write_val = msgs[0].buf[1];
+
+		PRINTK(KERN_INFO,
+		"%s line#%d: write req_len: %d offset: 0x%02x write_val: 0x%02x\n",
+		__func__, __LINE__, req_len, offset, write_val);
+
+		ret = mrvl_spi_check_status(fpga_dev.data_base_addr,
+							obo_id, 0);
+		if (ret == 0) {
+			if (offset < 0x80) { /* lower page */
+				mrvl_obo_spi_write(fpga_dev.data_base_addr,
+							obo_id,
+							0,
+							0,
+							offset,
+							1,
+							&write_val);
+			} else {  /* upper page */
+				mrvl_obo_spi_read(fpga_dev.data_base_addr,
+						obo_id,
+						0,
+						0,
+						0x7f,
+						1,
+						&current_page_sel_byte);
+
+				mrvl_obo_spi_write(fpga_dev.data_base_addr,
+							obo_id,
+							0,
+							current_page_sel_byte,
+							offset,
+							1,
+							&write_val);
+			}
+		} else {
+			PRINTK(KERN_INFO, "%s line#%d Cannot read value SPI\n",
+				__func__, __LINE__);
+			mutex_unlock(&fpga_data->fpga_lock);
+			return -2;
+		}
+
+
+
+	}
+	mutex_unlock(&fpga_data->fpga_lock);
+
+	return num;
+}
+
 static const struct i2c_algorithm marvell_switch_i2c_algorithm = {
+	.master_xfer = vi2c_master_xfer,
 	.smbus_xfer = fpga_i2c_access,
 	.functionality  = fpga_i2c_func,
 };
@@ -906,15 +1048,6 @@ struct i2c_switch {
 					// this value is ignored.
 	enum PORT_TYPE port_type;	// QSFP/SFP tranceiver port type.
 	char calling_name[20];		// Calling name.
-};
-
-struct obo_i2c_data_t {
-	char calling_name[20];
-};
-
-struct i2c_dev_data {
-	int portid;
-	struct obo_i2c_data_t obo_i2c_data;
 };
 
 static struct obo_i2c_data_t v_i2c_adapter_data[] = {
@@ -1025,7 +1158,9 @@ static int fpga_i2c_access(struct i2c_adapter *adapter, u16 addr,
 							&(data->byte));
 				}
 			} else {
-				PRINTK(KERN_INFO, "%s line#%d Cannot read value SPI\n", __func__, __LINE__);
+				PRINTK(KERN_INFO,
+					"%s line#%d Cannot read value SPI\n",
+					__func__, __LINE__);
 				mutex_unlock(&fpga_data->fpga_lock);
 				return -2;
 			}
@@ -1105,7 +1240,7 @@ static int fpga_i2c_access(struct i2c_adapter *adapter, u16 addr,
 			}
 		} else {
 			PRINTK(KERN_INFO, "%s line#%d Cannot write value SPI\n",
-			       __func__, __LINE__);
+				   __func__, __LINE__);
 		}
 	}
 
@@ -1222,7 +1357,7 @@ static long fpgafw_unlocked_ioctl(struct file *file, unsigned int cmd,
 #ifdef TEST_MODE
 	static  uint32_t status_reg;
 #endif
-    // Switch function to read and write.
+	// Switch function to read and write.
 	switch (cmd) {
 	case READREG:
 		if (copy_from_user(&data, (void __user *)arg, sizeof(data))

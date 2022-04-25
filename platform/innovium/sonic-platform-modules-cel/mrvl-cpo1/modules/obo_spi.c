@@ -138,19 +138,19 @@ uint32_t mrvl_obo_spi_read(void __iomem *base_addr, u32 obo_idx, u32 bank,
 	PRINTK(KERN_INFO, "1. writing 0x%08x to 0x%04x", spi_xfer_info_reg_val,
 			spi_xfer_info_reg);
 	iowrite32(spi_xfer_info_reg_val, base_addr + spi_xfer_info_reg);
-	usleep_range(5000, 5001);
+	// usleep_range(5000, 5001);
 
 	// SPI Control Reg
 	spi_ctrl_reg_val = 0;
 	PRINTK(KERN_INFO, "2. writing 0x%08x to 0x%04x", spi_ctrl_reg_val,
 			spi_ctrl_reg);
 	iowrite32(spi_ctrl_reg_val, base_addr + spi_ctrl_reg);
-	usleep_range(5000, 5001);
+	// usleep_range(5000, 5001);
 
 	// SPI Status Reg
 	PRINTK(KERN_INFO, "3. writing 0x%08x to 0x%04x", 0x01, spi_stat_reg);
 	iowrite32(0x01, base_addr + spi_stat_reg);
-	usleep_range(5000, 5001);
+	// usleep_range(5000, 5001);
 
 	// Polling Check SPI Status Reg
 	PRINTK(KERN_INFO, "4. polling check 0x%08x", spi_stat_reg);
@@ -161,6 +161,8 @@ uint32_t mrvl_obo_spi_read(void __iomem *base_addr, u32 obo_idx, u32 bank,
 			__func__, __LINE__);
 		return -1;
 	}
+
+	usleep_range(5000, 5001);
 
 	// Data Retreiving
 	total_read_loop = byte_len / 4;
@@ -175,11 +177,12 @@ uint32_t mrvl_obo_spi_read(void __iomem *base_addr, u32 obo_idx, u32 bank,
 
 	for (i = 0; i < total_read_loop; i++) {
 		buf32[i] = ioread32(base_addr + data_reg_32);
+		// buf32[i] = ioread32(base_addr + data_reg_32); //double read
 
 		// printk(KERN_INFO "%d %lx %08x\n", i, data_reg_32, buf32[i]);
 		PRINTK(KERN_INFO, "0x%04x: 0x%08x", data_reg_32, buf32[i]);
 		data_reg_32 += 4;
-		usleep_range(5000, 5001);
+		// usleep_range(5000, 5001);
 	}
 	memcpy(buf, ((uint8_t *)buf32), u32_len);
 
@@ -187,9 +190,9 @@ uint32_t mrvl_obo_spi_read(void __iomem *base_addr, u32 obo_idx, u32 bank,
 	flow_ctrl_reg_val = ioread32(base_addr + spi_flow_ctrl_reg);
 	PRINTK(KERN_INFO, "flow_ctrl 0x%04x: 0x%08x\n", spi_flow_ctrl_reg,
 			flow_ctrl_reg_val);
-	usleep_range(5000, 5001);
+	// usleep_range(5000, 5001);
 
-	if ((flow_ctrl_reg_val & 0xff) == 0x00)
+	if ((flow_ctrl_reg_val & 0x00ff0000) == 0x00)
 		ret = 0;
 	else {
 		PRINTK(KERN_INFO, "%s#%d write_ready_byte: %02x\n",
