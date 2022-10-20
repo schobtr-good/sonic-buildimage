@@ -1,74 +1,49 @@
 #!/usr/bin/env python
-
-#############################################################################
-# Celestica Blackstone
 #
-# Platform and model specific sfp subclass, inherits from the base class,
-# and provides the followings:
-# - sfputil show presence
-#############################################################################
+# Platform-specific SFP transceiver interface for SONiC
+# This plugin supports QSFP-DD, QSFP and SFP.
 
 try:
+    import time
     from sonic_sfp.sfputilbase import SfpUtilBase
 except ImportError as e:
-    raise ImportError('%s - required module not found' % str(e))
-
-PORT_START = 1
-PORT_END = 32
-
-QSFPDD_PORT_START = 1
-QSFPDD_PORT_END = 32
-EEPROM_OFFSET = 12
-
-MEDIA_TYPE_OFFSET = 0
-MEDIA_TYPE_WIDTH = 1
-
-QSFP_DD_MODULE_ENC_OFFSET = 3
-QSFP_DD_MODULE_ENC_WIDTH = 1
-
-SFP_TYPE_LIST = [
-    '03'  # SFP/SFP+/SFP28 and later
-]
-QSFP_TYPE_LIST = [
-    '0c',  # QSFP
-    '0d',  # QSFP+ or later
-    '11'  # QSFP28 or later
-]
-QSFP_DD_TYPE_LIST = [
-    '18'  # QSFP_DD Type
-]
-OSFP_TYPE_LIST = [
-    '19'  # OSFP 8X Type
-]
+    raise ImportError("%s - required module not found" % str(e))
 
 
 class SfpUtil(SfpUtilBase):
-    '''Platform-specific SfpUtil class'''
+    """Platform-specific SfpUtil class"""
 
+    PORT_START = 10
+    PORT_END = 27
+    QSFP_PORT_START = 12
+    QSFP_PORT_END = 27
+    SFP_PORT_START = 10
+    SFP_PORT_END = 11
+
+    EEPROM_OFFSET = 0
+    QSFP_PORT_INFO_PATH = '/sys/bus/platform/devices/Marvell_Switch_FPGA/OBO'
+    SFP_PORT_INFO_PATH = '/sys/bus/platform/devices/fpga-xcvr'
+    PORT_INFO_PATH = QSFP_PORT_INFO_PATH
+
+    _port_name = ""
     _port_to_eeprom_mapping = {}
     _port_to_i2cbus_mapping = {}
 
-    def __init__(self):
-        # Override port_to_eeprom_mapping for class initialization
-        eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
-
-        for x in range(PORT_START, PORT_END+1):
-            self.port_to_i2cbus_mapping[x] = (x + EEPROM_OFFSET) - 1
-            self.port_to_eeprom_mapping[x] = eeprom_path.format(
-                self.port_to_i2cbus_mapping[x])
-        SfpUtilBase.__init__(self)
-
     @property
     def port_start(self):
-        return PORT_START
+        return self.PORT_START
 
     @property
     def port_end(self):
-        return PORT_END
+        return self.PORT_END
 
     @property
-    def osfp_ports(self):
-        return list(range(QSFPDD_PORT_START, QSFPDD_PORT_END + 1))
+    def qsfp_ports(self):
+        return []
+
+    @property
+    def qsfp_ports(self):
+        return range(self.QSFP_PORT_START, self.QSFP_PORT_END + 1)
 
     @property
     def port_to_eeprom_mapping(self):
@@ -78,81 +53,153 @@ class SfpUtil(SfpUtilBase):
     def port_to_i2cbus_mapping(self):
         return self._port_to_i2cbus_mapping
 
-    def get_media_type(self, port_num):
-        """
-        Reads optic eeprom byte to determine media type inserted
-        """
-        eeprom_raw = self._read_eeprom_bytes(
-            self.port_to_eeprom_mapping[port_num], MEDIA_TYPE_OFFSET, MEDIA_TYPE_WIDTH)
-        if eeprom_raw is not None:
-            if eeprom_raw[0] in SFP_TYPE_LIST:
-                sfp_type = 'SFP'
-            elif eeprom_raw[0] in QSFP_TYPE_LIST:
-                sfp_type = 'QSFP'
-            elif eeprom_raw[0] in QSFP_DD_TYPE_LIST:
-                sfp_type = 'QSFP_DD'
-            else:
-                # Set native port type if EEPROM type is not recognized/readable
-                sfp_type = 'QSFP_DD'
+    def get_port_name(self, port_num):
+        if port_num in self.qsfp_ports:
+            self._port_name = "OBO" + str(port_num - self.QSFP_PORT_START + 1)
         else:
-            sfp_type = 'QSFP_DD'
+            self._port_name = "SFP" + str(port_num - self.SFP_PORT_START + 1)
+        return self._port_name
 
-        return sfp_type
+    def get_eeprom_dom_raw(self, port_num):
+        if port_num in self.qsfp_ports:
+            # QSFP DOM EEPROM is also at addr 0x50 and thus also stored in eeprom_ifraw
+            return None
+        else:
+            # Read dom eeprom at addr 0x51
+            return self._read_eeprom_devid(port_num, self.DOM_EEPROM_ADDR, 256)
+
+    def __init__(self):
+
+        # Override port_to_eeprom_mapping for class initialization
+        eeprom_path = '/sys/bus/i2c/devices/i2c-{0}/{0}-0050/eeprom'
+
+        for x in range(self.QSFP_PORT_START, self.QSFP_PORT_END+1):
+            self.port_to_i2cbus_mapping[x] = (x + self.EEPROM_OFFSET)
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(
+                x + self.EEPROM_OFFSET)
+
+        # import pdb
+        # pdb.set_trace()
+        for x in range(self.SFP_PORT_START, self.SFP_PORT_END+1):
+            # self.port_to_i2cbus_mapping[x] = (x - 52)
+            # self.port_to_eeprom_mapping[x] = eeprom_path.format(
+            #     x - 52)
+            self.port_to_i2cbus_mapping[x] = (x)
+            self.port_to_eeprom_mapping[x] = eeprom_path.format(x)
+        SfpUtilBase.__init__(self)
 
     def get_presence(self, port_num):
-        """
-        :param port_num: Integer, index of physical port
-        :returns: Boolean, True if tranceiver is present, False if not
-        """
-        return True
+        # Check for invalid port_num
+        if port_num not in range(self.port_start, self.port_end + 1):
+            return False
 
-    def get_low_power_mode(self, port_num):
-        """
-        :param port_num: Integer, index of physical port
-        :returns: Boolean, True if low-power mode enabled, False if disabled
-        """
-        if self.get_media_type(port_num) == 'QSFP_DD':
-            lpmode = self._read_eeprom_bytes(
-                self.port_to_eeprom_mapping[port_num], QSFP_DD_MODULE_ENC_OFFSET, QSFP_DD_MODULE_ENC_WIDTH)
-            if lpmode and int(lpmode[0]) >> 1 == 1:
+        # Get path for access port presence status
+        port_name = self.get_port_name(port_num)
+        sysfs_filename = "presence" if port_num in self.qsfp_ports else "sfp_modabs"
+        self.PORT_INFO_PATH = self.QSFP_PORT_INFO_PATH if port_num in self.qsfp_ports else self.SFP_PORT_INFO_PATH
+        reg_path = "/".join([self.PORT_INFO_PATH, port_name, sysfs_filename])
+
+        # Read status
+        try:
+            reg_file = open(reg_path)
+            content = reg_file.readline().rstrip()
+            reg_value = int(content)
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        # Module present is active low
+        if reg_value == 1:
+            if port_num in self.qsfp_ports:
+                return True
+            else:
+                return False
+        else:
+            if port_num in self.qsfp_ports:
+                return False
+            else:
                 return True
 
-        return False
+    def get_low_power_mode(self, port_num):
+        # Check for invalid QSFP port_num
+        if port_num not in self.qsfp_ports:
+            return False
+
+        try:
+            port_name = self.get_port_name(port_num)
+            reg_file = open("/".join([self.PORT_INFO_PATH,
+                                      port_name, "lopwr"]))
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        # Read status
+        content = reg_file.readline().rstrip()
+        reg_value = int(content)
+        # low power mode is active high
+        if reg_value == 0:
+            return False
+
+        return True
 
     def set_low_power_mode(self, port_num, lpmode):
-        """
-        :param port_num: Integer, index of physical port
-        :param lpmode: Boolean, True to enable low-power mode, False to disable it
-        :returns: Boolean, True if low-power mode set successfully, False if not
-        """
-        if self.get_media_type(port_num) == 'QSFP_DD':
-            write_val = 0x10 if lpmode is True else 0x0
-            return self._write_eeprom_bytes(self.port_to_eeprom_mapping[port_num], 26, 1, bytearray([write_val]))
+        # Check for invalid QSFP port_num
+        if port_num not in self.qsfp_ports:
+            return False
 
-        return False
+        try:
+            port_name = self.get_port_name(port_num)
+            reg_file = open("/".join([self.PORT_INFO_PATH,
+                                      port_name, "lopwr"]), "r+")
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        content = hex(lpmode)
+
+        reg_file.seek(0)
+        reg_file.write(content)
+        reg_file.close()
+
+        return True
 
     def reset(self, port_num):
-        """
-        :param port_num: Integer, index of physical port
-        :returns: Boolean, True if reset successful, False if not
-        """
-        # TBD
-        return False
+        # Check for invalid QSFP port_num
+        if port_num not in self.qsfp_ports:
+            return False
+
+        try:
+            port_name = self.get_port_name(port_num)
+            reg_file = open("/".join([self.PORT_INFO_PATH,
+                                      port_name, "rst_l"]), "w")
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        # Convert our register value back to a hex string and write back
+        reg_file.seek(0)
+        reg_file.write(hex(0))
+        reg_file.close()
+
+        # Sleep 1 second to allow it to settle
+        time.sleep(1)
+
+        # Flip the bit back high and write back to the register to take port out of reset
+        try:
+            reg_file = open(
+                "/".join([self.PORT_INFO_PATH, port_name, "rst_l"]), "w")
+        except IOError as e:
+            print "Error: unable to open file: %s" % str(e)
+            return False
+
+        reg_file.seek(0)
+        reg_file.write(hex(1))
+        reg_file.close()
+
+        return True
 
     def get_transceiver_change_event(self, timeout=0):
         """
-        :param timeout in milliseconds. The method is a blocking call. When timeout is
-         zero, it only returns when there is change event, i.e., transceiver plug-in/out
-         event. When timeout is non-zero, the function can also return when the timer expires.
-         When timer expires, the return status is True and events is empty.
-        :returns: (status, events)
-        :status: Boolean, True if call successful and no system level event/error occurred,
-         False if call not success or system level event/error occurred.
-        :events: dictionary for physical port index and the SFP status,
-         status='1' represent plug in, '0' represent plug out like {'0': '1', '31':'0'}
-         when it comes to system level event/error, the index will be '-1',
-         and status can be 'system_not_ready', 'system_become_ready', 'system_fail',
-         like {'-1':'system_not_ready'}.
+        TBD
         """
-        # TBD
-        return
+        raise NotImplementedError
